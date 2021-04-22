@@ -1,3 +1,11 @@
+/* 
+Palette:
+#313131
+#000
+#ffffff
+#313131
+*/
+
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -14,7 +22,9 @@ body {
   font-weight: normal;
   font-style: normal;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  color: #333333;
+  // color: #333333;
+  background-color: #000;
+  color: #ffffff;
   padding: 20px;
   margin: 0;
   -webkit-font-smoothing: antialiased;
@@ -31,7 +41,8 @@ h5,
 h6 {
     margin-bottom: 1rem;
     line-height: 1.25;
-    color: #313131;
+    // color: #313131;
+    color: #ffffff;
 }
 h1 {
   font-size: 2rem;
@@ -349,7 +360,8 @@ section {
       a {
         text-decoration: none;
         border: 0;
-        color: #000;
+        // color: #000;
+        color: #ffffff;
         box-sizing: border-box;
       }
       .post-date {
