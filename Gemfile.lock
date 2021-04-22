@@ -90,13 +90,13 @@ PLATFORMS
   arm64-darwin-20
 
 DEPENDENCIES
-  html-proofer
-  jekyll
+  html-proofer (~> 3.19)
+  jekyll (~> 4.2)
   jekyll-seo-tag
   jekyll-sitemap
   tzinfo
   tzinfo-data
-  webrick
+  webrick (~> 1.7)
 
 BUNDLED WITH
    2.2.16
