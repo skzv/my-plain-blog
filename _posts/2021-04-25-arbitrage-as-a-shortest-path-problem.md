@@ -26,11 +26,13 @@ Do you sense an opportunity?
 
 Being the enterprising individual that you are, you may try to exploit it. Starting with 5 carrots, you approach Bob, and trade your 5 carrots for 10 potatoes, at the rate at which he is willing to trade.
 
-$$
+{%include math.html content=
+"
 \begin{align}
 5 \text{ carrots} \times 2 \space \frac{\text{potatoes}}{\text{carrots}} = 10 \text{ potatoes} \tag{1} \label{eq:arb_example}
 \end{align}
-$$
+" 
+%}
 
 Next, you approach Peter with your potatoes, knowing that he’ll trade you 5 lettuce for them. Then you approach Paul with your 5 lettuce, and he trades 10 carrots for your lettuce.
 
@@ -110,30 +112,36 @@ In our graph, that means that our series of trades must end at the same node fro
 
 Notice that if we multiply along the edges of a cycle, we transform the units of the effective exchange rate.
 
-$$
+{%include math.html content=
+"
 \begin{align}
 \require{cancel}
 a \space \frac{\cancel{£}}{$} \times b \space \frac{¥}{\cancel{£}} = ab \space \frac{¥}{$}  \tag{2} \label{eq:units_of_exchange_rate}
 \end{align}
-$$
+" 
+%}
 
 However, when we return to our starting node, the quantity becomes unit-less. It transforms from a rate of exchange, to a ratio of return! Traversing a cycle on our graph and computing the product of exchange rates along the way corresponds to calculating the ratio of return we would get after completing the series of trades.
 
-$$
+{%include math.html content=
+"
 \begin{align}
 a \space \frac{\cancel{£}}{\cancel{$}} \times b \space \frac{\cancel{¥}}{\cancel{£}} \times c \space \frac{\cancel{$}}{\cancel{¥}} = abc \space \text{[dimensionless]}  \tag{3} \label{eq:unitless_exchange}
 \end{align}
-$$
+" 
+%}
 
 If the market is perfectly efficient, our return ratio, $$abc$$, will be 1, because the exchange rates have equalized. If the product of weights is greater than 1, say 1.02, then our arbitrage opportunity would have made us a 2% return.
 
 Therefore, generalizing to an arbitrary number of trades, an arbitrage opportunity corresponds to the following inequality:
 
-$$
+{%include math.html content=
+"
 \begin{align}
 \prod_i^n{e_i} = e_ie_2...e_n > 1  \tag{4} \label{eq:arbitrage_return}
 \end{align}
-$$
+" 
+%}
 
 where $$e_i$$ corresponds to the $$i^{th}$$ exchange rate, for each trade $$i$$, over n trades.
 
@@ -161,37 +169,45 @@ But how does an algorithm which can find cycles where the **_sum_** of edges is 
 
 The next insight is that a product can be turned into a sum by applying the logarithmic function, thanks to the identity:
 
-$$
+{%include math.html content=
+"
 \begin{align}
 \log{ab} = \log{a} + \log{b}  \tag{5} \label{eq:log_product_identity}
 \end{align}
-$$
+" 
+%}
 
 Thereby we can transform our problem of finding a cycle with a _product_ greater than 1, to a problem of finding a cycle with a _sum_ greater than 0! We do that by taking the log of each exchange rate, and using that as the weight of each edge.
 
 Let’s show that by taking the log of both sides of our inequality. First, taking the log of the left-hand side transforms the problem of computing a product into computing a sum:
 
-$$
+{%include math.html content=
+"
 \begin{align}
 \log{\prod_i^n{e_i}} = \log{e_ie_2...e_n} = \log{e_1} + ... + \log{e_n} = \sum_i^n{\log{e_i}} \tag{6} 
 \end{align}
-$$
+" 
+%}
 
 The log of the right side just transforms the 1 to a 0:
 
-$$
+{%include math.html content=
+"
 \begin{align}
 \sum_i^n{\log{e_i}} > \log{1} \rightarrow \sum_i^n{\log{e_i}} > 0 \tag{7}
 \end{align}
-$$
+" 
+%}
 
 We’re close, but not quite there. The final step, to reduce our problem to one that we can solve with this known algorithm, is to multiply each edge weight by -1. This turns the problem of finding a positive weight cycle, into finding a negative one:
 
-$$
+{%include math.html content=
+"
 \begin{align}
 \sum_i^n{-\log{e_i}} < 0 \tag{8}
 \end{align}
-$$
+" 
+%}
 
 Which we know the Bellman-Ford algorithm can do! Constructing a graph as specified and executing the Bellman-Ford algorithm on it will quickly and efficiently find arbitrage opportunities for us, because we’ve turned the arbitrage problem into the problem of finding the shortest path — _the infinitely shortest path_.
 
@@ -214,20 +230,25 @@ Let’s run this algorithm on our exchange rates to see if it correctly identifi
 
 Summing over the trades, our equality holds- _we found a negative weight cycle_!
 
-$$
+{%include math.html content=
+"
 \begin{align}
-\sum_i^n{\log{e_i}} = 0.223 - 4.605 + 4.343 = -0.039 \tag{6} \label{eq:neg_log_exchange_rate_example} \tag{8}
+\sum_i^n{\log{e_i}} = 0.223 - 4.605 + 4.343 = -0.039 \label{eq:neg_log_exchange_rate_example} \tag{9}
 \end{align}
-$$
+" 
+%}
 
 We can undo the logarithmic operation to restore the product, and calculate the return:
 
-$$
+{%include math.html content=
+"
 \begin{align}
 \prod_i^n{e_i} &= \exp{\sum_i^n{log{e_i}}} \\
-\prod_i^n{e_i} &= \exp(0.039) = 1.04 \tag{9}
+\prod_i^n{e_i} &= \exp(0.039) = 1.04 \tag{10}
 \end{align}
 $$
+" 
+%}
 
 Which is exactly the 4% return we calculated earlier.
 
