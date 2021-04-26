@@ -8,8 +8,8 @@
 		{% assign prompt = 'Back to Index' %}
 	{% endif %}
 
-	<a href="{{ link | prepend: site.baseurl | prepend: site.url }}">
-		<img src="{{ site.logo_url }}" alt="" class="logo-avatar">
+	<a href="{{ link | prepend: site.baseurl | prepend: site.url }}" aria-label="My avatar">
+		<img src="{{ site.logo_url }}" alt="Me!" class="logo-avatar">
 	</a>
 	<span class="logo-prompt code">{{ prompt }}</span>
 
