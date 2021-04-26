@@ -6,6 +6,8 @@ Palette:
 #313131
 **/
 
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400&display=swap');
+
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -21,7 +23,8 @@ body {
   line-height: 20px;
   font-weight: normal;
   font-style: normal;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: 'Montserrat', sans-serif;
+  // font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   // color: #333333;
   background-color: #000;
   color: #ffffff;
