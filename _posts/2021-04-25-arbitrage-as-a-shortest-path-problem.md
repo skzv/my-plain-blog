@@ -246,7 +246,6 @@ We can undo the logarithmic operation to restore the product, and calculate the 
 \prod_i^n{e_i} &= \exp{\sum_i^n{log{e_i}}} \\
 \prod_i^n{e_i} &= \exp(0.039) = 1.04 \tag{10}
 \end{align}
-$$
 " 
 %}
 
