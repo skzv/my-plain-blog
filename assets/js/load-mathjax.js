@@ -1,6 +1,8 @@
 window.MathJax = {
+    loader: {load: ['[tex]/cancel']},
     tex: {
       inlineMath: [['$$', '$$'], ['\\(', '\\)']],
+      packages: {'[+]': ['cancel']},
     //   linebreaks: { automatic: true }
     },
     svg: {

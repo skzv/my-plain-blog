@@ -115,7 +115,6 @@ Notice that if we multiply along the edges of a cycle, we transform the units of
 {%include math.html content=
 "
 \begin{align}
-\require{cancel}
 a \space \frac{\cancel{£}}{$} \times b \space \frac{¥}{\cancel{£}} = ab \space \frac{¥}{$}  \tag{2} \label{eq:units_of_exchange_rate}
 \end{align}
 " 
