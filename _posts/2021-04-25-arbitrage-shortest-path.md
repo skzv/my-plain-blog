@@ -88,3 +88,119 @@ In our case, let’s treat each currency as a node. Moving from node to node cor
 ![Simplified Currency Graph](assets/currency-graph-white.png)
 
 TODO: insert caption: Simplified graph — there should be a distinct edge in each direction.
+
+So moving along an edge, between nodes, should transform the amount of currency by the exchange rate.
+
+That means moving from the dollar node to the pound node corresponds to multiplying by 0.8 pounds/dollar. Let’s assign the exchange rate as the weight of each edge.
+
+Note that the exchange rate in each direction will be _approximately_ the reciprocal of each other. That means if the rate to convert pounds to dollars is 0.8 pounds/dollar, the rate in the other direction will be 1/(0.8 pounds/dollar) = 1.25 dollars/pound. The consequence for us is that we need to be careful to treat buying and selling on each market as distinct, directed edges, with different weights.
+
+The reason that the exchange rates in both directions are only _approximately_ reciprocal is due to small differences in the prices to buy and sell currencies, known as the buy-sell spread. For example, if at a given moment you can buy pounds at 0.8 pounds/dollar (the current price somebody will sell to you), but can sell dollars for pounds at 0.82 pounds/dollar (or 1.22 dollars/pound, and the current price somebody will buy from you), your graph model will look like this (excluding the other exchange rates for simplicity):
+
+TODO: insert img
+TODO: caption:
+
+A series of trades can be modeled by moving along edges in this graph, and the result of the trades is computed by **_multiplying_** the edge weights as you move along them.
+
+<div class="divider"></div>
+
+## Seeing the Opportunity
+
+Now that we have a working model, what are we looking for in our graph that corresponds to an arbitrage opportunity?
+
+To determine whether a series of trades is profitable, we need a consistent metric of profitability. In other words, if we begin our series of trades in dollars, then we’ll need to end it in dollars, too. And by comparing the amount of dollars we ended up with to the amount we started with, we’ll know if it was profitable or not.
+
+In our graph, that means that our series of trades must end at the same node from which it started. In our case, we started at the dollar node, and ended in the dollar node. In graph terminology, we call that a cycle. So we know we’re looking for some sort of cycle- but what kind of cycle makes it profitable?
+
+Notice that if we multiply along the edges of a cycle, we transform the units of the effective exchange rate.
+
+TODO: insert eqn
+TODO: caption:
+
+However, when we return to our starting node, the quantity becomes unit-less. It transforms from a rate of exchange, to a ratio of return! Traversing a cycle on our graph and computing the product of exchange rates along the way corresponds to calculating the ratio of return we would get after completing the series of trades.
+
+TODO: insert eqn
+
+If the market is perfectly efficient, our return ratio, _abc_, will be 1, because the exchange rates have equalized. If the product of weights is greater than 1, say 1.02, then our arbitrage opportunity would have made us a 2% return.
+
+Therefore, generalizing to an arbitrary number of trades, an arbitrage opportunity corresponds to the following inequality:
+
+TODO: insert eqn
+
+where e_i corresponds to the i’th exchange rate, for each trade i, over n trades.
+
+So what we need is an algorithm that will find a cycle on the graph of markets, where the product of edge weights is greater than 1. You might be able to invent an algorithm to do that - but in computer science, as in life in general, it’s useful to reduce problems to ones you already know how to solve.
+
+<div class="divider"></div>
+
+## The Bellman-Ford Algorithm
+
+The problem of finding shortest paths is a common and fundamental problem in computer science, which can be applied to many different scenarios. An obvious one, by drawing a correspondence between a graph and a map, is that of finding the shortest route on a map. But with some cleverness, many other kinds of problems can be transformed into a shortest-path problem, as well. What I’m going to prove to you is that the problem of finding arbitrage opportunities is one such problem.
+
+First, let’s establish what the shortest path problem is. Given two nodes in a graph, _s_ and _t_, the shortest path is that path which minimizes the _sum_ of edge weights. In other words, we move along the path from _s_ to _t_, adding up edge weights along the way, the path with the minimum sum is the shortest path — the path with the smallest cost.
+
+Next, it will be helpful to understand that there are different classes of shortest-path problems. In the obvious example — like the shortest route on a map — edge weights must be positive. There’s no way, barring a time machine, that driving down a road will reduce your travel time. In a graph with only positive edge weights, Dijkstra’s famous algorithm will compute the shortest path to all nodes in the graph.
+
+However, there is no reason a graph cannot have negative edge weights. In that case, moving along that edge reduces the total cost of the path. But, if you have a cycle which has a negative weight, then you can keep traversing that _cycle_ forever — every time, lowering your overall cost of the path — and your shortest path will have a cost approaching -∞. In that case, it would be very useful for our shortest-path algorithm to have a mechanism to identify negative weight cycles. Otherwise the shortest path would get stuck circling the negative weight cycle, forever.
+
+The Bellman-Ford algorithm is exactly that algorithm. A more general version of Dijkstra’s shortest-path algorithm, it can handle negative weights. To do so, it detects _negative weight cycles_ — cycles in a graph along which adding up the weights produces a negative value.
+
+But how does an algorithm which can find cycles where the **_sum_** of edges is less than 0 help us, when we need an algorithm that can detect cycles where the **_product_** of edges is greater than 1?
+
+<div class="divider"></div>
+
+## Log to the Rescue
+
+The next insight is that a product can be turned into a sum by applying the logarithmic function, thanks to the identity:
+
+TODO: insert eqn
+
+Thereby we can transform our problem of finding a cycle with a _product_ greater than 1, to a problem of finding a cycle with a _sum_ greater than 0! We do that by taking the log of each exchange rate, and using that as the weight of each edge.
+
+Let’s show that by taking the log of both sides of our inequality. First, taking the log of the left-hand side transforms the problem of computing a product into computing a sum:
+
+TODO: insert eqn
+
+The log of the right side just transforms the 1 to a 0:
+
+TODO: insert eqn
+
+We’re close, but not quite there. The final step, to reduce our problem to one that we can solve with this known algorithm, is to multiply each edge weight by -1. This turns the problem of finding a positive weight cycle, into finding a negative one:
+
+TODO: insert eqn
+
+Which we know the Bellman-Ford algorithm can do! Constructing a graph as specified and executing the Bellman-Ford algorithm on it will quickly and efficiently find arbitrage opportunities for us, because we’ve turned the arbitrage problem into the problem of finding the shortest path — _the infinitely shortest path_.
+
+TODO: insert img
+TODO: caption: We need to find a negative weight cycle, where the weights are the negative logarithm of the exchange rates.
+
+In hindsight, it’s obvious that there should be a correspondence between a negative weight cycle — which lowers the cost of the path every time you traverse it — to an arbitrage opportunity, which makes you a profit every time you traverse it. The key insight is transforming a problem of finding a product greater than 1 into finding a sum less than 0, by applying -log to the edge weights.
+
+<div class="divider"></div>
+
+## Prove It
+
+Let’s run this algorithm on our exchange rates to see if it correctly identifies the arbitrage opportunity. Transforming the exchange rates by -log, we get:
+
+TODO: insert table
+TODO: caption:
+
+Summing over the trades, our equality holds- _we found a negative weight cycle_!
+
+TODO: insert eqn
+
+We can undo the logarithmic operation to restore the product, and calculate the return:
+
+TODO: insert eqn
+
+Which is exactly the 4% return we calculated earlier.
+
+<div class="divider"></div>
+
+## In the Real World
+
+Since an arbitrage opportunity corresponds to a negative weight cycle, it seems that we could traverse the cycle forever to make infinite money. Of course, that is not the case.
+
+The liquidity — the volume available before the price changes significantly- available for any arbitrage opportunity is limited, and is quickly exploited by algorithmic traders pushing the boundaries of computing technology and the laws of physics to beat each other.
+
+That being said, I hope you found this exercise in applying graph theory and a well known shortest path algorithm to solving a problem in the finance domain — and making money — as interesting as I always have.
