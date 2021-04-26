@@ -20,8 +20,7 @@ Furthermore, Bob will trade 2 potatoes for a carrot, Peter will trade 1 lettuce 
 | Bob (potatoes for carrots)     | 2 potato/carrot                           |
 | Peter (lettuce for potatoes)   | 1 lettuce/2 potato = 0.5 lettuce/potato   |
 | Paul (carrots for lettuce)     | 2 carrot/lettuce                          |
-
-TODO: insert caption: Exchange rates for goods in our village.
+{% include caption.html content="Exchange rates for goods in our village." %}
 
 Do you sense an opportunity?
 
@@ -54,8 +53,7 @@ Say at a given time, the exchange rates are as follows:
 | pound (£) / dollar ($) | 0.8 pounds/dollar   |
 | yen (¥) / pound (£)    | 100 yen/pound       |
 | dollars ($) / yen (¥)  | 0.013 dollars/yen   |
-
-TODO: insert caption: An example of currency market exchange rates.
+{% include caption.html content="An example of currency market exchange rates." %}
 
 If you learned anything from Bob, Peter, and Paul trading carrots, lettuce, and potatoes, you’d sense an opportunity here.
 
@@ -86,8 +84,7 @@ Graphs are an incredibly important structure that has found its uses in numerous
 In our case, let’s treat each currency as a node. Moving from node to node corresponds to trading one currency for another.
 
 ![Simplified Currency Graph](assets/currency-graph-white.png)
-
-TODO: insert caption: Simplified graph — there should be a distinct edge in each direction.
+{% include caption.html content="Simplified graph — there should be a distinct edge in each direction." %}
 
 So moving along an edge, between nodes, should transform the amount of currency by the exchange rate.
 
@@ -98,7 +95,6 @@ Note that the exchange rate in each direction will be _approximately_ the recipr
 The reason that the exchange rates in both directions are only _approximately_ reciprocal is due to small differences in the prices to buy and sell currencies, known as the buy-sell spread. For example, if at a given moment you can buy pounds at 0.8 pounds/dollar (the current price somebody will sell to you), but can sell dollars for pounds at 0.82 pounds/dollar (or 1.22 dollars/pound, and the current price somebody will buy from you), your graph model will look like this (excluding the other exchange rates for simplicity):
 
 ![Currency Graph with Exchange Rates](assets/currency-graph-w-exchange-rates-white.png)
-TODO: caption:
 
 A series of trades can be modeled by moving along edges in this graph, and the result of the trades is computed by **_multiplying_** the edge weights as you move along them.
 
@@ -121,8 +117,6 @@ a \space \frac{\cancel{£}}{$} \times b \space \frac{¥}{\cancel{£}} = ab \spac
 \end{align}
 $$
 
-TODO: caption:
-
 However, when we return to our starting node, the quantity becomes unit-less. It transforms from a rate of exchange, to a ratio of return! Traversing a cycle on our graph and computing the product of exchange rates along the way corresponds to calculating the ratio of return we would get after completing the series of trades.
 
 $$
@@ -130,8 +124,6 @@ $$
 a \space \frac{\cancel{£}}{\cancel{$}} \times b \space \frac{\cancel{¥}}{\cancel{£}} \times c \space \frac{\cancel{$}}{\cancel{¥}} = abc \space \text{[dimensionless]}  \tag{3} \label{eq:unitless_exchange}
 \end{align}
 $$
-
-TODO: caption:
 
 If the market is perfectly efficient, our return ratio, $$abc$$, will be 1, because the exchange rates have equalized. If the product of weights is greater than 1, say 1.02, then our arbitrage opportunity would have made us a 2% return.
 
@@ -204,7 +196,7 @@ $$
 Which we know the Bellman-Ford algorithm can do! Constructing a graph as specified and executing the Bellman-Ford algorithm on it will quickly and efficiently find arbitrage opportunities for us, because we’ve turned the arbitrage problem into the problem of finding the shortest path — _the infinitely shortest path_.
 
 ![Negative Log Currency Graph](assets/neg-log-currency-graph-white.png)
-TODO: caption: We need to find a negative weight cycle, where the weights are the negative logarithm of the exchange rates.
+{% include caption.html content="We need to find a negative weight cycle, where the weights are the negative logarithm of the exchange rates." %}
 
 In hindsight, it’s obvious that there should be a correspondence between a negative weight cycle — which lowers the cost of the path every time you traverse it — to an arbitrage opportunity, which makes you a profit every time you traverse it. The key insight is transforming a problem of finding a product greater than 1 into finding a sum less than 0, by applying -log to the edge weights.
 
@@ -219,8 +211,6 @@ Let’s run this algorithm on our exchange rates to see if it correctly identifi
 | pound (£) / dollar ($) | 0.223               |
 | yen (¥) / pound (£)    | -4.605              |
 | dollars ($) / yen (¥)  | 4.343               |
-
-TODO: caption:
 
 Summing over the trades, our equality holds- _we found a negative weight cycle_!
 
