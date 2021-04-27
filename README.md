@@ -2,7 +2,7 @@
 
 # My Plain Blog
 
-A personal blog, hosted at blog.skz.dev.
+A personal blog, hosted at [blog.skz.dev](https://blog.skz.dev).
 
 Minimalist and elegant while powerful. Supports latex via mathjax, and other embeddings such as videos and images.
 
