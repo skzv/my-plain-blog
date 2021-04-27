@@ -4,7 +4,7 @@
 
 A personal blog, hosted at [blog.skz.dev](https://blog.skz.dev).
 
-Minimalist and elegant while powerful. Supports latex via mathjax, and other embeddings such as videos and images.
+Minimalist and elegant while powerful. Supports LaTeX via mathjax, and other embeddings such as videos and images.
 
 Adapted from [The Plain](https://github.com/heiswayi/the-plain) by [Heiswayi Nrird](https://heiswayi.nrird.com).
 
