@@ -1,6 +1,7 @@
 ---
 title: Arbitrage as a Shortest Path Problem
 updated: 2021-04-25 00:00
+imgpath: /assets/img/arbitrage-as-a-shortest-path-problem
 ---
 
 #### _Who doesn't like to make money?_
@@ -85,7 +86,7 @@ Graphs are an incredibly important structure that has found its uses in numerous
 
 In our case, let’s treat each currency as a node. Moving from node to node corresponds to trading one currency for another.
 
-![Simplified Currency Graph](assets/currency-graph-white.png)
+![Simplified Currency Graph]({{ "/currency-graph-white.png" | prepend: page.imgpath }})
 {% include caption.html content="Simplified graph — there should be a distinct edge in each direction." %}
 
 So moving along an edge, between nodes, should transform the amount of currency by the exchange rate.
@@ -96,7 +97,7 @@ Note that the exchange rate in each direction will be _approximately_ the recipr
 
 The reason that the exchange rates in both directions are only _approximately_ reciprocal is due to small differences in the prices to buy and sell currencies, known as the buy-sell spread. For example, if at a given moment you can buy pounds at 0.8 pounds/dollar (the current price somebody will sell to you), but can sell dollars for pounds at 0.82 pounds/dollar (or 1.22 dollars/pound, and the current price somebody will buy from you), your graph model will look like this (excluding the other exchange rates for simplicity):
 
-![Currency Graph with Exchange Rates](assets/currency-graph-w-exchange-rates-white.png)
+![Currency Graph with Exchange Rates]({{ "/currency-graph-w-exchange-rates-white.png" | prepend: page.imgpath }})
 
 A series of trades can be modeled by moving along edges in this graph, and the result of the trades is computed by **_multiplying_** the edge weights as you move along them.
 
@@ -210,7 +211,7 @@ We’re close, but not quite there. The final step, to reduce our problem to one
 
 Which we know the Bellman-Ford algorithm can do! Constructing a graph as specified and executing the Bellman-Ford algorithm on it will quickly and efficiently find arbitrage opportunities for us, because we’ve turned the arbitrage problem into the problem of finding the shortest path — _the infinitely shortest path_.
 
-![Negative Log Currency Graph](assets/neg-log-currency-graph-white.png)
+![Negative Log Currency Graph]({{ "/neg-log-currency-graph-white.png" | prepend: page.imgpath }})
 {% include caption.html content="We need to find a negative weight cycle, where the weights are the negative logarithm of the exchange rates." %}
 
 In hindsight, it’s obvious that there should be a correspondence between a negative weight cycle — which lowers the cost of the path every time you traverse it — to an arbitrage opportunity, which makes you a profit every time you traverse it. The key insight is transforming a problem of finding a product greater than 1 into finding a sum less than 0, by applying -log to the edge weights.

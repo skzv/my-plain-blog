@@ -8,6 +8,13 @@ Minimalist and elegant while powerful. Supports LaTeX via mathjax, and other emb
 
 Adapted from [The Plain](https://github.com/heiswayi/the-plain) by [Heiswayi Nrird](https://heiswayi.nrird.com).
 
+## Running Locally
+To run locally, run:
+`bundle exec jekyll serve --config _config.yml,_config_development.yml`
+
+To serve drafts, add the `--drafts` option, like:
+`bundle exec jekyll serve --drafts`
+
 ## License
 
 [MIT](LICENSE)
