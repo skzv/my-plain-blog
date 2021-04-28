@@ -278,6 +278,11 @@ article {
       margin-left:36px;
       margin-right:36px;
     }
+    &.description {
+      font-size: 0.9em;
+      color: grey;
+      font-style: italic;
+    }
   }
   img {
     display: block;
