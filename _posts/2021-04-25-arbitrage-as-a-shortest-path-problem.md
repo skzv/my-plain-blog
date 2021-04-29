@@ -3,7 +3,7 @@ title: Arbitrage as a Shortest Path Problem
 updated: 2021-04-25 00:00
 imgpath: /assets/img/arbitrage-as-a-shortest-path-problem
 ---
-{% include description.html content="Finding arbitrage opportunities on markets by treating them as symmetric directed graphs and solving the shortest-path problem." %}
+{% include description.html content="An explanation of arbitrage and a look at an efficient algorithm to find riskless instantaneous arbitrage opportunities." %}
 
 #### _Who doesn't like to make money?_
 
