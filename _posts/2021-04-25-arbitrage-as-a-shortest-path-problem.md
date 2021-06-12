@@ -2,6 +2,7 @@
 title: Arbitrage as a Shortest Path Problem
 updated: 2021-04-25 00:00
 imgpath: /assets/img/arbitrage-as-a-shortest-path-problem
+previewurl: /currency-graph-on-black.png
 ---
 {% include description.html content="An explanation of arbitrage and a look at an efficient algorithm to find riskless instantaneous arbitrage opportunities." %}
 
