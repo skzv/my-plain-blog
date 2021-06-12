@@ -59,7 +59,7 @@ Those words from my father upon seeing the newly coloured photos made it all wor
 <div class="divider"></div>
 
 ## Photos From the Vietnamese War
-A couple weeks after preparing this bulk colourising script for my family photos, a post titled ["The Vietnam War from the North Vietnamese Side"](https://news.ycombinator.com/item?id=27283624) made it to the top of Hacker News. It seemed like a perfect opportunity to apply the script, and offer a new perspective on historical footage. Just as ["They Shall Not Grow Old"](https://www.imdb.com/title/tt7905466/) made the horrors of WW1 living and real, so did I aim to make the characters and scenes from the perspective of North Vietnam.
+A couple weeks after preparing a bulk colourising script for my family photos, a post titled ["The Vietnam War from the North Vietnamese Side"](https://news.ycombinator.com/item?id=27283624) made it to the top of Hacker News. It seemed like a perfect opportunity to apply the script, and offer a new perspective on historical footage. Just as ["They Shall Not Grow Old"](https://www.imdb.com/title/tt7905466/) made the horrors of WW1 living and real, so did I aim to make the characters and scenes from the perspective of North Vietnam.
 
 ![Mama with Vova]({{ "/vietnam-agent-orange.jpeg" | prepend: page.imgpath }})
 {% include caption.html content="Destruction of the jungle wrought by Agent Orange." %}
@@ -97,9 +97,9 @@ The full thread spurred by the colourised photos can be found [here](https://new
 
 ## Limitations
 
-There were two aspects of the discussion that stood out to me. First, was the reminder of the limitations of this technology. 
+There were two aspects of the discussion that stood out to me. First, was the reminder of the limitations of AI. 
 
-For example, this model invoked on an old image of the Golden Gate under construction produces a white bridge. It's not wholly inaccurate, to be fair- the bridge was indeed white early in its construction, but by the time this picture was taken, the bridge had already been covered in red primer (according to the source at the [DeOldify repository](https://github.com/jantic/DeOldify)). So while the training data probably did contain the Golden Gate under construction, and the model could identify the same bridge under construction here, it could not discern the date and know that the bridge had already been primed with red at this point.
+For example, the model invoked on an old image of the Golden Gate under construction produces a white bridge. It's not wholly inaccurate, to be fair- the bridge was indeed white early in its construction, but by the time the picture was taken, the bridge had already been covered in red primer (according to the source at the [DeOldify repository](https://github.com/jantic/DeOldify)). So while the training data probably did contain the Golden Gate under construction, and the model could identify the same bridge under construction here, it could not discern the date and know that the bridge had already been primed with red at this point.
 
 ![A White Golden Gate?]({{ "/golden-gate.jpeg" | prepend: page.imgpath }}) {% include caption.html content="A white Golden Gate? It was white- but not when this picture was taken." %}
 
@@ -117,7 +117,7 @@ Indeed, my father requested to correct the colour of some of the articles in the
 
 ## Ethical Considerations
 
-Now that some of the limitations are clear, we are in a good position to consider the ethical ramifications of this technology. This is was the second aspect of discussion that stood out to me. Ethics did not occur to me when I undertook this project, but some of the feedback I received spurred me to reflect, and for that I am thankful.
+Now that some of the limitations are clear, we are in a good position to consider the ethical ramifications of a colourising AI. This is was the second aspect of discussion that stood out to me. Ethics did not occur to me when I undertook the project, but some of the feedback I received spurred me to reflect, and for that I am thankful.
 
 The main ethical consideration is truth. Similar to the controversy around deepfakes confusing us to what is true, artificial coloration can alter our experience of history. The AI makes choices about the colours of the past, which are not necessarily accurate. For example, if we keep and disseminate the white version of the Golden Gate, produced by such an AI, then the version of the bridge that is experienced by viewers is not historically accurate. Of course, neither is the black and white version. Perhaps the trouble is that viewers of the black and white image know that's not what that past looked like, but viewers of the coloured image are easily tricked into believing that is history as it was.
 
@@ -127,7 +127,7 @@ Some may go as far as to say such retouching is rewriting of history, and indeed
 
 <p class="caption" style="margin-top:-25px;"><a href="https://www.aljazeera.com/news/2021/4/11/cambodia-condemns-vice-for-altered-khmer-rouge-images">Source</a></p>
 
-This is a very valid complaint. It appears the model was over-fit, likely trained on mostly smiling faces.  It thus altered the faces of the victims to more closely resemble the training data- by smiling. It is a good example of the pitfalls of AI, especially where applied carelessly. 
+Which is a very valid complaint. It appears the model was over-fit, likely trained on mostly smiling faces.  It thus altered the faces of the victims to more closely resemble the training data- by smiling. It is a good example of the pitfalls of AI, especially where applied carelessly. 
 
 [MyHeritage](https://www.myheritage.com/incolor), which offers a color restoration service based on the same DeOldify model I have used, attempts to make a compromise by watermarking all their retouched images. I think they make a compelling point:
 
