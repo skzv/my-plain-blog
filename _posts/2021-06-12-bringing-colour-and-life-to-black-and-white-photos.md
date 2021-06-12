@@ -26,7 +26,7 @@ Color restoration can be done manually and laboriously. Machine learned models o
 
 I used the [Image Colorization API from DeepAi](https://deepai.org/machine-learning-model/colorizer). The production model deployed by DeepAi appears to be a form of the DeOldify model, which can be found at [this github repo](https://github.com/jantic/DeOldify). 
 
-I don't think the DeepAi API allows you to adjust the model parameters, but you definitely can if you run it yourself from the repo above or [a colab instance](https://colab.research.google.com/github/jantic/DeOldify/blob/master/ImageColorizerColabStable.ipynb). [MyHeritage](https://www.myheritage.com/incolor) also offers this API as a service with tunable parameters.
+I don't think the DeepAi API allows you to adjust the model parameters, but you can if you run it yourself from the repo above or [a colab instance](https://colab.research.google.com/github/jantic/DeOldify/blob/master/ImageColorizerColabStable.ipynb). [MyHeritage](https://www.myheritage.com/incolor) also offers this API as a service with tunable parameters.
 
 What I did was create a quick script that enables bulk colorization of directories. It iterates over all the photos in a directory, sends them off to Image Colorization API from DeepAi, and downloads the result into a separate folder (ignoring images that have already been colorized). If that would be useful to you, just set your own DeepAi API key as an environment variable and run [this script](https://github.com/skzv/colorize-photos):
 
@@ -127,7 +127,7 @@ Some may go as far as to say such retouching is rewriting of history, and indeed
 
 <p class="caption" style="margin-top:-25px;"><a href="https://www.aljazeera.com/news/2021/4/11/cambodia-condemns-vice-for-altered-khmer-rouge-images">Source</a></p>
 
-This definitely is a very valid complaint. It appears the model was over-fit, likely trained on mostly smiling faces.  It thus altered the faces of the victims to more closely resemble the training data- by smiling. It is a good example of the pitfalls of AI, especially where applied carelessly. 
+This is a very valid complaint. It appears the model was over-fit, likely trained on mostly smiling faces.  It thus altered the faces of the victims to more closely resemble the training data- by smiling. It is a good example of the pitfalls of AI, especially where applied carelessly. 
 
 [MyHeritage](https://www.myheritage.com/incolor), which offers a color restoration service based on the same DeOldify model I have used, attempts to make a compromise by watermarking all their retouched images. I think they make a compelling point:
 
