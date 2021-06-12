@@ -4,7 +4,7 @@ updated: 2021-06-12 00:00
 imgpath: /assets/img/colourising-black-and-white-photos
 ---
 
-{% include description.html content="Machine learning allows us to colourise black and white photos with ease, but at what cost?" %}
+{% include description.html content="Machine learning allows us to colourise black and white photos with ease, but at what risk?" %}
 
 ## A Different Universe
 
