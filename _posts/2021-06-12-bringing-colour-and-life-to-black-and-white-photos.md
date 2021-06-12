@@ -2,6 +2,7 @@
 title: Bringing Colour and Life to Black and White Photos
 updated: 2021-06-12 00:00
 imgpath: /assets/img/colourising-black-and-white-photos
+previewurl: colourising-black-and-white-photos/mama-and-vova-colorized.jpg
 ---
 
 {% include description.html content="Machine learning allows us to colourise black and white photos with ease, but at what risk?" %}

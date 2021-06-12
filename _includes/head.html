@@ -1,9 +1,15 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:image" content="https://skz.dev/assets/img/preview-banner.png">
-<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="600" />
-<meta name="twitter:image" content="https://skz.dev/assets/img/preview-banner.png">
+
+{% if page.previewurl %}
+	<meta property="og:image" content="{{page.previewurl | prepend: "/assets/img/" | prepend: site.baseurl | prepend: site.url}}">
+	<meta name="twitter:image" content="{{page.previewurl | prepend: "/assets/img/" | prepend: site.baseurl | prepend: site.url}}">
+{% else %}
+	<meta property="og:image" content="https://skz.dev/assets/img/preview-banner.png">
+	<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="600" />
+	<meta name="twitter:image" content="https://skz.dev/assets/img/preview-banner.png">
+{% endif %}
 
 {% if page.title %}
 	<title>{{ page.title }} · {{ site.title }}</title>
