@@ -58,7 +58,7 @@ Those words from my father upon seeing the newly coloured photos made it all wor
 
 <div class="divider"></div>
 
-## Photos From the Vietnamese War
+## Photos From the Vietnam War
 A couple weeks after preparing a bulk colourising script for my family photos, a post titled ["The Vietnam War from the North Vietnamese Side"](https://news.ycombinator.com/item?id=27283624) made it to the top of Hacker News. It seemed like a perfect opportunity to apply the script, and offer a new perspective on historical footage. Just as ["They Shall Not Grow Old"](https://www.imdb.com/title/tt7905466/) made the horrors of WW1 living and real, so did I aim to make the characters and scenes from the perspective of North Vietnam.
 
 ![Mama with Vova]({{ "/vietnam-agent-orange.jpeg" | prepend: page.imgpath }})
