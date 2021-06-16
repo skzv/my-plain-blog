@@ -9,14 +9,14 @@ previewurl: /mama-and-vova-colorized.jpg
 
 ## A Different Universe
 
-Although colorized photos have technically existed for a century or more ([Sergey Prokudin-Gorsky and Piotr Vedenisov, pioneers of colour photography, traveled around Imperial Russia documenting it in full colour](https://www.loc.gov/pictures/related/?fi=name&q=Prokudin-Gorski%20%2C%20Serge%20%20Mikha%20lovich%2C%201863-1944)), the majority of the 20th century was documented in black and white. Even later in the century, much of the world did not have the luxury of colour film- my father was developing his own black and white photos into the 1980s-90s in Soviet Ukraine, and while Americans recorded full colour footage of the Vietnam War, the North's perspective seems to be relegated to black and white photography.
+Although colourised photos have technically existed for a century or more ([Sergey Prokudin-Gorsky and Piotr Vedenisov, pioneers of colour photography, traveled around Imperial Russia documenting it in full colour](https://www.loc.gov/pictures/related/?fi=name&q=Prokudin-Gorski%20%2C%20Serge%20%20Mikha%20lovich%2C%201863-1944)), the majority of the 20th century was documented in black and white. Even later in the century, much of the world did not have the luxury of colour film- my father was developing his own black and white photos into the 1980s-90s in Soviet Ukraine, and while Americans recorded full colour footage of the Vietnam War, the North's perspective seems to be relegated to black and white photography.
 
 ![Young boy near the Sim River]({{ "/boy-sim-river.jpeg" | prepend: page.imgpath }})
 {% include caption.html content="Young boy near the Sim River, a very early colour photograph from Imperial Russia. This was achieved by taking multiple pictures of the same scene with different colour filters. Courtesy of the Library of Congress." %}
 
 Some will argue that black and white footage has its own special quality, and this may be true. But for me black and white footage disconnects me from the scene. It is clearly distant in time. We all associate black and white footage with the past, as the trope of black and white footage in cinematagrophy to refer to a memory shows. And as someone who experiences reality in full colour, black and white footage is difficult to experience. I struggle to put myself into the scene or the characters' shoes, because in my mind it exists in a different, black and white universe. And yet when that footage is colourized, all of sudden everything appears more real, more believable, more tangible. It is then clear that whatever is depicted in the footage is of the same Earth and of the same people, people like you or me. 
 
-And so when my father recently began digitizing our collection of family photos - as physical photos deteriorate, or are otherwise at risk of being lost forever, along with the histories, memories, and legacies preserved by them - I felt an urge to colorize them, too - so that I could experience them to a fuller extent, and so that my family members could reminisce about their loved ones who are no longer around or remember the memories of their past and their youth.  
+And so when my father recently began digitizing our collection of family photos - as physical photos deteriorate, or are otherwise at risk of being lost forever, along with the histories, memories, and legacies preserved by them - I felt an urge to colourise them, too - so that I could experience them to a fuller extent, and so that my family members could reminisce about their loved ones who are no longer around or remember the memories of their past and their youth.  
 
 <div class="divider"></div>
 
@@ -28,7 +28,7 @@ I used the [Image Colorization API from DeepAi](https://deepai.org/machine-learn
 
 I don't think the DeepAi API allows you to adjust the model parameters, but you can if you run it yourself from the repo above or [a colab instance](https://colab.research.google.com/github/jantic/DeOldify/blob/master/ImageColorizerColabStable.ipynb). [MyHeritage](https://www.myheritage.com/incolor) also offers this API as a service with tunable parameters.
 
-What I did was create a quick script that enables bulk colorization of directories. It iterates over all the photos in a directory, sends them off to Image Colorization API from DeepAi, and downloads the result into a separate folder (ignoring images that have already been colorized). If that would be useful to you, just set your own DeepAi API key as an environment variable and run [this script](https://github.com/skzv/colorize-photos):
+What I did was create a quick script that enables bulk colorization of directories. It iterates over all the photos in a directory, sends them off to Image Colorization API from DeepAi, and downloads the result into a separate folder (ignoring images that have already been colourised). If that would be useful to you, just set your own DeepAi API key as an environment variable and run [this script](https://github.com/skzv/colorize-photos):
 
 ```bash
 export DL_API_KEY=<your-deep-ai-key>
