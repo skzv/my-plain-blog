@@ -75,7 +75,7 @@ Searching the web for zlthunder brings you to a company called [ZeroLight](https
 ![Zero Light]({{ "/zero-light.png" | prepend: page.imgpath }})
 {% include caption.html content="Cloud based 3D visualization specialists." %}
 
-It wasn't much longer until I found [this blogpost from Unity](https://unity3d.com/showcase/case-stories/zerolight) (the prominent video game engine) explaining how ZeroLight leveraged the engine to create a realistic virtual showroom, with optimized physics, reflections, and all. 
+It wasn't much longer until I found [this blog post from Unity](https://unity3d.com/showcase/case-stories/zerolight) (the prominent video game engine) explaining how ZeroLight leveraged the engine to create a realistic virtual showroom, with optimized physics, reflections, and all. 
 
 ![Zero Light]({{ "/unity-zero-light.png" | prepend: page.imgpath }})
 {% include caption.html content="Video games have brought us a long way." %}
