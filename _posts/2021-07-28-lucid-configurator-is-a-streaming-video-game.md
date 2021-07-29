@@ -22,7 +22,7 @@ So how did Lucid manage to pull this off? Can you expect the average user's web 
 
 ## The Model
 
-Initially, I naively assumed that the model was being ed in my browser via the latest [WebGL library](https://en.wikipedia.org/wiki/WebGL) (an API for rendering 2D and 3D graphics in web browsers with hardware acceleration). And since the model must have been rendered locally, it had to exist in my RAM somewhere, so I could extract it and load it up in a 3D model editor. Specifically, I wanted to see if I could remove the sun visors interrupting the almost seamless glass canopy - an effect achieved by Tesla's Model X, I'm not sure why Lucid didn't follow. 
+Initially, I naively assumed that the model was being rendered in my browser via the latest [WebGL library](https://en.wikipedia.org/wiki/WebGL) (an API for rendering 2D and 3D graphics in web browsers with hardware acceleration). And since the model must have been rendered locally, it had to exist in my RAM somewhere, so I could extract it and load it up in a 3D model editor. Specifically, I wanted to see if I could remove the sun visors interrupting the almost seamless glass canopy - an effect achieved by Tesla's Model X, I'm not sure why Lucid didn't follow. 
 
 ![Lucid Air sun visors interrupting the glass canopy]({{ "/lucid-air-sun-visors.png" | prepend: page.imgpath }})
 {% include caption.html content="Lucid Air sun visors interrupting the glass canopy." %}
