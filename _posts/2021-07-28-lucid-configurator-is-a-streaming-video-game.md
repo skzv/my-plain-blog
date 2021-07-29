@@ -12,11 +12,11 @@ previewurl: /lucid-configurator.png
 [Lucid Motors went public on Monday](https://www.barrons.com/articles/lucid-churchill-merger-ipo-ev-51627308359), and although I am not going to be buying a Lucid anytime soon, I found myself looking at [their vehicle configurator](https://www.lucidmotors.com/air/configure/) out of curiosity. It is a piece of art. It allows you to observe and interact with the vehicle from almost every direction, inside and out:
 
 {% include video.html content="https://streamable.com/e/cudr66" %}
-<p class="caption video-caption">"Lucid's configurator for their flagship elite vehicle, the Lucid Air Dream.</p>
+<p class="caption video-caption">Lucid's configurator for their flagship elite vehicle, the Lucid Air Dream.</p>
 
 You can simulate various colours and trims, open and close the doors, and even retract the center console display. The backdrop of the Golden Gate bridge reflects off the glassy puddles. The configurator preserves all sorts of details of the vehicle, including lights under the door handles that activate when you are using them. I feel like I got an accurate enough feel for the vehicle, I don't even have to see it in person anymore. 
 
-So how did Lucid manage to pull this off? Can you expect the average user's web browser to render a scene like this in real-time, reflections and all? The answer is probably not. It works because the scene you are seeing is rendered with Unity, a video game engine, running an Amazon server, streamed to your browser via WebRTC - a peer-to-peer video streaming protocol.
+So how did Lucid manage to pull this off? Can you expect the average user's web browser to render a scene like this in real-time, reflections and all? The answer is probably not. It works because the scene you are seeing is rendered with Unity, a video game engine, running in the cloud (on an Amazon server), streamed to your browser via WebRTC - a peer-to-peer video streaming protocol.
 
 <div class="divider"></div>
 
