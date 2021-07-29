@@ -16,7 +16,7 @@ previewurl: /lucid-configurator.png
 
 You can simulate various colours and trims, open and close the doors, and even retract the center console display. The backdrop of the Golden Gate bridge reflects off the glassy puddles. The configurator preserves all sorts of details of the vehicle, including lights under the door handles that activate when you are using them. I feel like I got an accurate enough feel for the vehicle, I don't even have to see it in person anymore. 
 
-So how did Lucid manage to pull this off? Can you expect the average user's web browser to render a scene like this in real-time, reflections and all? The answer is probably not. It works because the scene you are seeing is rendered with Unity, a video game engine, running in the cloud - offloading the computational load to an Amazon server- and streamed back to your browser via WebRTC - a peer-to-peer video streaming protocol.
+So how did Lucid manage to pull this off? Can you expect the average user's web browser to render a scene like this in real-time, reflections and all? The answer is probably not. It works because the scene you are seeing is rendered with Unity, a video game engine, running in the cloud - offloading the intense computational load to an Amazon server - and streamed back to your browser via WebRTC - a peer-to-peer video streaming protocol.
 
 <div class="divider"></div>
 
