@@ -57,7 +57,7 @@ The first box reveals that, to test your bandwidth, they partially download from
 ![Bandwidth Test Image]({{ "/bandwidth-test-image.png" | prepend: page.imgpath }})
 {% include caption.html content="Doesn't have much to do with automobiles, but it will test your bandwidth just fine." %}
 
-By the way, [this image seems to be an effect produced by the plasma plugin from GIMP](https://www.gimp.org/tutorials/Floating_Logo/Plasma.jpg). 
+By the way, [this image seems to be an effect produced by the plasma plugin from GIMP](https://www.gimp.org/tutorials/Floating_Logo/Plasma.jpg). It loads quite slowly; as it resembles noise it must be largely incompressible.
 
 Opening up [chrome://webrtc-internals/](chrome://webrtc-internals/) reveals some details about the webRTC connection streaming the 3D scene to my browser.
 
