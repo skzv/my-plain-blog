@@ -277,6 +277,9 @@ article {
       font-style: italic;
       margin-left:36px;
       margin-right:36px;
+      &.video-caption {
+        margin-top:60px;
+      }
     }
     &.description {
       font-size: 0.9em;
