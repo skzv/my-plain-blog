@@ -80,7 +80,7 @@ It wasn't much longer until I found [this blogpost from Unity](https://unity3d.c
 ![Zero Light]({{ "/unity-zero-light.png" | prepend: page.imgpath }})
 {% include caption.html content="Video games have brought us a long way." %}
 
-Now I put all the pieces together. When I connect to the site, they load a 2D configurator. If my hardware can handle it, they connect me to an instance of Unity - a 3D video game engine - running on an AWS server. The server receives my mouse inputs, rotating and zooming the field of view, renders the results in the cloud, and streams them back to me. 
+Now I put all the pieces together. When I connect to the site, they load a 2D configurator. If my internet connection can handle it, they connect me to an instance of Unity - a 3D video game engine - running on an AWS server. The server receives my mouse inputs, rotating and zooming the field of view, renders the results in the cloud, and streams them back to me. 
 
 <div class="divider"></div>
 
