@@ -1,5 +1,5 @@
 ---
-title: The Lucid Configurator is A Video Game Streaming to Your Browser
+title: The Lucid Motors Configurator is A Video Game Streaming to Your Browser
 updated: 2021-07-28 00:00
 imgpath: /assets/img/lucid-configurator-is-a-streaming-video-game
 previewurl: /lucid-configurator.png
