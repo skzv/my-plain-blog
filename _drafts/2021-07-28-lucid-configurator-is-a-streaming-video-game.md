@@ -68,9 +68,9 @@ At this point, you may have noticed that none of the URLS here are on a lucid do
 
 <div class="divider"></div>
 
-## Zero Light
+## ZeroLight
 
-Searching the web for zlthunder brings you to a company called [Zero Light](https://zerolight.com/). They indicate that they provide cloud-based 3D visualization, specializing in automotive. It all makes sense now!  
+Searching the web for zlthunder brings you to a company called [ZeroLight](https://zerolight.com/). They indicate that they provide cloud-based 3D visualization, specializing in automotive. It all makes sense now!  
 
 ![Zero Light]({{ "/zero-light.png" | prepend: page.imgpath }})
 {% include caption.html content="Cloud based 3D visualization specialists." %}
@@ -86,7 +86,7 @@ Now I put all the pieces together. When I connect to the site, they load a 2D co
 
 ## Sounds Expensive
 
-Imagine you have a 1,000 users connected to the site: you need a 1,000 hardware accelerated instances of a video game engine receiving inputs and streaming back large amounts of realtime video- just like the cloud video games products that are Stadia and GeForce now, among others. But it seems they're very aware of that: to save on costs, they disconnect you after 60s of inactavity: 
+Imagine you have a 1,000 users connected to the site: you need a 1,000 hardware accelerated instances of a video game engine receiving inputs and streaming back large amounts of realtime video- just like the cloud video games products that are Stadia and GeForce Now, among others. But it seems they're very aware of that: to save on costs, they disconnect you after 60s of inactavity: 
 
 ![Inactivity downgrade]({{ "/inactivity-downgrade.png" | prepend: page.imgpath }})
 {% include caption.html content="Downgrading on idle must save a lot of money." %}
