@@ -1,5 +1,3 @@
-// TODO: use bignumber
-
 /** Computes a 2D grid of the function f over the arrays X and Y. */
 function computeFunctionGrid(X, Y, f) {
     var Z = [];
@@ -51,8 +49,20 @@ function createPlot(divName, title, X, Y, f) {
     Plotly.newPlot(divName, data, layout);
 }
 
-function addTrace(divName, X, Y, Z) {
+/* Constructs a trace above and below the surface so as to be more visible. */
+function addGradientDescentToSurfPlot(divName, X, Y, Z) {
+    addLineTrace(divName, X, Y, math.map(Z, z => z + 0.05));
+    addLineTrace(divName, X, Y, Z);
+    addScatterTrace(divName, X, Y, Z);
+}
+
+function addLineTrace(divName, X, Y, Z) {
     var data = [createLineTraceDataElement(X, Y, Z)];
+    Plotly.addTraces(divName, data);
+}
+
+function addScatterTrace(divName, X, Y, Z) {
+    var data = [createScatterDataElement(X, Y, Z)];
     Plotly.addTraces(divName, data);
 }
 
@@ -60,6 +70,22 @@ function createLineTraceDataElement(X, Y, Z) {
     return {
         type: 'scatter3d',
         mode: 'lines',
+        showlegend: false,
+        x: X.toArray(),
+        y: Y.toArray(),
+        z: Z.toArray(),
+        line: {
+            color: 'rgb(255, 0, 0)',
+            width: 5,
+        },
+    };
+}
+
+function createScatterDataElement(X, Y, Z) {
+    return {
+        type: 'scatter3d',
+        mode: 'markers',
+        showlegend: false,
         x: X.toArray(),
         y: Y.toArray(),
         z: Z.toArray(),
@@ -129,17 +155,14 @@ function f(x, y) {
 }
 
 /* df/dx = -10 (1/5 - 3 x^2) e^(-x^2 - y^2) + 6 x (1 - x)^2 e^(x^2 - (y + 1)^2) - 6 (1 - x) 
-   e^(x^2 - (y + 1)^2) + 20 x e^(-x^2 - y^2) (-x^3 + x/5 - y^5) + 2/3 (x + 1) e^(-(x + 1)^2 - y^2)
-   
-   df/dy = 50 y^4 e^(-x^2 - y^2) - 6 (1 - x)^2 (y + 1) e^(x^2 - (y + 1)^2) + 20 y e^(-x^2 - y^2) 
-    (-x^3 + x/5 - y^5) + 2/3 y e^(-(x + 1)^2 - y^2)
+e^(x^2 - (y + 1)^2) + 20 x e^(-x^2 - y^2) (-x^3 + x/5 - y^5) + 2/3 (x + 1) e^(-(x + 1)^2 - y^2)
 
-    gradf(0,0) = [-4.0876939278726425,-2.207276647028654]
-   */
+df/dy = 50 y^4 e^(-x^2 - y^2) - 6 (1 - x)^2 (y + 1) e^(x^2 - (y + 1)^2) + 20 y e^(-x^2 - y^2) 
+(-x^3 + x/5 - y^5) + 2/3 y e^(-(x + 1)^2 - y^2)
+
+gradf(0,0) = [-4.0876939278726425,-2.207276647028654]
+*/
 function gradf(x, y) {
-    // x = math.bignumber(x);
-    // y = math.bignumber(y);
-
     var dfdx = -6 * math.exp(math.pow(x, 2) - math.pow(1 + y, 2))
         * (1 - x) + 6 * math.exp(math.pow(x, 2) - math.pow(1 + y, 2))
         * math.pow(1 - x, 2) * x + 2 / 3 * math.exp(1 - math.E * math.pow(1 + x, 2) - math.pow(y, 2))
@@ -156,6 +179,12 @@ function gradf(x, y) {
     return math.matrix([dfdx, dfdy]);
 }
 
+function smoothInterpolation(X, Y, Z) {
+    for (var i = 1; i < Y.size()[0]; i++) {
+
+    }
+}
+
 var X = math.range(-3, 3, 0.1, true);
 var Y = math.range(-3, 3, 0.1, true);
 createPlot('plot-0', 'Cost Function', X, Y, f);
@@ -170,24 +199,15 @@ math.forEach(Y, y => {
     Z.push(f(0, y));
 });
 Z = math.matrix(Z);
-addTrace('plot-0', X, Y, Z);
+addLineTrace('plot-0', X, Y, Z);
 
-var T = computeGradientDescent(math.matrix([0, 0]), F, gradF, 0.01, 10);
-addTrace('plot-1', T.X, T.Y, T.Z);
+var T = computeGradientDescent(math.matrix([2.2, -1.9]), F, gradF, 0.001, 20);
+addGradientDescentToSurfPlot('plot-1', T.X, T.Y, T.Z);
 
 
-// /*  3 * (1 - x)^2 * exp(- x^2 - (y + 1)^2) - 10 * (x / 5 - x^3 - y^5) 
-//     * exp(-x^2 - y^2) - 1 / 3 * exp(-(x+1)^2 - y^2) */
-//     function f(x, y) {
-//         return 3 * math.pow(1 - x, 2) * math.exp(-math.pow(x, 2) - math.pow((y + 1), 2))
-//             - 10 * (x / 5 - math.pow(x, 3) - math.pow(y, 5))
-//             * math.exp(-math.pow(x, 2) - math.pow(y, 2))
-//             - 1 / 3 * math.exp(-math.pow(x + 1, 2) - math.pow(y, 2));
-//     }
-    
 //     /* df/dx = -10 (1/5 - 3 x^2) e^(-x^2 - y^2) + 6 x (1 - x)^2 e^(x^2 - (y + 1)^2) - 6 (1 - x) 
 //        e^(x^2 - (y + 1)^2) + 20 x e^(-x^2 - y^2) (-x^3 + x/5 - y^5) + 2/3 (x + 1) e^(-(x + 1)^2 - y^2)
-       
+
 //        df/dy = 50 y^4 e^(-x^2 - y^2) - 6 (1 - x)^2 (y + 1) e^(x^2 - (y + 1)^2) + 20 y e^(-x^2 - y^2) 
 //         (-x^3 + x/5 - y^5) + 2/3 y e^(-(x + 1)^2 - y^2)
     
