@@ -109,7 +109,7 @@ function computeGradientDescentNumIterations(P0, f, gradf, alpha, N) {
     var Y = [getY(P0)];
     var Z = [f(P0)];
     for (var i = 0; i < N; i++) {
-        console.log("P " + P[P.length - 1].toArray());
+        // console.log("P " + P[P.length - 1].toArray());
         var Pi = iterateGradientDescent(P[P.length - 1], f, gradf, alpha);
         P.push(Pi.P);
 
@@ -130,10 +130,10 @@ function computeGradientDescentTolerance(P0, f, gradf, alpha, tolerance, maxN) {
     var Y = [getY(P0)];
     var Z = [f(P0)];
     for (var i = 0; i < maxN && dZ > tolerance; i++) {
-        console.log("P " + P[P.length - 1].toArray());
+        // console.log("P " + P[P.length - 1].toArray());
         var Pi = iterateGradientDescent(P[P.length - 1], f, gradf, alpha);
         dZ = math.abs(Pi.dZ);
-        console.log("dZ " + dZ);
+        // console.log("dZ " + dZ);
         P.push(Pi.P);
 
         X.push(getX(Pi.P));
@@ -147,8 +147,8 @@ function computeGradientDescentTolerance(P0, f, gradf, alpha, tolerance, maxN) {
 
 function iterateGradientDescent(P0, f, gradf, alpha) {
     var Z0 = f(P0);
-    console.log("P0 " + P0.toArray());
-    console.log("gradf " + gradf(P0).toArray());
+    // console.log("P0 " + P0.toArray());
+    // console.log("gradf " + gradf(P0).toArray());
     var P = math.subtract(P0, math.multiply(alpha, gradf(P0)));
     var dP = math.subtract(P, P0);
     var Z = f(P);
@@ -214,6 +214,27 @@ function smoothInterpolation(X, Y, Z) {
     }
 }
 
+function containTrace(T, minX, maxX, minY, maxY, minZ, maxZ) {
+    // TODO add precondition
+    Xc = [];
+    Yc = [];
+    Zc = [];
+    for (var i = 0; i < T.X.size()[0]; i++) {
+        var x = T.X.get([i]);
+        var y = T.Y.get([i]);
+        var z = T.Z.get([i]);
+        // console.log("" + x + " " + y + " " + z);
+        if (minX <= x && x <= maxX && minY <= y && y <= maxY && minZ <= z && z <= maxZ) {
+            Xc.push(x);
+            Yc.push(y);
+            Zc.push(z);
+        }
+    }
+
+    var Tc = { X: math.matrix(Xc), Y: math.matrix(Yc), Z: math.matrix(Zc) };
+    return Tc;
+}
+
 var X = math.range(-3, 3, 0.1, true);
 var Y = math.range(-3, 3, 0.1, true);
 createPlot('plot-0', 'Cost Function', X, Y, f, 1);
@@ -229,8 +250,34 @@ var X = math.range(-3, 3, 0.1, true);
 var Y = math.range(-3, 3, 0.1, true);
 createPlot('plot-2', 'Cost Function', X, Y, f2, 0.99);
 
+for (var x of math.range(-3, 3, 1, true).toArray()) {
+    for (var y of math.range(-3, 3, 1, true).toArray()) {
+        var T = computeGradientDescentTolerance(math.matrix([x, y]), F2, gradF2, 0.01, 1e-10, 1e3);
+        T = containTrace(T, -3, 3, -3, 3, -10, 50);
+        // console.log(T.X.toArray());
+        addGradientDescentToSurfPlot('plot-2', T.X, T.Y, T.Z);
+    }
+}
+
+var X = math.range(-3, 3, 0.1, true);
+var Y = math.range(-3, 3, 0.1, true);
+createPlot('plot-3', 'Cost Function', X, Y, f2, 0.99);
+
 var T = computeGradientDescentTolerance(math.matrix([-1.5, -2.5]), F2, gradF2, 0.01, 1e-5, 1e2);
-addGradientDescentToSurfPlot('plot-2', T.X, T.Y, T.Z);
+addGradientDescentToSurfPlot('plot-3', T.X, T.Y, T.Z);
+
+var X = math.range(-3, 3, 0.1, true);
+var Y = math.range(-3, 3, 0.1, true);
+createPlot('plot-4', 'Cost Function', X, Y, f, 0.99);
+
+for (var x of math.range(-3, 3, 1, true).toArray()) {
+    for (var y of math.range(-3, 3, 1, true).toArray()) {
+        var T = computeGradientDescentTolerance(math.matrix([x, y]), F, gradF, 0.01, 1e-10, 1e3);
+        T = containTrace(T, -3, 3, -3, 3, -10, 50);
+        // console.log(T.X.toArray());
+        addGradientDescentToSurfPlot('plot-4', T.X, T.Y, T.Z);
+    }
+}
 
 
 function evaluateAt(f, P) {
@@ -246,16 +293,41 @@ function gradF2(P) {
 }
 
 function f2(x, y) {
-    return math.pow(x,2) + math.pow(y,2);
+    return math.pow(x, 2) + math.pow(y, 2);
 }
 
 function gradf2(x, y) {
-    var dfdx = 2*x;
-    var dfdy = 2*y;
+    var dfdx = 2 * x;
+    var dfdy = 2 * y;
 
     return math.matrix([dfdx, dfdy]);
 }
 
+function gradf(x, y) {
+
+    var dfdx = -6 * math.exp(-math.pow(x,2)-math.pow((1+y),2)) * (1-x)
+    -6 * math.exp(-math.pow(x,2)-math.pow(1+y,2)) * math.pow(1-x,2) * x 
+    + 2/3 * math.exp(-math.pow((1+x),2)-
+    math.pow(y,2)) * (1+x)-10 * math.exp(-math.pow(x,2)-math.pow(y,2)) * (1/5-3 * math.pow(x,2))
+    +20 * math.exp(-math.pow(x,2)-math.pow(y,2)) * x * (x/5-math.pow(x,3)-math.pow(y,5));
+
+    var dfdy = 2/3 * math.exp(-math.pow((1+x),2)-math.pow(y,2)) * y 
+    + 50 * math.exp(-math.pow(x,2)-math.pow(y,2)) * math.pow(y,4) 
+    -6 * math.exp(-math.pow(x,2)-math.pow((1+y),2)) * math.pow((1-x),2) * (1+y)
+    +20 * math.exp(-math.pow(x,2)-math.pow(y,2)) * y * (x/5-math.pow(x,3)-math.pow(y,5));
+    // var dfdx = -6 * math.exp(math.pow(x, 2) - math.pow((1 + y), 2)) * (1 - x) 
+    // + 6 * math.exp(math.pow(x, 2) - math.pow((1 + y), 2)) * math.pow((1 - x), 2) * x 
+    // + 2 / 3 * math.exp(1 - math.E * math.pow((1 + x), 2) - math.pow(y, 2)) * (1 + x) 
+    // - 10 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * (1 / 5 - 3 * math.pow(x, 2)) 
+    // + 20 * math.exp (-math.pow(x, 2) - math.pow(y, 2)) * x * (x / 5 - math.pow(x, 3) - math.pow(y, 5));
+
+    // var dfdy = 2 / 3 * math.exp(-math.E *  math.pow((1 + x), 2) - math.pow(y, 2)) * y 
+    // + 50 * math.exp(-math.pow(x, 2) - math.pow(y,2)) * math.pow(y, 4) 
+    // - 6 * math.exp(math.pow(x, 2) - math.pow((1 + y), 2)) * math.pow((1 - x), 2)*(1 + y) 
+    // + 20 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * y * (x / 5 - math.pow(x, 3) - math.pow(y, 5));
+
+    return math.matrix([dfdx, dfdy]);
+}
 /* df/dx = -10 (1/5 - 3 x^2) e^(-x^2 - y^2) + 6 x (1 - x)^2 e^(x^2 - (y + 1)^2) - 6 (1 - x) 
    e^(x^2 - (y + 1)^2) + 20 x e^(-x^2 - y^2) (-x^3 + x/5 - y^5) + 2/3 (x + 1) e^(-(x + 1)^2 - y^2)
 
@@ -264,7 +336,7 @@ function gradf2(x, y) {
  
     gradf(0,0) = [-4.0876939278726425,-2.207276647028654]
    */
-function gradf(x, y) {
+function gradff(x, y) {
     // x = math.bignumber(x);
     // y = math.bignumber(y);
 
@@ -288,7 +360,7 @@ function gradf(x, y) {
                     math.pow(math.add(1, y), 2))
             ),
             math.pow(
-                math.subtract(1, x), 
+                math.subtract(1, x),
                 2
             ),
             x
@@ -303,7 +375,7 @@ function gradf(x, y) {
                         math.multiply(
                             math.E,
                             math.pow(
-                                math.add(1, x), 
+                                math.add(1, x),
                                 2
                             )
                         )
@@ -315,8 +387,8 @@ function gradf(x, y) {
         )
         -
         math.multiply(
-            10, 
-            math.exp(-math.pow(x, 2) - math.pow(y, 2)), 
+            10,
+            math.exp(-math.pow(x, 2) - math.pow(y, 2)),
             (1 / 5 - 3 * math.pow(x, 2))
         )
         +
