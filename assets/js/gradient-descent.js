@@ -44,6 +44,9 @@ function createPlot(divName, title, X, Y, f, opacity) {
             t: 50,
             pad: 0
         },
+        config: {
+            plotGlPixelRatio: 0
+        }
     };
 
     Plotly.newPlot(divName, data, layout);
@@ -57,7 +60,7 @@ function addGradientDescentToSurfPlot(divName, X, Y, Z) {
 }
 
 function addLineTrace(divName, X, Y, Z) {
-    var data = [createLineTraceDataElement(X, Y, Z)];
+    var data = [createGradientDescentPathDataElement(X, Y, Z)];
     Plotly.addTraces(divName, data);
 }
 
@@ -66,7 +69,7 @@ function addScatterTrace(divName, X, Y, Z) {
     Plotly.addTraces(divName, data);
 }
 
-function createLineTraceDataElement(X, Y, Z) {
+function createGradientDescentPathDataElement(X, Y, Z) {
     return {
         type: 'scatter3d',
         mode: 'lines+markers',
@@ -138,12 +141,14 @@ function computeGradientDescentTolerance(P0, f, gradf, alpha, tolerance, maxN) {
 
         X.push(getX(Pi.P));
         Y.push(getY(Pi.P));
-        Z.push(Pi.Z);
+        Z.push(Pi.Z + 0.1); // TODO: only add offset if surf is opaque
     }
 
     var T = { X: math.matrix(X), Y: math.matrix(Y), Z: math.matrix(Z) };
     return T;
 }
+
+// TODO: add surf opaque toggle
 
 function iterateGradientDescent(P0, f, gradf, alpha) {
     var Z0 = f(P0);
@@ -241,7 +246,7 @@ createPlot('plot-0', 'Cost Function', X, Y, f, 1);
 
 var X = math.range(-3, 3, 0.1, true);
 var Y = math.range(-3, 3, 0.1, true);
-createPlot('plot-1', 'Cost Function', X, Y, f, 0.99);
+createPlot('plot-1', 'Cost Function', X, Y, f, 1);
 
 var T = computeGradientDescentTolerance(math.matrix([1.3, -0.1]), F, gradF, 0.01, 1e-10, 1e3);
 addGradientDescentToSurfPlot('plot-1', T.X, T.Y, T.Z);
@@ -256,36 +261,36 @@ var ySlider = document.getElementById('y-slider');
 var alphaSlider = document.getElementById('alpha-slider');
 
 xSlider.oninput = function () {
-   mX = Number(this.value);
-   runGradientDescent();
+    mX = Number(this.value);
+    runGradientDescent();
 }
 
 ySlider.oninput = function () {
     mY = Number(this.value);
     runGradientDescent();
- }
+}
 
- alphaSlider.oninput = function () {
+alphaSlider.oninput = function () {
     alpha = Number(this.value);
     runGradientDescent();
- }
+}
 
 function runGradientDescent() {
     var T = computeGradientDescentTolerance(math.matrix([mX, mY]), F, gradF, alpha, 1e-10, 1e2);
     T = containTrace(T, -3, 3, -3, 3, -10, 50);
     Plotly.animate('plot-1', {
-        data: [{x: T.X.toArray(), y: T.Y.toArray(), z: T.Z.toArray()}],
+        data: [{ x: T.X.toArray(), y: T.Y.toArray(), z: T.Z.toArray() }],
         traces: [1],
         layout: {}
-      }, {
+    }, {
         transition: {
-          duration: 1,
-          easing: 'cubic-in-out'
+            duration: 0,
+            easing: 'cubic-in-out'
         },
-          frame: {
-              duration: 1
-          }
-      })
+        frame: {
+            duration: 0
+        }
+    })
     // Plotly.deleteTraces('plot-1', 1);
     // addGradientDescentToSurfPlot('plot-1', T.X, T.Y, T.Z);
 }
