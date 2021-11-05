@@ -246,38 +246,82 @@ createPlot('plot-1', 'Cost Function', X, Y, f, 0.99);
 var T = computeGradientDescentTolerance(math.matrix([1.3, -0.1]), F, gradF, 0.01, 1e-10, 1e3);
 addGradientDescentToSurfPlot('plot-1', T.X, T.Y, T.Z);
 
-var X = math.range(-3, 3, 0.1, true);
-var Y = math.range(-3, 3, 0.1, true);
-createPlot('plot-2', 'Cost Function', X, Y, f2, 0.99);
+// Update the current slider value (each time you drag the slider handle)
+var mX = 0;
+var mY = 0;
+var alpha = 0.01;
 
-for (var x of math.range(-3, 3, 1, true).toArray()) {
-    for (var y of math.range(-3, 3, 1, true).toArray()) {
-        var T = computeGradientDescentTolerance(math.matrix([x, y]), F2, gradF2, 0.01, 1e-10, 1e3);
-        T = containTrace(T, -3, 3, -3, 3, -10, 50);
-        // console.log(T.X.toArray());
-        addGradientDescentToSurfPlot('plot-2', T.X, T.Y, T.Z);
-    }
+var xSlider = document.getElementById('x-slider');
+var ySlider = document.getElementById('y-slider');
+var alphaSlider = document.getElementById('alpha-slider');
+
+xSlider.oninput = function () {
+   mX = Number(this.value);
+   runGradientDescent();
 }
 
-var X = math.range(-3, 3, 0.1, true);
-var Y = math.range(-3, 3, 0.1, true);
-createPlot('plot-3', 'Cost Function', X, Y, f2, 0.99);
+ySlider.oninput = function () {
+    mY = Number(this.value);
+    runGradientDescent();
+ }
 
-var T = computeGradientDescentTolerance(math.matrix([-1.5, -2.5]), F2, gradF2, 0.01, 1e-5, 1e2);
-addGradientDescentToSurfPlot('plot-3', T.X, T.Y, T.Z);
+ alphaSlider.oninput = function () {
+    alpha = Number(this.value);
+    runGradientDescent();
+ }
 
-var X = math.range(-3, 3, 0.1, true);
-var Y = math.range(-3, 3, 0.1, true);
-createPlot('plot-4', 'Cost Function', X, Y, f, 0.99);
-
-for (var x of math.range(-3, 3, 1, true).toArray()) {
-    for (var y of math.range(-3, 3, 1, true).toArray()) {
-        var T = computeGradientDescentTolerance(math.matrix([x, y]), F, gradF, 0.01, 1e-10, 1e3);
-        T = containTrace(T, -3, 3, -3, 3, -10, 50);
-        // console.log(T.X.toArray());
-        addGradientDescentToSurfPlot('plot-4', T.X, T.Y, T.Z);
-    }
+function runGradientDescent() {
+    var T = computeGradientDescentTolerance(math.matrix([mX, mY]), F, gradF, alpha, 1e-10, 1e2);
+    T = containTrace(T, -3, 3, -3, 3, -10, 50);
+    Plotly.animate('plot-1', {
+        data: [{x: T.X.toArray(), y: T.Y.toArray(), z: T.Z.toArray()}],
+        traces: [1],
+        layout: {}
+      }, {
+        transition: {
+          duration: 1,
+          easing: 'cubic-in-out'
+        },
+          frame: {
+              duration: 1
+          }
+      })
+    // Plotly.deleteTraces('plot-1', 1);
+    // addGradientDescentToSurfPlot('plot-1', T.X, T.Y, T.Z);
 }
+
+// var X = math.range(-3, 3, 0.1, true);
+// var Y = math.range(-3, 3, 0.1, true);
+// createPlot('plot-2', 'Cost Function', X, Y, f2, 0.99);
+
+// for (var x of math.range(-3, 3, 1, true).toArray()) {
+//     for (var y of math.range(-3, 3, 1, true).toArray()) {
+//         var T = computeGradientDescentTolerance(math.matrix([x, y]), F2, gradF2, 0.01, 1e-10, 1e3);
+//         T = containTrace(T, -3, 3, -3, 3, -10, 50);
+//         // console.log(T.X.toArray());
+//         addGradientDescentToSurfPlot('plot-2', T.X, T.Y, T.Z);
+//     }
+// }
+
+// var X = math.range(-3, 3, 0.1, true);
+// var Y = math.range(-3, 3, 0.1, true);
+// createPlot('plot-3', 'Cost Function', X, Y, f2, 0.99);
+
+// var T = computeGradientDescentTolerance(math.matrix([-1.5, -2.5]), F2, gradF2, 0.01, 1e-5, 1e2);
+// addGradientDescentToSurfPlot('plot-3', T.X, T.Y, T.Z);
+
+// var X = math.range(-3, 3, 0.1, true);
+// var Y = math.range(-3, 3, 0.1, true);
+// createPlot('plot-4', 'Cost Function', X, Y, f, 0.99);
+
+// for (var x of math.range(-3, 3, 1, true).toArray()) {
+//     for (var y of math.range(-3, 3, 1, true).toArray()) {
+//         var T = computeGradientDescentTolerance(math.matrix([x, y]), F, gradF, 0.05, 1e-10, 1e3);
+//         T = containTrace(T, -3, 3, -3, 3, -10, 50);
+//         // console.log(T.X.toArray());
+//         addGradientDescentToSurfPlot('plot-4', T.X, T.Y, T.Z);
+//     }
+// }
 
 
 function evaluateAt(f, P) {
@@ -305,16 +349,16 @@ function gradf2(x, y) {
 
 function gradf(x, y) {
 
-    var dfdx = -6 * math.exp(-math.pow(x,2)-math.pow((1+y),2)) * (1-x)
-    -6 * math.exp(-math.pow(x,2)-math.pow(1+y,2)) * math.pow(1-x,2) * x 
-    + 2/3 * math.exp(-math.pow((1+x),2)-
-    math.pow(y,2)) * (1+x)-10 * math.exp(-math.pow(x,2)-math.pow(y,2)) * (1/5-3 * math.pow(x,2))
-    +20 * math.exp(-math.pow(x,2)-math.pow(y,2)) * x * (x/5-math.pow(x,3)-math.pow(y,5));
+    var dfdx = -6 * math.exp(-math.pow(x, 2) - math.pow((1 + y), 2)) * (1 - x)
+        - 6 * math.exp(-math.pow(x, 2) - math.pow(1 + y, 2)) * math.pow(1 - x, 2) * x
+        + 2 / 3 * math.exp(-math.pow((1 + x), 2) -
+            math.pow(y, 2)) * (1 + x) - 10 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * (1 / 5 - 3 * math.pow(x, 2))
+        + 20 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * x * (x / 5 - math.pow(x, 3) - math.pow(y, 5));
 
-    var dfdy = 2/3 * math.exp(-math.pow((1+x),2)-math.pow(y,2)) * y 
-    + 50 * math.exp(-math.pow(x,2)-math.pow(y,2)) * math.pow(y,4) 
-    -6 * math.exp(-math.pow(x,2)-math.pow((1+y),2)) * math.pow((1-x),2) * (1+y)
-    +20 * math.exp(-math.pow(x,2)-math.pow(y,2)) * y * (x/5-math.pow(x,3)-math.pow(y,5));
+    var dfdy = 2 / 3 * math.exp(-math.pow((1 + x), 2) - math.pow(y, 2)) * y
+        + 50 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * math.pow(y, 4)
+        - 6 * math.exp(-math.pow(x, 2) - math.pow((1 + y), 2)) * math.pow((1 - x), 2) * (1 + y)
+        + 20 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * y * (x / 5 - math.pow(x, 3) - math.pow(y, 5));
     // var dfdx = -6 * math.exp(math.pow(x, 2) - math.pow((1 + y), 2)) * (1 - x) 
     // + 6 * math.exp(math.pow(x, 2) - math.pow((1 + y), 2)) * math.pow((1 - x), 2) * x 
     // + 2 / 3 * math.exp(1 - math.E * math.pow((1 + x), 2) - math.pow(y, 2)) * (1 + x) 
@@ -328,6 +372,7 @@ function gradf(x, y) {
 
     return math.matrix([dfdx, dfdy]);
 }
+
 /* df/dx = -10 (1/5 - 3 x^2) e^(-x^2 - y^2) + 6 x (1 - x)^2 e^(x^2 - (y + 1)^2) - 6 (1 - x) 
    e^(x^2 - (y + 1)^2) + 20 x e^(-x^2 - y^2) (-x^3 + x/5 - y^5) + 2/3 (x + 1) e^(-(x + 1)^2 - y^2)
 
