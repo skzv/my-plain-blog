@@ -127,15 +127,14 @@ where $$p_n$$ is our position at the $$n^{th}$$ iteration of our descent. Try it
 </span>
 
 ## Observations
-Some observations you might make are that:
 
-* Gradient descent is sensitive to the initial position. It will pull you towards a local minima, which may not be the global minima. The area of the domain that causes gradient descent to converge to a particular minima is known as that minima's basin of attraction.
+You may notice that gradient descent is sensitive to the initial position. It will pull you towards a local minima, which may not be the global minima. The area of the domain that causes gradient descent to converge to a particular minima is known as that minima's basin of attraction.
 
-* Increasing the descent rate $$\alpha$$ reduces the number of iterations required to arrive at the minimum. But making it too large causes the algorithm to overshoot, and possibly diverge.
+You may also notice that increasing the descent rate $$\alpha$$ reduces the number of iterations required to arrive at the minimum. But making it too large causes the algorithm to overshoot, and possibly diverge.
 
 ## Machine learning
 
-You've probably heard of gradient descent in the context of machine learning. Here, the cost function we could be trying to minimize might be the error classifying images, where the inputs to the cost function are the weights of the neural network we are varying. Hence, we can use gradient descent to find the optimal configuration of weights that minimize the classification error of our neural network! And in this field, the descent rate $$\alpha$$ has a special name: it is known as the *learning rate*.
+You've probably heard of gradient descent in the context of machine learning. In that context, the cost function represents the error of our machine learning model. For example, it may be the error of classifying images, and the inputs to the cost function are the weights of the model we are varying. Hence, we can use gradient descent to find the optimal configuration of weights that minimize the classification error of the neural network! In this field, the descent rate $$\alpha$$ has a special name: it is known as the *learning rate*. Maybe it's what our brains have been doing all along. 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="/assets/js/gradient-descent.js" async></script>
