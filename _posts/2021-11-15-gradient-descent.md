@@ -101,7 +101,7 @@ Mathematically, our procedure looks like:
 " 
 %}
 
-where $$p_n$$ is our position at the $$n^{th}$$ iteration of our descent. Try it out on the demo below! Varying the rate $$\alpha$$ varies the rate of the descent, while varying $$X$$ and $$Y$$ vary the initial starting point on the surface. What do you notice?
+where $$p_n$$ is our position at the $$n^{th}$$ iteration of our descent. Try it out on the demo below. Varying the rate $$\alpha$$ varies the rate of the descent, while varying $$X$$ and $$Y$$ vary the initial starting point on the surface. What do you notice?
 
 <div id='plot-1'></div>
 
