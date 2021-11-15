@@ -47,11 +47,24 @@ The motivation behind gradient descent is intuitive, and I bet you would arrive 
 ## Gradient
 Gradient is essentially another word for slope. Most people will be familiar with finding a slope in a 1 dimensional situation. In 1-D, since one can only proceed either forwards or backwards, the slope is clearly defined. However, in higher dimensions - imagine you find yourself on a hike - the slope may have a different value depending on which direction you go. How does one define the slope at this point?
 
-In vector calculus one uses the gradient operator $$\nabla$$, which is a vector of the slopes (or first derivatives) along each dimension. On a 2D surface, this would be the slope along the x-axis and the slope along the y-axis. The slope in any particular direction can be found by summing the corresponding x and y components of the slope in that direction. In other words, the dot product of a direction vector with the gradient produces the slope in that direction.
+In vector calculus one uses the gradient operator $$\nabla$$, which is a vector of the slopes (or first derivatives) along each dimension. 
+
+{%include math.html content=
+"
+\begin{align}
+\nabla f(x,y)= \begin{bmatrix}
+           \frac{\partial f}{dx} (x,y) \\
+           \frac{\partial f}{dy} (x,y)
+         \end{bmatrix} \tag{2}  \label{eq:gradient}
+\end{align}
+" 
+%}
+
+On a 2D surface defined by $$f(x,y)$$, this would be the slope along the x-axis and the slope along the y-axis. The slope in any particular direction (which is important, since we are not constrained to move only along either the x-axis or the y-axis) can be found by summing the corresponding x and y components of the slope in that direction. In other words, the dot product of a direction vector with the gradient produces the slope in that direction.
 
 Another interesting property of the gradient is that it gives the direction of the steepest slope. One can see this mathematically - since the slope in any particular direction can be found by dotting that direction vector with the gradient, the dot product is maximized when the gradient is dotted with itself!
 
-Below, I plot the gradient of $$f(x,y)$$ with Mathematica. 
+Below, I plot the negative gradient of $$f(x,y)$$ with Mathematica. This gives us the direction of steepest descent at every point on $$f$$.
 
 ![Gradient of f]({{ "/gradient.png" | prepend: page.imgpath }})
 {% include caption.html content="Gradient of f plotted as a vector field." %}
@@ -84,7 +97,7 @@ Mathematically, our procedure looks like:
 {%include math.html content=
 "
 \begin{align}
-\bar{p}_{n+1} = \bar{p}_n - \alpha \nabla f(x,y) \tag{2}  \label{eq:grad_descent}
+\bar{p}_{n+1} = \bar{p}_n - \alpha \nabla f(x,y) \tag{3}  \label{eq:grad_descent}
 \end{align}
 " 
 %}
