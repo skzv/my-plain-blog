@@ -5,7 +5,7 @@ imgpath: /assets/img/gradient-descent
 previewurl: /gradient-descent-preview.png
 ---
 
-#### _Interact with 3 dimensional gradient descent_
+#### _What is this special algorithm?_
 
 Gradient descent is an optimization algorithm for finding the (local) minimum of a function.
 
