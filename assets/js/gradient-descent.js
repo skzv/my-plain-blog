@@ -31,9 +31,11 @@ function createPlotWithSurface(divName, title, X, Y, f, opacity) {
         }
     }];
 
+    var config = {responsive: true}
+
     var layout = {
         title: title,
-        scene: { camera: { eye: { x: -0.65, y: -1.15, z: 0.3 } }, aspectmode: "cube", },
+        scene: { camera: { eye: { x: 0.5, y: -0.7, z: 1.0 } }, aspectmode: "cube", },
         autosize: true,
         plot_bgcolor: "black",
         paper_bgcolor: "rgba(0,0,0,0)",
@@ -45,12 +47,9 @@ function createPlotWithSurface(divName, title, X, Y, f, opacity) {
             t: 50,
             pad: 0
         },
-        // config: {
-        //     plotGlPixelRatio: 0
-        // }
     };
 
-    Plotly.newPlot(divName, data, layout);
+    Plotly.newPlot(divName, data, layout, config);
 }
 
 /* Constructs a trace above and below the surface so as to be more visible. */
@@ -184,10 +183,11 @@ function containTrace(T, minX, maxX, minY, maxY, minZ, maxZ) {
 
 // var X = math.range(-3, 3, 0.1, true);
 // var Y = math.range(-3, 3, 0.1, true);
-// createPlotWithSurface('plot-0', 'Cost Function', X, Y, f, 1);
 
 var X = math.range(-3, 3, 0.1, true);
 var Y = math.range(-3, 3, 0.1, true);
+createPlotWithSurface('plot-0', 'Cost Function', X, Y, f, 1);
+
 createPlotWithSurface('plot-1', 'Cost Function', X, Y, f, 1);
 
 // Update the current slider value (each time you drag the slider handle)
