@@ -5,8 +5,7 @@ imgpath: /assets/img/gradient-descent
 previewurl: /gradient-descent-preview.png
 ---
 
-<!-- Load plotly.js into the DOM -->
-<script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
+#### _Interact with 3 dimensional gradient descent_
 
 Gradient descent is an optimization algorithm for finding the (local) minimum of a function.
 
@@ -136,5 +135,6 @@ You may also notice that increasing the descent rate $$\alpha$$ reduces the numb
 
 You've probably heard of gradient descent in the context of machine learning. In that context, the cost function represents the error of our machine learning model. For example, it may be the error of classifying images, and the inputs to the cost function are the weights of the model we are varying. Hence, we can use gradient descent to find the optimal configuration of weights that minimize the classification error of the neural network! In this field, the descent rate $$\alpha$$ has a special name: it is known as the *learning rate*. Maybe it's what our brains have been doing all along. 
 
+<script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="/assets/js/gradient-descent.js" async></script>
