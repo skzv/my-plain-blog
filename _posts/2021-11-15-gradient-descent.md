@@ -11,7 +11,7 @@ Gradient descent is an optimization algorithm for finding the (local) minimum of
 
 ## Why is that useful?
 
-Say you have some function $$f(x,y)$$. This function may represent a cost to you, and $$x$$ and $$y$$ are some inputs that vary the cost. Naturally, you are going to try to find the values of $$x$$ and $$y$$ that minimize the cost. This is a problem of finding the minimum of $$f(x,y)$$. For example, we may want to find the minumum of this function, which is plotted below:
+Say you have some function $$f(x,y)$$. This function may represent a cost to you, and $$x$$ and $$y$$ are some inputs that vary the cost. Naturally, you are going to try to find the values of $$x$$ and $$y$$ that minimize the cost. This is a problem of finding the minimum of $$f(x,y)$$. For example, we may want to find the minimum of this function, which is plotted below:
 
 {%include math.html content=
 "
@@ -27,7 +27,7 @@ This is where gradient descent can help.
 
 ## Why gradient descent?
 
-From elementary calculus you may remember a precodure for finding the minimum of a function. You could find the first derivative, set it to zero, and solve that equation:
+From elementary calculus, you may remember a procedure for finding the minimum of a function. You could find the first derivative, set it to zero, and solve that equation:
 
 {%include math.html content=
 "
@@ -41,12 +41,12 @@ This will reveal the locations of the extrema (maxima and minima) of the functio
 
 ## The gradient descent algorithm
 
-The motivation behind gradient descent is intuitive, and I bet you would arrive at the same procedure in an analagous physical situation. Imagine you find yourself in a thick fog, and you can only see a few feet in front of you and feel the slope of the ground beneath you. You are are trying to get to bottom of a valley as quickly as possible. Surely, you won't waste your time walking along a flat slope - or worse, head uphill. To descend quickly, you will inspect the slope at your location, and proceed in the direction where the slope is steepest downwards. Gradient is a synomym for slope, hence, you would be performing gradient descent. Conversely, if you were trying to find the top of the hill, you would follow the steepest part of the surface up, wherever you are. This is gradient *ascent*.
+The motivation behind gradient descent is intuitive, and I bet you would arrive at the same procedure in an analogous physical situation. Imagine you find yourself in a thick fog, and you can only see a few feet in front of you and feel the slope of the ground beneath you. You are trying to get to the bottom of a valley as quickly as possible. Surely, you won't waste your time walking along a flat slope - or worse, head uphill. To descend quickly, you will inspect the slope at your location, and proceed in the direction where the slope is steepest downwards. Gradient is a synonym for slope, hence, you would be performing gradient descent. Conversely, if you were trying to find the top of the hill, you would follow the steepest part of the surface up, wherever you are. This is gradient *ascent*.
 
 ## Gradient
-Gradient is essentially another word for slope. Most people will be familiar with finding a slope in a 1 dimensional situation. In 1-D, since one can only proceed either forwards or backwards, the slope is clearly defined. However, in higher dimensions - imagine you find yourself on a hike - the slope may have a different value depending on which direction you go. How does one define the slope at this point?
+Gradient is essentially another word for slope. Most people will be familiar with finding a slope in a 1-dimensional situation. In 1-D, since one can only proceed either forward or backward, the slope is clearly defined. However, in higher dimensions - imagine you find yourself on a hike - the slope may have a different value depending on which direction you go. How does one define the slope at this point?
 
-In vector calculus one uses the gradient operator $$\nabla$$, which is a vector of the slopes (or first derivatives) along each dimension. 
+In vector calculus, one uses the gradient operator $$\nabla$$, which is a vector of the slopes (or first derivatives) along each dimension. 
 
 {%include math.html content=
 "
@@ -69,7 +69,7 @@ Below, I plot the negative gradient of $$f(x,y)$$ with Mathematica. This gives u
 {% include caption.html content="Gradient of f plotted as a vector field." %}
 
 ## Follow the steepest part down
-Earlier we agreed that if you were blindly navigating down a valley, you would follow the steepest direction of the ground down if you wanted to get to the bottom as quickly as possible. Mathematically, you are traversing down the valley along the gradient at each point, since the gradient vector at each point is the direction of the steepest descent. Looking at the image above, we can see that means following the arrows will lead us to a minima (but be wary - each minima has its own basin of attraction! More on that later).
+Earlier we agreed that if you were blindly navigating down a valley, you would follow the steepest direction of the ground down if you wanted to get to the bottom as quickly as possible. Mathematically, you are traversing down the valley along the gradient at each point, since the gradient vector at each point is the direction of the steepest descent. Looking at the image above, we can see that means following the arrows will lead us to a minimum (but be wary - each minimum has its own basin of attraction! More on that later).
 
 Thus we can define a procedure. It may go something like this:
 
@@ -127,7 +127,7 @@ where $$p_n$$ is our position at the $$n^{th}$$ iteration of our descent. Try it
 
 ## Observations
 
-You may notice that gradient descent is sensitive to the initial position. It will pull you towards a local minima, which may not be the global minima. The area of the domain that causes gradient descent to converge to a particular minima is known as that minima's basin of attraction.
+You may notice that gradient descent is sensitive to the initial position. It will pull you towards a local minimum, which may not be the global minimum. The area of the domain that causes gradient descent to converge to a particular minimum is known as that minima's basin of attraction.
 
 You may also notice that increasing the descent rate $$\alpha$$ reduces the number of iterations required to arrive at the minimum. But making it too large causes the algorithm to overshoot, and possibly diverge.
 
