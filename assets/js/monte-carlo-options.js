@@ -3,83 +3,136 @@ const dT = 1 / TRADING_DAYS_IN_YEAR;
 
 const RANGE_MARGIN = 0.1;
 
+const M0 = 1;
+const M1 = 25;
+const M2 = 1000;
+
 var s0 = 100;
 var mu_y = 0.1;
 var sigma_y = 0.3;
 var N = 252;
-var M = 5;
+// var M = 50;
 
-var TS = generateMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N);
-console.log(TS);
+generate(/* divName= */ 'plot-0', /* isInitalized= */ false, s0, mu_y, sigma_y, dT, N, M0);
+generate(/* divName= */ 'plot-1', /* isInitalized= */ false, s0, mu_y, sigma_y, dT, N, M1);
+generate(/* divName= */ 'plot-2', /* isInitalized= */ false, s0, mu_y, sigma_y, dT, N, M2);
 
-var data = [{
-    x: TS.t,
-    y: TS.s,
-    line: { simplify: false },
-}];
-var layout = {
-    title: "Monte Carlo Options",
-    autosize: true,
-    plot_bgcolor: "black",
-    paper_bgcolor: "rgba(0,0,0,0)",
-    "yaxis": {
-        "gridcolor": "grey",
-    },
-    "xaxis": {
-        "gridcolor": "grey",
-    },
-};
+function regenerate0() {
+    generate(/* divName= */ 'plot-0', /* isInitalized= */ true, s0, mu_y, sigma_y, dT, N, M0);
+}
 
-var config = { responsive: true }
+function regenerate1() {
+    generate(/* divName= */ 'plot-1', /* isInitalized= */ true, s0, mu_y, sigma_y, dT, N, M1);
+}
 
-Plotly.newPlot('plot-0', data, layout, config);
+function regenerate2() {
+    generate(/* divName= */ 'plot-2', /* isInitalized= */ true, s0, mu_y, sigma_y, dT, N, M2);
+}
 
-function recompute() {
-    var TS = generateMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N);
-    var data = [{
-        x: TS.t,
-        y: TS.s,
-        line: { simplify: false },
-    }];
+function generate(divName, isInitialized, s0, mu_y, sigma_y, dT, N, M) {
+    const M_WITHIN_THRESHOLD = M <= 75;
 
-    var min = math.min(TS.s);
-    var max = math.max(TS.s);
+    var TS = generateSetOfMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N, M);
+    var XY = convertSetOfTimeSeriesToXYData(TS);
+
+    var max = findMaxPriceOfAllSeries(TS);
+    var min = findMinPriceOfAllSeries(TS);
     var diff = max - min;
     var margin = RANGE_MARGIN * diff;
+    var range = [min - margin, max + margin];
 
-    Plotly.animate('plot-0', {
-        data: data,
-        traces: [0],
-        layout: {
-        }
-    }, {
-        transition: {
-            duration: 500,
-            easing: 'cubic-in-out'
-        },
-        frame: {
-            duration: 500
-        }
-    });
+    if (!isInitialized) {
+        var layout = {
+            title: "Monte Carlo Options",
+            showlegend: false,
+            autosize: true,
+            plot_bgcolor: "black",
+            paper_bgcolor: "rgba(0,0,0,0)",
+            "yaxis": {
+                "gridcolor": "grey",
+                range: range,
+            },
+            "xaxis": {
+                "gridcolor": "grey",
+            },
+        };
 
-    Plotly.animate('plot-0', {
-        layout: {
-            yaxis: { range: [min - margin, max + margin] }
+        var config = { responsive: true }
+
+        Plotly.newPlot(divName, XY, layout, config);
+    } else {
+        var transitionParams;
+
+        if (M <= 75) {
+            transitionParams = {
+                transition: {
+                    duration: 500,
+                    easing: 'cubic-in-out'
+                },
+                frame: {
+                    duration: 500
+                }
+            };
+        } else {
+            transitionParams = {
+                transition: {
+                    duration: 0,
+                    easing: 'none'
+                },
+                frame: {
+                    duration: 0
+                }
+            };
         }
-    }, {
-        transition: {
-            duration: 500,
-            easing: 'cubic-in-out'
-        },
-        frame: {
-            duration: 500
+
+        Plotly.animate(divName, {
+            data: XY,
+            layout: {
+            }
+        }, transitionParams);
+
+        if (M_WITHIN_THRESHOLD) {
+            Plotly.animate(divName, {
+                layout: {
+                    yaxis: { range: range }
+                }
+            }, transitionParams);
         }
-    });
+
+    }
+}
+
+function findMaxPriceOfAllSeries(TS) {
+    return math.max(TS.map(ts => math.max(ts.s)));
+}
+
+function findMinPriceOfAllSeries(TS) {
+    return math.min(TS.map(ts => math.min(ts.s)));
+}
+
+function convertTimeSeriesToXYData(ts) {
+    return {
+        x: ts.t,
+        y: ts.s,
+        line: { simplify: false },
+    }
+}
+
+function convertSetOfTimeSeriesToXYData(TS) {
+    return TS.map(ts => convertTimeSeriesToXYData(ts));
+}
+
+function generateSetOfMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N, M) {
+    TS = [];
+    for (var i = 0; i < M; i++) {
+        TS.push(generateMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N));
+    }
+    return TS;
 }
 
 function generateMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N) {
     var ts = generateDailyMonteCarloReturns(mu_y, sigma_y, dT, N);
-    console.log(ts);
+    // console.log(ts);
     var cum_r = accumulateMonteCarloReturns(ts.r);
     var S = math.multiply(s0, math.exp(cum_r));
     return { t: ts.t, s: S };
