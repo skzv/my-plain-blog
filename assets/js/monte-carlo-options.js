@@ -55,6 +55,14 @@ function generate(divName, isInitialized, s0, mu_y, sigma_y, dT, N, M) {
             "xaxis": {
                 "gridcolor": "grey",
             },
+            hovermode: false,
+            margin: {
+                l: 25,
+                r: 0,
+                b: 25,
+                t: 25,
+                pad: 0
+            },
         };
 
         var config = { responsive: true }
