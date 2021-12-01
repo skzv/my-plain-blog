@@ -1,9 +1,9 @@
 const TRADING_DAYS_IN_YEAR = 252;
 const dT = 1 / TRADING_DAYS_IN_YEAR;
 
-const RANGE_MARGIN = 0.000005;
+const RANGE_MARGIN = 0.1;
 
-var s0 = 10;
+var s0 = 100;
 var mu_y = 0.1;
 var sigma_y = 0.3;
 var N = 252;
@@ -44,6 +44,8 @@ function recompute() {
 
     var min = math.min(TS.s);
     var max = math.max(TS.s);
+    var diff = max - min;
+    var margin = RANGE_MARGIN * diff;
 
     Plotly.animate('plot-0', {
         data: data,
@@ -62,7 +64,7 @@ function recompute() {
 
     Plotly.animate('plot-0', {
         layout: {
-            yaxis: { range: [min - RANGE_MARGIN * min, max + RANGE_MARGIN * max] }
+            yaxis: { range: [min - margin, max + margin] }
         }
     }, {
         transition: {
@@ -89,12 +91,9 @@ function accumulateMonteCarloReturns(r) {
 }
 
 function generateDailyMonteCarloReturns(mu_y, sigma_y, dT, N) {
-    var mu_d = mu_y / TRADING_DAYS_IN_YEAR;
-    var sigma_d = sigma_y / TRADING_DAYS_IN_YEAR;
-
     var z = math.matrix(math.random([1, N], -0.5, 0.5));
-    var means = math.multiply(math.ones([1, N]), mu_d * dT);
-    var impulses = math.multiply(z, sigma_d * math.sqrt(dT));
+    var means = math.multiply(math.ones([1, N]), mu_y * dT);
+    var impulses = math.multiply(z, sigma_y * math.sqrt(dT));
     var r = [0].concat(math.add(means, impulses).toArray()[0]);
 
     var t = [0].concat(math.range(1, N, true).toArray());
