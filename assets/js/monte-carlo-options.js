@@ -4,13 +4,13 @@ const dT = 1 / TRADING_DAYS_IN_YEAR;
 const RANGE_MARGIN = 0.1;
 
 const M0 = 1;
-const M1 = 25;
-const M2 = 1000;
+const M1 = 10;
+const M2 = 500;
 
 var s0 = 100;
-var mu_y = 0.1;
-var sigma_y = 0.3;
-var N = 252;
+var mu_y = 0.06;
+var sigma_y = 0.15;
+var N = TRADING_DAYS_IN_YEAR;
 // var M = 50;
 
 generate(/* divName= */ 'plot-0', /* isInitalized= */ false, s0, mu_y, sigma_y, dT, N, M0);
@@ -33,6 +33,8 @@ function generate(divName, isInitialized, s0, mu_y, sigma_y, dT, N, M) {
     const M_WITHIN_THRESHOLD = M <= 75;
 
     var TS = generateSetOfMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N, M);
+    var stats = calculateStatistics(TS);
+
     var XY = convertSetOfTimeSeriesToXYData(TS);
 
     var max = findMaxPriceOfAllSeries(TS);
@@ -65,7 +67,11 @@ function generate(divName, isInitialized, s0, mu_y, sigma_y, dT, N, M) {
             },
         };
 
-        var config = { responsive: true }
+        var config = { responsive: true, staticPlot: false };
+
+        if (!M_WITHIN_THRESHOLD) {
+            config.staticPlot = true;
+        }
 
         Plotly.newPlot(divName, XY, layout, config);
     } else {
@@ -140,6 +146,8 @@ function generateSetOfMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N, M) {
 
 function generateMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N) {
     var ts = generateDailyMonteCarloReturns(mu_y, sigma_y, dT, N);
+    // console.log(math.mean(ts.r));
+    // console.log(math.std(ts.r));
     // console.log(ts);
     var cum_r = accumulateMonteCarloReturns(ts.r);
     var S = math.multiply(s0, math.exp(cum_r));
@@ -152,11 +160,31 @@ function accumulateMonteCarloReturns(r) {
 }
 
 function generateDailyMonteCarloReturns(mu_y, sigma_y, dT, N) {
-    var z = math.matrix(math.random([1, N], -0.5, 0.5));
-    var means = math.multiply(math.ones([1, N]), mu_y * dT);
+    var z = normal(N);
+    // var z = math.multiply(math.subtract(math.matrix(math.randomInt([1, N], 0, 2)), 1 / 2), 2);
+    var means = math.multiply(math.ones([1, N]), (mu_y - sigma_y * sigma_y / 2) * dT)[0];
     var impulses = math.multiply(z, sigma_y * math.sqrt(dT));
-    var r = [0].concat(math.add(means, impulses).toArray()[0]);
+    // console.log(math.mean(impulses));
+    // console.log(math.std(impulses));
+    var r = [0].concat(math.add(means, impulses));
 
     var t = [0].concat(math.range(1, N, true).toArray());
     return { t: t, r: r };
+}
+
+function calculateStatistics(TS) {
+    var endPrices = TS.map(ts => ts.s[ts.s.length - 1]);
+    var mean = math.mean(endPrices);
+    var standardDeviation = math.std(endPrices);
+    console.log(mean);
+    console.log(standardDeviation);
+}
+
+function normal(n) {
+    var u = math.subtract(1, math.random([1, 2 * n]))[0];
+    var z = [];
+    for (var i = 0; i < n; i++) {
+        z.push(math.sqrt( -2.0 * math.log( u[i] )) * math.cos( 2.0 * Math.PI * u[n + i] ));
+    }
+    return z;
 }
