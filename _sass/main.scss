@@ -516,25 +516,21 @@ section {
   display: inline-block;
 }
 
-// .slider:hover {
-//   opacity: 1;
-// }
+button {
+  background-color: white;
+  border: none;
+  color: black;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+  display: inline-block;
+  // font-size: 16px;
+  width: 100%;
+}
 
-// .slider::-webkit-slider-thumb {
-//   -webkit-appearance: none;
-//   appearance: none;
-//   width: 25px;
-//   height: 25px;
-//   background: #04AA6D;
-//   cursor: pointer;
-//   // background: white;
-// }
-
-// .slider::-moz-range-thumb {
-//   background: white;
-//   // width: 25px;
-//   // height: 25px;
-//   // background: #04AA6D;
-//   // cursor: pointer;
-// }
-
+button:hover {
+  background-color: #e6e6e6;
+  // color: white;
+  // text-shadow: 1px 1px grey;
+}

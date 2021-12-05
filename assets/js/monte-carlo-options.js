@@ -7,33 +7,95 @@ const M0 = 1;
 const M1 = 10;
 const M2 = 500;
 
-var s0 = 100;
-var mu_y = 0.06;
-var sigma_y = 0.15;
 var N = TRADING_DAYS_IN_YEAR;
+
+var seriesParams =
+    { s0: 100, mu_y: 0.06, sigma_y: 0.15 };
+// var s0 = 100;
+// var mu_y = 0.06;
+// var sigma_y = 0.15;
 // var M = 50;
 
-generate(/* divName= */ 'plot-0', /* isInitalized= */ false, s0, mu_y, sigma_y, dT, N, M0);
-generate(/* divName= */ 'plot-1', /* isInitalized= */ false, s0, mu_y, sigma_y, dT, N, M1);
-generate(/* divName= */ 'plot-2', /* isInitalized= */ false, s0, mu_y, sigma_y, dT, N, M2);
+generate(/* index= */ 0, /* isInitalized= */ false, seriesParams, dT, N, M0);
+generate(/* index= */ 1, /* isInitalized= */ false, seriesParams, dT, N, M1);
+generate(/* index= */ 2, /* isInitalized= */ false, seriesParams, dT, N, M2);
 
 function regenerate0() {
-    generate(/* divName= */ 'plot-0', /* isInitalized= */ true, s0, mu_y, sigma_y, dT, N, M0);
+    generate(/* index= */ 0, /* isInitalized= */ true, seriesParams, dT, N, M0);
 }
 
 function regenerate1() {
-    generate(/* divName= */ 'plot-1', /* isInitalized= */ true, s0, mu_y, sigma_y, dT, N, M1);
+    generate(/* index= */ 1, /* isInitalized= */ true, seriesParams, dT, N, M1);
 }
 
 function regenerate2() {
-    generate(/* divName= */ 'plot-2', /* isInitalized= */ true, s0, mu_y, sigma_y, dT, N, M2);
+    generate(/* index= */ 2, /* isInitalized= */ true, seriesParams, dT, N, M2);
 }
 
-function generate(divName, isInitialized, s0, mu_y, sigma_y, dT, N, M) {
+var meanSlider = document.getElementById('mean-slider');
+var meanSliderValue = document.getElementById('mean-slider-value');
+var sigmaSlider = document.getElementById('sigma-slider');
+var sigmaSliderValue = document.getElementById('sigma-slider-value');
+
+meanSlider.value = seriesParams.mu_y;
+sigmaSlider.value = seriesParams.sigma_y;
+meanSliderValue.innerHTML = (seriesParams.mu_y * 100).toFixed(0) + "%";
+sigmaSliderValue.innerHTML = (seriesParams.sigma_y * 100).toFixed(0) + "%";
+
+meanSlider.oninput = function () {
+    seriesParams.mu_y = this.valueAsNumber;
+    meanSliderValue.innerHTML = (seriesParams.mu_y * 100).toFixed(0) + "%";
+}
+
+sigmaSlider.oninput = function () {
+    seriesParams.sigma_y = this.valueAsNumber;
+    sigmaSliderValue.innerHTML = (seriesParams.sigma_y * 100).toFixed(0) + "%";
+}
+
+var animationLock = false;
+const ANIMATION_LOCK_TIME_MILLIS = 1000;
+
+var timestampLastAnimation = Date.now();
+
+meanSlider.onchange = function () {
+    regenerate0();
+    timestampLastAnimation = Date.now();
+    maybeRegenerateOtherCharts();
+    // regenerate1();
+}
+
+sigmaSlider.onchange = function () {
+    regenerate0();
+    timestampLastAnimation = Date.now();
+    maybeRegenerateOtherCharts();
+    // regenerate1();
+}
+
+function maybeRegenerateOtherCharts() {
+    if(Date.now() - timestampLastAnimation > 3000) {
+        regenerate1();
+        setTimeout(function() {
+            regenerate2();
+        }, 2000);
+        timestampLastAnimation = Date.now();
+    } else {
+        setTimeout(function() {
+            maybeRegenerateOtherCharts();
+        }, 1000);
+    }
+}
+
+function generate(index, isInitialized, seriesParams, dT, N, M) {
     const M_WITHIN_THRESHOLD = M <= 75;
+    const s0 = seriesParams.s0;
+    const mu_y = seriesParams.mu_y;
+    const sigma_y = seriesParams.sigma_y;
+
+    const divName = 'plot-' + index;
 
     var TS = generateSetOfMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N, M);
     var stats = calculateStatistics(TS);
+    updateStats(index, stats);
 
     var XY = convertSetOfTimeSeriesToXYData(TS);
 
@@ -105,13 +167,13 @@ function generate(divName, isInitialized, s0, mu_y, sigma_y, dT, N, M) {
             }
         }, transitionParams);
 
-        if (M_WITHIN_THRESHOLD) {
+        // if (M_WITHIN_THRESHOLD) {
             Plotly.animate(divName, {
                 layout: {
                     yaxis: { range: range }
                 }
             }, transitionParams);
-        }
+        // }
 
     }
 }
@@ -176,15 +238,21 @@ function calculateStatistics(TS) {
     var endPrices = TS.map(ts => ts.s[ts.s.length - 1]);
     var mean = math.mean(endPrices);
     var standardDeviation = math.std(endPrices);
-    console.log(mean);
-    console.log(standardDeviation);
+    return { mean: mean, standardDeviation: standardDeviation };
+    // console.log(mean);
+    // console.log(standardDeviation);
+}
+
+function updateStats(index, stats) {
+    document.getElementById('mean-' + index).innerHTML = "Mean: $" + (stats.mean).toFixed(2);
+    document.getElementById('sigma-' + index).innerHTML = "Standard Deviation: $" + (stats.standardDeviation).toFixed(2);
 }
 
 function normal(n) {
     var u = math.subtract(1, math.random([1, 2 * n]))[0];
     var z = [];
     for (var i = 0; i < n; i++) {
-        z.push(math.sqrt( -2.0 * math.log( u[i] )) * math.cos( 2.0 * Math.PI * u[n + i] ));
+        z.push(math.sqrt(-2.0 * math.log(u[i])) * math.cos(2.0 * Math.PI * u[n + i]));
     }
     return z;
 }
