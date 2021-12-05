@@ -24,18 +24,18 @@ previewurl: /gradient-descent-preview.png
     <span class="slider-value" id="sigma-slider-value">0</span>
 </span>
 
-<button onclick="regenerate0()">Regenerate</button>
+<button class="regenerate-button" onclick="regenerate0()">Regenerate</button>
 
 <div id='mean-0'>0</div>
 <div id='sigma-0'>0</div>
 
 <div id='plot-1'></div>
-<button onclick="regenerate1()">Regenerate</button>
+<button class="regenerate-button" onclick="regenerate1()">Regenerate</button>
 <div id='mean-1'>0</div>
 <div id='sigma-1'>0</div>
 
 <div id='plot-2'></div>
-<button onclick="regenerate2()">Regenerate</button>
+<button class="regenerate-button" onclick="regenerate2()">Regenerate</button>
 <div id='mean-2'>0</div>
 <div id='sigma-2'>0</div>
 

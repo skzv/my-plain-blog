@@ -53,31 +53,36 @@ sigmaSlider.oninput = function () {
 }
 
 var animationLock = false;
-const ANIMATION_LOCK_TIME_MILLIS = 1000;
 
 var timestampLastAnimation = Date.now();
 
 meanSlider.onchange = function () {
     regenerate0();
     timestampLastAnimation = Date.now();
-    maybeRegenerateOtherCharts();
+    if (!animationLock) {
+        maybeRegenerateOtherCharts();
+    }
     // regenerate1();
 }
 
 sigmaSlider.onchange = function () {
     regenerate0();
     timestampLastAnimation = Date.now();
-    maybeRegenerateOtherCharts();
+    if (!animationLock) {
+        maybeRegenerateOtherCharts();
+    }
     // regenerate1();
 }
 
-function maybeRegenerateOtherCharts() {
+function maybeRegenerateOtherCharts() {    
+    animationLock = true;
     if(Date.now() - timestampLastAnimation > 3000) {
         regenerate1();
         setTimeout(function() {
             regenerate2();
-        }, 2000);
+        }, 1000);
         timestampLastAnimation = Date.now();
+        animationLock = false;
     } else {
         setTimeout(function() {
             maybeRegenerateOtherCharts();
