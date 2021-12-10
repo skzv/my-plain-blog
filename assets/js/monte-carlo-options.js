@@ -5,12 +5,12 @@ const RANGE_MARGIN = 0.1;
 
 const M0 = 1;
 const M1 = 10;
-const M2 = 500;
+const M2 = 10000;
 
 var N = TRADING_DAYS_IN_YEAR;
 
 var seriesParams =
-    { s0: 100, mu_y: 0.06, sigma_y: 0.15 };
+    { s0: 100, mu_y: 0.15, sigma_y: 0.07 };
 // var s0 = 100;
 // var mu_y = 0.06;
 // var sigma_y = 0.15;
@@ -92,6 +92,8 @@ function maybeRegenerateOtherCharts() {
 
 function generate(index, isInitialized, seriesParams, dT, N, M) {
     const M_WITHIN_THRESHOLD = M <= 75;
+    const MAX_TRACES_TO_RENDER = 150;
+
     const s0 = seriesParams.s0;
     const mu_y = seriesParams.mu_y;
     const sigma_y = seriesParams.sigma_y;
@@ -102,10 +104,11 @@ function generate(index, isInitialized, seriesParams, dT, N, M) {
     var stats = calculateStatistics(TS);
     updateStats(index, stats);
 
-    var XY = convertSetOfTimeSeriesToXYData(TS);
+    var TS_clipped = TS.slice(0, MAX_TRACES_TO_RENDER);
+    var XY = convertSetOfTimeSeriesToXYData(TS_clipped);
 
-    var max = findMaxPriceOfAllSeries(TS);
-    var min = findMinPriceOfAllSeries(TS);
+    var max = findMaxPriceOfAllSeries(TS_clipped);
+    var min = findMinPriceOfAllSeries(TS_clipped);
     var diff = max - min;
     var margin = RANGE_MARGIN * diff;
     var range = [min - margin, max + margin];
@@ -218,6 +221,7 @@ function generateMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N) {
     // console.log(ts);
     var cum_r = accumulateMonteCarloReturns(ts.r);
     var S = math.multiply(s0, math.exp(cum_r));
+    // console.log(S);
     return { t: ts.t, s: S };
 }
 
@@ -249,8 +253,8 @@ function calculateStatistics(TS) {
 }
 
 function updateStats(index, stats) {
-    document.getElementById('mean-' + index).innerHTML = "Mean: $" + (stats.mean).toFixed(2);
-    document.getElementById('sigma-' + index).innerHTML = "Standard Deviation: $" + (stats.standardDeviation).toFixed(2);
+    document.getElementById('mean-' + index).innerHTML = "Mean terminal value: $" + (stats.mean).toFixed(2);
+    document.getElementById('sigma-' + index).innerHTML = "Standard deviation of terminal values: $" + (stats.standardDeviation).toFixed(2);
 }
 
 function normal(n) {
