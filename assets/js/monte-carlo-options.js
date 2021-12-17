@@ -10,7 +10,7 @@ const M2 = 10000;
 var N = TRADING_DAYS_IN_YEAR;
 
 var seriesParams =
-    { s0: 100, mu_y: 0.15, sigma_y: 0.07 };
+    { s0: 100, mu_y: 0.15, sigma_y: 0.07, strike: 105 };
 // var s0 = 100;
 // var mu_y = 0.06;
 // var sigma_y = 0.15;
@@ -74,17 +74,17 @@ sigmaSlider.onchange = function () {
     // regenerate1();
 }
 
-function maybeRegenerateOtherCharts() {    
+function maybeRegenerateOtherCharts() {
     animationLock = true;
-    if(Date.now() - timestampLastAnimation > 3000) {
+    if (Date.now() - timestampLastAnimation > 3000) {
         regenerate1();
-        setTimeout(function() {
+        setTimeout(function () {
             regenerate2();
         }, 1000);
         timestampLastAnimation = Date.now();
         animationLock = false;
     } else {
-        setTimeout(function() {
+        setTimeout(function () {
             maybeRegenerateOtherCharts();
         }, 1000);
     }
@@ -101,8 +101,8 @@ function generate(index, isInitialized, seriesParams, dT, N, M) {
     const divName = 'plot-' + index;
 
     var TS = generateSetOfMonteCarloPriceSeries(s0, mu_y, sigma_y, dT, N, M);
-    var stats = calculateStatistics(TS);
-    updateStats(index, stats);
+    var stats = calculateStatistics(TS, seriesParams.strike);
+    updateStats(index, stats, seriesParams.strike);
 
     var TS_clipped = TS.slice(0, MAX_TRACES_TO_RENDER);
     var XY = convertSetOfTimeSeriesToXYData(TS_clipped);
@@ -115,7 +115,7 @@ function generate(index, isInitialized, seriesParams, dT, N, M) {
 
     if (!isInitialized) {
         var layout = {
-            title: "Monte Carlo Options",
+            // title: "Monte Carlo Options",
             showlegend: false,
             autosize: true,
             plot_bgcolor: "black",
@@ -176,11 +176,11 @@ function generate(index, isInitialized, seriesParams, dT, N, M) {
         }, transitionParams);
 
         // if (M_WITHIN_THRESHOLD) {
-            Plotly.animate(divName, {
-                layout: {
-                    yaxis: { range: range }
-                }
-            }, transitionParams);
+        Plotly.animate(divName, {
+            layout: {
+                yaxis: { range: range }
+            }
+        }, transitionParams);
         // }
 
     }
@@ -243,18 +243,23 @@ function generateDailyMonteCarloReturns(mu_y, sigma_y, dT, N) {
     return { t: t, r: r };
 }
 
-function calculateStatistics(TS) {
+function calculateStatistics(TS, strike) {
     var endPrices = TS.map(ts => ts.s[ts.s.length - 1]);
     var mean = math.mean(endPrices);
     var standardDeviation = math.std(endPrices);
-    return { mean: mean, standardDeviation: standardDeviation };
+    var strikeValues = math.subtract(endPrices, strike);
+    strikeValues = strikeValues.map(v => math.max(0, v));
+    var optionMean = math.mean(strikeValues);
+    var optionStandardDeviation = math.std(strikeValues);
+    return { mean: mean, standardDeviation: standardDeviation, optionMean: optionMean, optionStandardDeviation: optionStandardDeviation };
     // console.log(mean);
     // console.log(standardDeviation);
 }
 
-function updateStats(index, stats) {
+function updateStats(index, stats, strike) {
     document.getElementById('mean-' + index).innerHTML = "Mean terminal value: $" + (stats.mean).toFixed(2);
     document.getElementById('sigma-' + index).innerHTML = "Standard deviation of terminal values: $" + (stats.standardDeviation).toFixed(2);
+    document.getElementById('option-mean-' + index).innerHTML = "Mean $" + strike + " call option terminal value: $" + (stats.optionMean).toFixed(2) + " ± $" + (stats.optionStandardDeviation).toFixed(2);
 }
 
 function normal(n) {
