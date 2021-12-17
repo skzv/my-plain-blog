@@ -1,7 +1,7 @@
 ---
 title: Monte Carlo Options Pricing
 updated: 2021-12-07 00:00
-imgpath: /assets/img/gradient-descent
+imgpath: /assets/img/monte-carlo-stocks
 previewurl: /gradient-descent-preview.png
 ---
 
@@ -60,9 +60,12 @@ In quantitative finance it is common to deal with continuously compounded return
 
 This is also convenient because a common assumption in finance is that the logarithmic returns of a stock are independent and normally distributed with mean $$\mu$$ and variance $$\sigma^2$$ - meaning that if returns are normally distributed then the stock price is *lognormally* distributed. This has been observed empirically to some extent, although in real life stock prices tend to have "fatter tails" - meaning rare events happen more often than a normal distribution would predict.  Here are the monthly relative returns for the S&P 500 showing this behaviour (recall that small simple returns $$R_t$$ approximate logarthmic returns $$r_t$$ since $$r_t = \ln{(1 + R_t)} \approx R_t$$ ). [link](https://towardsdatascience.com/are-stock-returns-normally-distributed-e0388d71267e). 
 
+![Gradient of f]({{ "/sp500-monthly-returns.png" | prepend: page.imgpath }})
+{% include caption.html content="Monthly returns of the S&P 500 with a fitted normal distribution. We observe more returns at the extremities of the distribution than the normal distribution would predict. We call these 'fat tails' or 'excess kurtosis'. <a href='https://towardsdatascience.com/are-stock-returns-normally-distributed-e0388d71267e' target='_blank'>Source</a>" %}
+
 This model also works well because it only permits positive security prices. Securities tend to only have positive prices (although in some cases they can go negative - see the oil crash of 2020).
 
-So what we want is some process that generates a series of normally distributed returns $$r_t$$ - which is where we go to Brownian motion.
+So what we want is some process that generates a series of normally distributed returns $$r_t$$ - which invites Brownian motion as a natural choice.
 
 
 # Brownian motion
