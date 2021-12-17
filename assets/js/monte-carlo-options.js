@@ -139,7 +139,7 @@ function generate(index, isInitialized, seriesParams, dT, N, M) {
 
         var config = { responsive: true, staticPlot: false };
 
-        if (!M_WITHIN_THRESHOLD) {
+        if (!M_WITHIN_THRESHOLD || true) {
             config.staticPlot = true;
         }
 
