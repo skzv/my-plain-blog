@@ -92,7 +92,7 @@ function maybeRegenerateOtherCharts() {
 
 function generate(index, isInitialized, seriesParams, dT, N, M) {
     const M_WITHIN_THRESHOLD = M <= 75;
-    const MAX_TRACES_TO_RENDER = 150;
+    const MAX_TRACES_TO_RENDER = 100;
 
     const s0 = seriesParams.s0;
     const mu_y = seriesParams.mu_y;
