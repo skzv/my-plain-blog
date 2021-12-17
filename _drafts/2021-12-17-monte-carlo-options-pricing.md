@@ -1,6 +1,6 @@
 ---
 title: Monte Carlo Options Pricing
-updated: 2021-12-07 00:00
+updated: 2021-12-17 00:00
 imgpath: /assets/img/monte-carlo-stocks
 previewurl: /gbm-example.png
 ---
