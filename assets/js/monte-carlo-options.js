@@ -257,9 +257,9 @@ function calculateStatistics(TS, strike) {
 }
 
 function updateStats(index, stats, strike) {
-    document.getElementById('mean-' + index).innerHTML = "Mean terminal value: $" + (stats.mean).toFixed(2);
-    document.getElementById('sigma-' + index).innerHTML = "Standard deviation of terminal values: $" + (stats.standardDeviation).toFixed(2);
-    document.getElementById('option-mean-' + index).innerHTML = "Mean $" + strike + " call option terminal value: $" + (stats.optionMean).toFixed(2) + " ± $" + (stats.optionStandardDeviation).toFixed(2);
+    document.getElementById('mean-' + index).innerHTML = "<span class='option-stats'>Mean terminal value:</span> $" + (stats.mean).toFixed(2);
+    document.getElementById('sigma-' + index).innerHTML = "<span class='option-stats'>Standard deviation of terminal values:</span> $" + (stats.standardDeviation).toFixed(2);
+    document.getElementById('option-mean-' + index).innerHTML = "<span class='option-stats'>Mean $" + strike + " call option terminal value:</span> $" + (stats.optionMean).toFixed(2) + " ± $" + (stats.optionStandardDeviation).toFixed(2);
 }
 
 function normal(n) {
