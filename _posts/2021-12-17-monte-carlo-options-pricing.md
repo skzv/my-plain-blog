@@ -15,12 +15,12 @@ One such commonly used model is geometric Brownian motion ([1](https://stats.lib
 {%include math.html content=
 "
 \begin{align}
- S(t) = S(0)\exp{((\mu-\frac{\sigma^2}{2})t + \sigma Z_t)} \tag{0}  \label{eq:gbm}
+ S(t) = S(0)\exp{((\mu-\frac{\sigma^2}{2})t + \sigma B(t))} \tag{0}  \label{eq:gbm}
 \end{align}
 " 
 %}
 
-where $$Z_t$$ is standard Brownian motion. If we let $$S(0)$$ to be the initial stock price, $$\mu$$ to be the mean [compounding return](https://en.wikipedia.org/wiki/Rate_of_return#Logarithmic_or_continuously_compounded_return), and $$\sigma$$ to be the [volatility](https://en.wikipedia.org/wiki/Volatility_(finance)) of a stock, then we can generate very realistic price paths. 
+where $$B(t)$$ is standard Brownian motion. If we let $$S(0)$$ to be the initial stock price, $$\mu$$ to be the mean [compounding return](https://en.wikipedia.org/wiki/Rate_of_return#Logarithmic_or_continuously_compounded_return), and $$\sigma$$ to be the [volatility](https://en.wikipedia.org/wiki/Volatility_(finance)) of a stock, then we can generate very realistic price paths. 
 
 <div id='plot-0'></div>
 <span class="slider-container">
@@ -76,9 +76,19 @@ So, we want a process that generates a series of normally distributed returns $$
 
 Brownian motion has the very nice property that the trajectories are normally distributed, which is exactly what we are looking for. We can simulate a Brownian process with discrete steps by sampling from a normal distribution (although if you only cared about the terminal value of a time series, you could sample from any distribution with unit variance; due to the central limit theorem the sum of random variables would approach a Gaussian distribution in the long term anyway).
 
-Hence, Brownian motion provides us with the series of normally distributed logarathmic returns $$r_t$$ as required in $$\eqref{eq:rr}$$. Taking the exponential of this series, we've recovered an equation for modelling stock price movement.
+Hence, Brownian motion provides us with the series of normally distributed logarathmic returns $$r_t$$ as required in $$\eqref{eq:rr}$$:
 
-Of particular interest here is the drift rate $$\mu - \frac{\sigma^2}{2}$$ which causes the process to drift, as the name suggests. $$\mu$$ is obvious - it's the mean continuosly compounding return for the stock. But what about $$\frac{\sigma^2}{2}$$? Well, it turns out that the expected value of a lognormally distributed variable is $$\exp(\mu + \sigma^2/2)$$. Since we require that the expected value of the stock price after continuous compounding to be $$\exp(\mu t)$$, we must apply the correction term of $$- \frac{\sigma^2}{2}$$ to the process.
+{%include math.html content=
+"
+\begin{align}
+ (\mu-\frac{\sigma^2}{2})t + \sigma B(t) \tag{2}  \label{eq:bm}
+\end{align}
+" 
+%}
+
+Taking the exponential of this series, we've recovered an equation for modelling stock price movement.
+
+Of particular interest here is the drift rate $$\mu - \frac{\sigma^2}{2}$$ which causes the process to drift linearly, as the name suggests. $$\mu$$ is obvious - it's the mean continuosly compounding return for the stock. But what about $$\frac{\sigma^2}{2}$$? Well, it turns out that the expected value of a lognormally distributed variable is $$\exp(\mu + \sigma^2/2)$$. Since we require that the expected value of the stock price after continuous compounding to be $$\exp(\mu t)$$, we must apply the correction term of $$- \frac{\sigma^2}{2}$$ to the process.
 
 # Option Pricing
 
