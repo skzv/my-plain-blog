@@ -86,7 +86,7 @@ Hence, Brownian motion provides us with the series of normally distributed logar
 " 
 %}
 
-Taking the exponential of this series, we've recovered an equation for modelling stock price movement.
+Taking the exponential of this process, we've recovered an equation for modelling stock price movement.
 
 Of particular interest here is the drift rate $$\mu - \frac{\sigma^2}{2}$$ which causes the process to drift linearly, as the name suggests. $$\mu$$ is obvious - it's the mean continuosly compounding return for the stock, and in the absence of noise, the stock price would only grow (or decrease) by this compounding amount. But what about $$\frac{\sigma^2}{2}$$? Well, it turns out that the expected value of a lognormally distributed variable is $$\exp(\mu + \sigma^2/2)$$. Since we require that the expected value of the stock price after continuous compounding to be $$\exp(\mu t)$$, we must apply the correction term of $$- \frac{\sigma^2}{2}$$ to the process.
 
