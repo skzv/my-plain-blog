@@ -76,7 +76,7 @@ So, we want a process that generates a series of normally distributed returns $$
 
 Brownian motion has the very nice property that the trajectories are normally distributed, which is exactly what we are looking for. We can simulate a Brownian process with discrete steps by sampling from a normal distribution (although if you only cared about the terminal value of a time series, you could sample from any distribution with unit variance; due to the central limit theorem the sum of random variables would approach a Gaussian distribution in the long term anyway).
 
-Hence, Brownian motion provides us with the series of normally distributed logarathmic returns $$r_t$$ as required in $$\eqref{eq:rr}$$. Taking the exponential to recover the price movement, we've recovered an equation for modelling stock price movement.
+Hence, Brownian motion provides us with the series of normally distributed logarathmic returns $$r_t$$ as required in $$\eqref{eq:rr}$$. Taking the exponential of this series, we've recovered an equation for modelling stock price movement.
 
 Of particular interest here is the drift rate $$\mu - \frac{\sigma^2}{2}$$ which causes the process to drift, as the name suggests. $$\mu$$ is obvious - it's the mean continuosly compounding return for the stock. But what about $$\frac{\sigma^2}{2}$$? Well, it turns out that the expected value of a lognormally distributed variable is $$\exp(\mu + \sigma^2/2)$$. Since we require that the expected value of the stock price after continuous compounding to be $$\exp(\mu t)$$, we must apply the correction term of $$- \frac{\sigma^2}{2}$$ to the process.
 
