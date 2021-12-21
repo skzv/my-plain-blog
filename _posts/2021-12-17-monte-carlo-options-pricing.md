@@ -90,6 +90,8 @@ Taking the exponential of this process, we've recovered an equation for modellin
 
 Of particular interest here is the drift rate $$\mu - \frac{\sigma^2}{2}$$ which causes the process to drift linearly, as the name suggests. $$\mu$$ is obvious - it's the mean continuosly compounding return for the stock, and in the absence of noise (or volatility), the stock price would only grow (or decrease) by this compounding amount. But what about $$\frac{\sigma^2}{2}$$? Well, it turns out that the expected value of a lognormally distributed variable is $$\exp(\mu + \sigma^2/2)$$. Since we require that the expected value of the stock price after continuous compounding to be $$\exp(\mu t)$$, we must apply the correction term of $$- \frac{\sigma^2}{2}$$ to the process.
 
+There's also a philsophical argument to be made for choosing Brownian motion as the basis for this model. A common assumption made in finance is that markets are efficient, so there should be no arbitrage opportunities. Hence, the market should be unpredictable - if an actor could predict it, that would be an arbitrage opportunity that would be exploited away. Hence, random noise (which is what Brownian motion is, essentially) is a good choice for modelling markets.
+
 # Option Pricing
 
 Monte-Carlo simulation is a statistical technique inspired by the casinos of Monaco. Much like gamblers resigning their fates to probability, we hand over the results of statistical analysis to chance. By running enough trials, we can make conclusions with statistical significance. 
