@@ -76,7 +76,7 @@ sigmaSlider.onchange = function () {
 
 function maybeRegenerateOtherCharts() {
     animationLock = true;
-    if (Date.now() - timestampLastAnimation > 3000) {
+    if (Date.now() - timestampLastAnimation > 7000) {
         regenerate1();
         setTimeout(function () {
             regenerate2();
