@@ -10,7 +10,7 @@ previewurl: /gbm-example.png
 Predicting the movement of stock prices is an alluring challenge with the promise of riches. Unfortunately, predicting future stock prices consistently and reliably is generally considered impossible. However, we can use models to make useful predictions, manage risk, and profit *probalistically*. 
 
 # Geometric Brownian Motion
-One such commonly used model is geometric Brownian motion ([1](https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.04%3A_Geometric_Brownian_Motion), [2](http://www.columbia.edu/~ks20/FE-Notes/4700-07-Notes-GBM.pdf)). This has the form
+One such commonly used model is geometric Brownian motion ([1](https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.04%3A_Geometric_Brownian_Motion), [2](http://www.columbia.edu/~ks20/FE-Notes/4700-07-Notes-GBM.pdf)) - in fact, the famous [Black-Scholes options pricing formula](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model) assumes this model as well. This has the form
 
 {%include math.html content=
 "
