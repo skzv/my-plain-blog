@@ -235,7 +235,7 @@ Summing over the trades, our equality holds- _we found a negative weight cycle_!
 {%include math.html content=
 "
 \begin{align}
-\sum_i^n{\log{e_i}} = 0.223 - 4.605 + 4.343 = -0.039 \label{eq:neg_log_exchange_rate_example} \tag{9}
+\sum_i^n{-\log{e_i}} = 0.223 - 4.605 + 4.343 = -0.039 \label{eq:neg_log_exchange_rate_example} \tag{9}
 \end{align}
 " 
 %}
@@ -245,7 +245,7 @@ We can undo the logarithmic operation to restore the product, and calculate the 
 {%include math.html content=
 "
 \begin{align}
-\prod_i^n{e_i} &= \exp{\sum_i^n{\log{e_i}}} \\
+\prod_i^n{e_i} &= \exp{\sum_i^n{-\log{e_i}}} \\
 \prod_i^n{e_i} &= \exp(0.039) = 1.04 \tag{10}
 \end{align}
 " 
