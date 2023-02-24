@@ -173,13 +173,22 @@ Notice that Vizier only suggests Gaussian parameters when the model is Gaussian,
 
 How does Vizier search for optimal parameters? It can do a grid or random search, but the real magic is the combination of other algorithms it employs: Gaussian process bandits, linear combination search, or their variants.
 
-Via GCP we can check this cool chart of Vizier's progress:
+Via GCP we can check these cool charts of Vizier's progress:
+
+![A study table showing the evolution of the metric being optimized and the parameters of each trial]({{ "/study-progress-table.png" | prepend: page.imgpath }})
+{% include caption.html content="A study table showing the evolution of the metric being optimized and the parameters of each trial." %}
+
+![A parallel chart showing the sets of parameters attempted and the resulting metric value]({{ "/parallel-chart.png" | prepend: page.imgpath }})
+{% include caption.html content="A parallel chart showing the sets of parameters attempted and the resulting metric value." %}
 
 <div class="divider"></div>
 
 ## Optimized Fit
 
 We can see that the Laplace distribution slightly wins out over the Gaussian:
+
+![Parallel chart zoomed in to show the top trials that minimize the sum of squared residuals. A better fit is found with a Laplace distribution than a Gaussian distribution.]({{ "/optimal-parallel-chart.png" | prepend: page.imgpath }})
+{% include caption.html content="Parallel chart zoomed in to show the top trials that minimize the sum of squared residuals. A better fit is found with a Laplace distribution than a Gaussian distribution." %}
 
 We query Vizier for the optimal trial parameters and plot them:
 
