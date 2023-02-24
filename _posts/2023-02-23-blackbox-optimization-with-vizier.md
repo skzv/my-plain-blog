@@ -208,4 +208,4 @@ For comparison, a Gaussian would have a rounder peak and thinner tails.
 
 ## How Can I Reproduce This?
 
-The colab I used to generate this article can be found [here](https://github.com/skzv/vizier-blog-post/blob/main/vizier_blog_post.ipynb). I used GCP's Vertex AI Vizier API because it generates some cool charts like the one I included in this post, but be aware it can be expensive ($1/trial). Vizier is also open-source and available [here](https://github.com/google/vizier). 
+The colab I used to generate this article can be found [here](https://github.com/skzv/vizier-blog-post/blob/main/vizier_blog_post.ipynb). I used GCP's Vertex AI Vizier API because it generates some cool charts like the ones I included in this post, but be aware it can be expensive ($1/trial). Vizier is also open-source and available [here](https://github.com/google/vizier). 
