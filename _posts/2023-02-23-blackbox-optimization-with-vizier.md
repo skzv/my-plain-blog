@@ -80,7 +80,7 @@ When trying to fit the Gaussian distribution, we don't want Vizier to try to est
 
 ```
 'conditional_parameter_specs': [
-    {
+{
     "parameter_spec": {
         "parameter_id": "mu",
         "scale_type": 'UNIT_LINEAR_SCALE',
@@ -92,8 +92,8 @@ When trying to fit the Gaussian distribution, we don't want Vizier to try to est
     "parent_categorical_values": {
         "values": ['gaussian']
     }
-    },
-    {
+},
+{
     "parameter_spec": {
         "parameter_id": "sigma",
         "scale_type": 'UNIT_LINEAR_SCALE',
@@ -105,7 +105,7 @@ When trying to fit the Gaussian distribution, we don't want Vizier to try to est
     "parent_categorical_values": {
         "values": ['gaussian']
     }
-    },
+},
     {
     "parameter_spec": {
         "parameter_id": "a",
@@ -118,8 +118,8 @@ When trying to fit the Gaussian distribution, we don't want Vizier to try to est
     "parent_categorical_values": {
         "values": ['laplace']
     }
-    },
-    {
+},
+{
     "parameter_spec": {
         "parameter_id": "b",
         "scale_type": 'UNIT_LINEAR_SCALE',
@@ -131,8 +131,7 @@ When trying to fit the Gaussian distribution, we don't want Vizier to try to est
     "parent_categorical_values": {
         "values": ['laplace']
     }
-    },
-]
+}]
 ```
 
 Lastly, we need to define the metric that Vizier will be to optimizing. I want to fit a function to the signal as closely as possible, and I will evaluate how well it fits the signal by calculating the sum of squares of residuals between the analytical function and the data. The smaller this number, the better the fit. All we need to tell Vizier is that there is this metric we are trying to minimize:
