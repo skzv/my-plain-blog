@@ -92,10 +92,15 @@ This dashboard is most useful when the futures market is open but the regular ma
 
 I put this dashboard together pretty quickly, and ended up just scraping a lot of the values which I cache once a minute on my own API :) My apologies if things break or it goes down - at some point I will replace things with proper APIs, or this dashboard will become irrelevant as markets move towards 24/7 trading. In any case, I wanted to put together this blog post for permenance. 
 
-If you notice errors in my calculations or have suggestions or other feedback, please reach out to me and let me know!
-
 ![It is what it is.]({{ "/it-is-what-it-is.png" | prepend: page.imgpath }})
 {% include caption.html content="It is what it is." %}
+
+If you notice errors in my calculations or have suggestions or other feedback, please reach out to me and let me know!
+
+If it ends up going down, this is what it looked like before then:
+
+![Save game]({{ "/save-game.png" | prepend: page.imgpath }})
+{% include caption.html content="Save game" %}
 
 <script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
