@@ -41,7 +41,7 @@ rate, $$q$$ is the dividend yield, and $$t$$ is the time to maturity.
 
 # Going Back in Time
 
-To calculate the current fair value of the stock price from the futures price, we can discount the futures price backwords in time, inverting the above formula:
+To calculate the current fair value of the stock price from the futures price, we can discount the futures price backwards in time, inverting the above formula:
 
 {% include math.html content=
 "
