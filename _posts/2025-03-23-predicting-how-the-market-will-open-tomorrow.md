@@ -8,13 +8,19 @@ previewurl: /preview.png
 #### _Predicting the Future_
 
 One weekend there was bad economic news, and I was wondering how it would impact the market at open on Monday. I looked into this question, and I learned that
-while the stock market is closed, futures trading of underlying indices continues, and we can use the futures market to understand how traders are already reacting to and pricing in new information. 
+while the stock market is closed, futures trading of underlying indices continues, and we can look to the futures market to understand how traders are already reacting to and pricing in new information - like a crystal ball 🔮. 
 
 As future prices and
 current prices are related, we can calculate what the futures markets are pricing as the current
 fair value of each index by discounting the future value backwards in time. This gives us the implied
 opening price of each index even before the market opens - so on Sunday night we can see whether the market
 will likely open <span style="color: #66ff66;">higher</span> or <span style="color: #ff6666;">lower</span> the next day.
+
+Below, I walk through all the pieces of this calculation, culminating in a dashboard I built that gives us a sneak preview of the opening movements the next day, at [impliedopen.com](https://impliedopen.com).
+
+
+![A preview of the dashboard I built which gives us a sneak peek of market movements the next day.]({{ "/save-game.png" | prepend: page.imgpath }})
+{% include caption.html content="A preview of the dashboard I built which gives us a sneak peek of market movements the next day." %}
 
 # Futures
 
@@ -99,11 +105,6 @@ I put this dashboard together pretty quickly, and ended up just scraping a lot o
 {% include caption.html content="It is what it is." %}
 
 If you notice errors in my calculations or have suggestions or other feedback, please reach out to me and let me know!
-
-If it ends up going down, this is what it looked like before then:
-
-![Save game]({{ "/save-game.png" | prepend: page.imgpath }})
-{% include caption.html content="Save game" %}
 
 <script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
