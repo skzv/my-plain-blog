@@ -17,7 +17,7 @@ will likely open <span style="color: #66ff66;">higher</span> or <span style="col
 
 Futures (future contracts) are instruments that allow traders to bet on the *future* price of an underlying asset at the future contract's date of expiry. Note the price and expiry date of the SP500 future below. It's currently trading higher than the SP500 price, but what does this tell us about what the current value of the SP500 is?
 
-To relate the futures price to the current fair value being priced by the futures market, we have to account for the time between now and the future expiry date.
+To relate the futures' price to the current fair value being priced by the futures market, we have to account for the time between now and the future expiry date.
 
 ![SP500 Future Contract]({{ "/futures-price.png" | prepend: page.imgpath }})
 {% include caption.html content="SP500 Future Contract" %}
