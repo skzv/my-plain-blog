@@ -9,6 +9,17 @@ Minimalist and elegant while powerful. Supports LaTeX via mathjax, and other emb
 Adapted from [The Plain](https://github.com/heiswayi/the-plain) by [Heiswayi Nrird](https://heiswayi.nrird.com).
 
 ## Running Locally
+
+Don't use MacOS System Ruby. Use rbenv.
+
+`brew install rbenv ruby-build`
+
+Add `eval "$(rbenv init -)"` to `~/.zshrc`.
+
+Install stable Ruby `rbenv install 3.2.2`. Set as global default `rbenv global 3.2.2`.
+
+Install bundler `gem install bundler`. Install inside project directory `bundle install`.
+
 To run locally, run:
 `bundle exec jekyll serve --config _config.yml,_config_development.yml`
 
