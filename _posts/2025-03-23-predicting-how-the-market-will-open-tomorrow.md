@@ -16,7 +16,7 @@ fair value of each index by discounting the future value backwards in time. This
 opening price of each index even before the market opens - so on Sunday night we can see whether the market
 will likely open <span style="color: #66ff66;">higher</span> or <span style="color: #ff6666;">lower</span> the next day.
 
-Below, I walk through all the pieces of this calculation, culminating in a dashboard I built that gives us a sneak preview of the opening movements the next day, at [impliedopen.com](https://impliedopen.com).
+Below, I walk through all the pieces of this calculation, culminating in a dashboard I built that gives us a sneak preview of the the next day's opening movements at [impliedopen.com](https://impliedopen.com).
 
 
 ![A preview of the dashboard I built which gives us a sneak peek of market movements the next day.]({{ "/save-game.png" | prepend: page.imgpath }})
