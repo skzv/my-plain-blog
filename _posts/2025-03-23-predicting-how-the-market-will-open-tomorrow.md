@@ -7,7 +7,10 @@ previewurl: /preview.png
 
 #### _Predicting the Future_
 
-While the stock market is closed, futures trading of underlying indices continues. As future prices and
+One weekend there was bad economic news, and I was wondering how it would impact the market at open on Monday. I looked into this question, and I learned that
+while the stock market is closed, futures trading of underlying indices continues, and we can use the futures market to understand how traders are already reacting to and pricing in new information. 
+
+As future prices and
 current prices are related, we can calculate what the futures markets are pricing as the current
 fair value of each index by discounting the future value backwards in time. This gives us the implied
 opening price of each index even before the market opens - so on Sunday night we can see whether the market
