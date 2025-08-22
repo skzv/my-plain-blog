@@ -2,7 +2,7 @@
 title: 3D Reconstruction From Public Photos with Machine Learning
 updated: 2025-08-21 00:00
 imgpath: /assets/img/3d-reconstruction
-previewurl: /preview.png
+previewurl: /3d-recnstruction-preview.png
 ---
 
 {% include description.html content="Can we reconstruct the world from public photos?" %}
