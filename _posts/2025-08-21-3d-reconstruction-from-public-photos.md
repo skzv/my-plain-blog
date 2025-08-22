@@ -22,7 +22,7 @@ I wondered: is it possible to create a 3D map of the world from all this data? C
 Into a 3D model like this:
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="500">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/safeway-1-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -34,7 +34,7 @@ Another example, from the famous Singapore Airport:
 {% include caption.html content="Public SG Airport input image." %}
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="800">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/sg-airport-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -46,7 +46,7 @@ And even an image of a forest:
 {% include caption.html content="Public Forest input image." %}
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="400">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/forest-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -124,7 +124,7 @@ The corresponding estimated depth mask and focal length are:
 I then used equations $$(2)$$ to map each pixel back into 3D, created a point cloud, and then visualized it with Open3D: 
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="500">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/safeway-1-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -143,7 +143,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 {% include caption.html content="COEX Mall depth mask and focal length predicted by the DepthPro model. " %}
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="500">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/coex-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -160,7 +160,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 {% include caption.html content="Forest depth mask and focal length predicted by the DepthPro model." %}
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="400">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/forest-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -177,7 +177,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 {% include caption.html content="NYC depth mask and focal length predicted by the DepthPro model." %}
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="400">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/nyc-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -194,7 +194,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 {% include caption.html content="Safeway depth mask 0 and focal length predicted by the DepthPro model." %}
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="500">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/safeway-0-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -211,7 +211,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 {% include caption.html content="Safeway depth mask 1 and focal length predicted by the DepthPro model." %}
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="500">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/safeway-1-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -228,7 +228,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 {% include caption.html content="SG Airport depth mask and focal length predicted by the DepthPro model." %}
 
 <div style="text-align: center;">
-    <video autoplay loop muted playsinline disableRemotePlayback height="800">
+    <video autoplay loop muted playsinline disableRemotePlayback style="width: 100%; height: auto;">
         <source src="assets/video/3d-reconstruction/sg-airport-recording.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
