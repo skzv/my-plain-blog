@@ -104,7 +104,7 @@ Note, it's also possible to describe the full transformation between 3D and 2D c
 
 ### Depth Masks
 
-Apple recently released the [DepthPro model](https://github.com/apple/ml-depth-pro), which made this possible. Depth models have existed for a long time, but I noticed this model was different in 2 ways:
+Apple's recently released [DepthPro model](https://github.com/apple/ml-depth-pro) made this project possible. While depth models have existed for a long time, I noticed this model was different in two ways:
     1. It provided depth in an absolute, metric scale, which meant 3D reconstructions would actually have metric proportions, even when generated from a single mono image
     2. It estimated the focal length of the camera for me
 
@@ -132,7 +132,7 @@ I then used equations $$(2)$$ to map each pixel back into 3D, created a point cl
 
 ### 3D Reconstruction
 
-Check out all my examples, below. I was curious to see how well it would work on a huge scene, like the skyline of NYC. Expectedly, the depth pro model did not produce a good depth mask. The model is generated from iPhone LiDAR data, so it's no wonder they didn't have accurate skyline depth training data for their model. 
+Check out all my examples, below. Notably, check out the NYC skyline example. I was curious to see how well it would work on a huge scene, like the skyline of NYC. As expected, the depth pro model did not produce a good depth mask. The training dataset almost certainly focused on smaller scales.
 
 #### COEX Mall
 
