@@ -144,11 +144,11 @@ function getY(P) {
 }
 
 function F(P) {
-    return f(getX(P), getY(P));
+    return evaluateAt(f, P);
 }
 
 function gradF(P) {
-    return gradf(getX(P), getY(P));
+    return evaluateAt(gradf, P);
 }
 
 /*  3 * (1 - x)^2 * exp(- x^2 - (y + 1)^2) - 10 * (x / 5 - x^3 - y^5) 
