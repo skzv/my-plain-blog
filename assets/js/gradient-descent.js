@@ -154,10 +154,17 @@ function gradF(P) {
 /*  3 * (1 - x)^2 * exp(- x^2 - (y + 1)^2) - 10 * (x / 5 - x^3 - y^5) 
     * exp(-x^2 - y^2) - 1 / 3 * exp(-(x+1)^2 - y^2) */
 function f(x, y) {
-    return 3 * math.pow(1 - x, 2) * math.exp(-math.pow(x, 2) - math.pow((y + 1), 2))
-        - 10 * (x / 5 - math.pow(x, 3) - math.pow(y, 5))
-        * math.exp(-math.pow(x, 2) - math.pow(y, 2))
-        - 1 / 3 * math.exp(-math.pow(x + 1, 2) - math.pow(y, 2));
+    var x2 = x * x;
+    var y2 = y * y;
+    var oneMinusX = 1 - x;
+    var oneMinusX2 = oneMinusX * oneMinusX;
+    var yPlus1 = y + 1;
+    var xPlus1 = x + 1;
+
+    return 3 * oneMinusX2 * math.exp(-x2 - yPlus1 * yPlus1)
+        - 10 * (x / 5 - x * x2 - math.pow(y, 5))
+        * math.exp(-x2 - y2)
+        - 1 / 3 * math.exp(-xPlus1 * xPlus1 - y2);
 }
 
 function containTrace(T, minX, maxX, minY, maxY, minZ, maxZ) {
@@ -261,17 +268,31 @@ function evaluateAt(f, P) {
     gradf(0,0) = [-4.0876939278726425,-2.207276647028654]
    */
 function gradf(x, y) {
+    var x2 = x * x;
+    var y2 = y * y;
+    var oneMinusX = 1 - x;
+    var oneMinusX2 = oneMinusX * oneMinusX;
+    var xPlus1 = x + 1;
+    var yPlus1 = y + 1;
+    var yPlus1_2 = yPlus1 * yPlus1;
+    var xPlus1_2 = xPlus1 * xPlus1;
 
-    var dfdx = -6 * math.exp(-math.pow(x, 2) - math.pow((1 + y), 2)) * (1 - x)
-        - 6 * math.exp(-math.pow(x, 2) - math.pow(1 + y, 2)) * math.pow(1 - x, 2) * x
-        + 2 / 3 * math.exp(-math.pow((1 + x), 2) -
-            math.pow(y, 2)) * (1 + x) - 10 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * (1 / 5 - 3 * math.pow(x, 2))
-        + 20 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * x * (x / 5 - math.pow(x, 3) - math.pow(y, 5));
+    var exp1 = math.exp(-x2 - yPlus1_2);
+    var exp2 = math.exp(-x2 - y2);
+    var exp3 = math.exp(-xPlus1_2 - y2);
 
-    var dfdy = 2 / 3 * math.exp(-math.pow((1 + x), 2) - math.pow(y, 2)) * y
-        + 50 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * math.pow(y, 4)
-        - 6 * math.exp(-math.pow(x, 2) - math.pow((1 + y), 2)) * math.pow((1 - x), 2) * (1 + y)
-        + 20 * math.exp(-math.pow(x, 2) - math.pow(y, 2)) * y * (x / 5 - math.pow(x, 3) - math.pow(y, 5));
+    var polyTerm = (x / 5 - x * x2 - math.pow(y, 5));
+
+    var dfdx = -6 * exp1 * oneMinusX
+        - 6 * exp1 * oneMinusX2 * x
+        + 2 / 3 * exp3 * xPlus1
+        - 10 * exp2 * (1 / 5 - 3 * x2)
+        + 20 * exp2 * x * polyTerm;
+
+    var dfdy = 2 / 3 * exp3 * y
+        + 50 * exp2 * math.pow(y, 4)
+        - 6 * exp1 * oneMinusX2 * yPlus1
+        + 20 * exp2 * y * polyTerm;
 
     return math.matrix([dfdx, dfdy]);
 }
