@@ -1,0 +1,14 @@
+{
+  "name": "my-plain-blog",
+  "version": "1.0.0",
+  "description": "A personal blog with interactive demos.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0",
+    "mathjs": "^9.5.1"
+  },
+  "license": "MIT"
+}

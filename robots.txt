@@ -1,0 +1,4 @@
+sitemap: https://blog.skz.dev/sitemap.xml
+
+user-agent: EmailCollector
+disallow: /
