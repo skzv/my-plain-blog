@@ -252,8 +252,6 @@ function calculateStatistics(TS, strike) {
     var optionMean = math.mean(strikeValues);
     var optionStandardDeviation = math.std(strikeValues);
     return { mean: mean, standardDeviation: standardDeviation, optionMean: optionMean, optionStandardDeviation: optionStandardDeviation };
-    // console.log(mean);
-    // console.log(standardDeviation);
 }
 
 function updateStats(index, stats, strike) {
