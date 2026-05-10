@@ -1,12 +1,34 @@
-/* 
-Palette:
-#313131
-#000
-#ffffff
-#313131
-**/
+/* Sasha Kuznetsov's Blog — plain dark theme.
+   Design tokens mirror sasha-kuznetsov-blog-design-system/project/colors_and_type.css. */
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-page:        #000000;
+  --bg-surface:     #1d1d1d;
+  --bg-inverted:    #ffffff;
+  --bg-inverted-h:  #e6e6e6;
+
+  --fg-default:     #ffffff;
+  --fg-muted:       #757575;
+  --fg-subtle:      #777777;
+  --fg-faint:       #555555;
+  --fg-grey:        #888888;
+  --fg-on-inverted: #000000;
+
+  --accent-link:     #0087BE;
+  --accent-logo-hot: #f14e32;
+  --accent-mark:     #fffc76;
+
+  --border-faint:   #555555;
+  --border-quote:   #cccccc;
+  --rule-divider:   linear-gradient(to right, rgba(255,255,255,0), #cccccc, rgba(255,255,255,0));
+
+  --shadow-avatar:  0 1px 3px rgba(0, 0, 0, 0.15);
+
+  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: Consolas, monaco, monospace;
+}
 
 * {
   -webkit-box-sizing: border-box;
@@ -23,11 +45,9 @@ body {
   line-height: 20px;
   font-weight: normal;
   font-style: normal;
-  font-family: 'Montserrat', sans-serif;
-  // font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  // color: #333333;
-  background-color: #000;
-  color: #ffffff;
+  font-family: var(--font-sans);
+  background-color: var(--bg-page);
+  color: var(--fg-default);
   padding: 20px;
   margin: 0;
   -webkit-font-smoothing: antialiased;
@@ -44,8 +64,7 @@ h5,
 h6 {
     margin-bottom: 1rem;
     line-height: 1.25;
-    // color: #313131;
-    color: #ffffff;
+    color: var(--fg-default);
 }
 h1 {
   font-size: 2rem;
@@ -71,13 +90,13 @@ img {
   max-width: 100%;
 }
 mjx-container[jax="SVG"] > svg a {
-  fill: #777 !important;
-  stroke: #777 !important;
+  fill: var(--fg-subtle) !important;
+  stroke: var(--fg-subtle) !important;
 }
 a {
   color: inherit;
   text-decoration: none;
-  border-bottom: 1px solid #555;
+  border-bottom: 1px solid var(--border-faint);
   &.image {
     display: block;
     text-align: center;
@@ -87,14 +106,14 @@ a {
   }
 }
 mark {
-  background: #fffc76;
+  background: var(--accent-mark);
   padding: 0 5px;
 }
 blockquote {
-  border-left: 5px solid #ccc;
+  border-left: 5px solid var(--border-quote);
   margin: 40px 0;
   padding: 5px 30px;
-  background: #1d1d1d;
+  background: var(--bg-surface);
 }
 .logo {
   position: relative;
@@ -107,8 +126,8 @@ blockquote {
   -webkit-animation-fill-mode: both;
   -webkit-animation-name: bounce;
   a {
-    background: #ddd url("/assets/img/logo_wrapper.png");
-    color: #000;
+    background: var(--bg-surface);
+    color: var(--fg-on-inverted);
     text-decoration: none;
     font-weight: 700;
     height: 100px;
@@ -118,18 +137,19 @@ blockquote {
     display: inline-block;
     text-align: center;
     line-height: 100px;
-    border: 5px solid #fff;
+    border: 5px solid var(--fg-default);
     box-sizing: border-box;
+    overflow: hidden;
     &:hover,
     &:focus {
-      background: #f14e32;
+      background: var(--accent-logo-hot);
     }
     &:hover + .logo-prompt,
     &:focus + .logo-prompt {
       display: inline-block !important;
     }
     .logo-avatar {
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-avatar);
       -webkit-border-radius: 50%;
       -moz-border-radius: 50%;
       border-radius: 50%;
@@ -144,22 +164,21 @@ blockquote {
     position: absolute;
     display: none;
     vertical-align: middle;
-    padding: 5px;
+    padding: 5px 8px;
     border-radius: 3px;
-    background: #666;
     background: rgba(0,0,0,.5);
     margin-left: 15px;
-    color: #fff;
+    color: var(--fg-default);
     font-size: 0.8235em;
     text-align: center;
     line-height: 1.2;
     top: 50%;
     margin-top: -10px;
+    white-space: nowrap;
     &:before {
       content: "";
       border-width: 5px 5px 5px 0;
       border-style: solid;
-      border-color: transparent #666;
       border-color: transparent rgba(0,0,0,.5);
       position: absolute;
       top: 50%;
@@ -190,17 +209,17 @@ sup {
   margin-left: 1px;
 }
 time {
-  color: #555;
+  color: var(--fg-faint);
 }
 code,
 pre,
 .code,
 .footnotes {
-  font-family: Consolas, monaco, monospace;
+  font-family: var(--font-mono);
 }
 code {
-  background-color: #1d1d1d;
-  border: 1px solid #1d1d1d;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--bg-surface);
   padding: 2px 6px;
   font-size: 13px;
 }
@@ -212,8 +231,8 @@ pre {
   line-height: 1.4;
   white-space: pre;
   overflow-x: auto;
-  background-color: #1d1d1d;
-  border: 1px solid #1d1d1d;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--bg-surface);
   padding: 1rem;
   code {
     font-size: 100%;
@@ -226,12 +245,8 @@ table {
   width: 100%;
   table-layout: fixed;
   margin: 45px 0;
-  // background: rgb(29, 29, 29);
-  // border: 1px dotted;
   thead {
-    // background: #f2f2f2;
-    // background: black;
-    background: rgb(29, 29, 29);
+    background: var(--bg-surface);
   }
   th {
     text-align: left;
@@ -255,10 +270,7 @@ article {
     font-size: 1.4em;
   }
   .divider {
-    background: #ddd;
-    background: -webkit-gradient(linear,left top,right top,from(rgba(255,255,255,0)),color-stop(#ccc),to(rgba(255,255,255,0)));
-    background: -webkit-linear-gradient(left,rgba(255,255,255,0),#ccc,rgba(255,255,255,0));
-    background: linear-gradient(to right,rgba(255,255,255,0),#ccc,rgba(255,255,255,0));
+    background: var(--rule-divider);
     height: 1px;
     margin: 2em 0;
   }
@@ -268,7 +280,7 @@ article {
   }
   hr {
     border: 0;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid var(--bg-page);
     margin: 30px 0;
   }
   p {
@@ -277,18 +289,17 @@ article {
     word-wrap: break-word;
     &.caption {
       font-size: 0.9em;
-      color: grey;
+      color: var(--fg-grey);
       font-style: italic;
       text-align: center;
-      // width: 300px;
-      margin:auto;
+      margin: auto;
       &.video-caption {
-        margin-top:60px;
+        margin-top: 60px;
       }
     }
     &.description {
       font-size: 0.9em;
-      color: grey;
+      color: var(--fg-grey);
       font-style: italic;
     }
   }
@@ -299,8 +310,8 @@ article {
   }
   .footnote {
     border: 0;
-    background-color: #0087BE;
-    color: #fff;
+    background-color: var(--accent-link);
+    color: var(--fg-default);
     padding-left: 2px;
     padding-right: 2px;
   }
@@ -308,7 +319,7 @@ article {
     margin: 50px auto;
     display: block;
     font-size: 0.8em;
-    color: #666;
+    color: var(--fg-subtle);
     p {
       line-height: 1rem;
       font-weight: normal;
@@ -322,14 +333,12 @@ article {
     }
     .reversefootnote {
       border: 0;
-      color: #0087BE;
+      color: var(--accent-link);
     }
   }
   a:hover {
-    // color: #369;
-    // border-color: #369;
-    color: grey;
-    border-color: grey;
+    color: var(--fg-grey);
+    border-color: var(--fg-grey);
   }
 }
 .back {
@@ -343,7 +352,7 @@ article {
     &:before {
       content: "<<";
       margin-right: 5px;
-      color: #000;
+      color: var(--bg-page);
     }
   }
 }
@@ -370,7 +379,7 @@ article {
 }
 .footer {
   margin-top: 50px;
-  color: #777;
+  color: var(--fg-subtle);
   a {
     border: none;
     font-weight: bold;
@@ -385,18 +394,15 @@ section {
     padding: 0;
     li {
       margin: 25px 0;
+      overflow: hidden;
       .title {
         max-width: 100%;
-        //overflow: hidden !important;
-        //text-overflow: ellipsis !important;
-        //white-space: nowrap !important;
         word-wrap: normal !important;
       }
       a {
         text-decoration: none;
         border: 0;
-        // color: #000;
-        color: #ffffff;
+        color: var(--fg-default);
         box-sizing: border-box;
       }
       .post-date {
@@ -405,14 +411,16 @@ section {
       }
       span {
         display: inline-block;
-        color: #757575;
+        color: var(--fg-muted);
         letter-spacing: 1px;
         text-transform: uppercase;
+        font-size: 12px;
       }
-      @media (min-width: 992px) {a {
+      @media (min-width: 992px) {
+        a {
           border-bottom: 2px solid transparent;
           &:hover {
-            border-color: #000;
+            border-color: var(--bg-page);
           }
         }
       }
@@ -458,45 +466,30 @@ section {
   -webkit-appearance: none;
   height: 5px;
   border-radius: 5px;
-  // opacity: 0.85;
-  // width: 100%;
-  // height: 5px;
-  // background: white;
-  // outline: none;
-  // opacity: 0.7;
-  // -webkit-transition: .2s;
-  // transition: opacity .2s;
 
-  // Range Handle
   &::-webkit-slider-thumb {
     appearance: none;
     width: 15px;
     height: 15px;
-    // opacity: 1 !;
     border-radius: 50%;
-    background: white;
+    background: var(--bg-inverted);
     cursor: pointer;
-    // border: black;
-    // outline: solid;
   }
 }
 
 .slider-container {
-  width: 100%; 
+  width: 100%;
   text-align: center;
 }
 
 .slider-value {
-  width: 3em; 
-  display: inline-block; 
-  background: white; 
-  border-radius: 3px; 
-  color: black; 
+  width: 3em;
+  display: inline-block;
+  background: var(--bg-inverted);
+  border-radius: 3px;
+  color: var(--fg-on-inverted);
   text-align: center;
   margin-left: 5px;
-
-  // padding: 5px 10px;
-  // margin-left: 8px;
   position: relative;
 
   &:after {
@@ -506,33 +499,30 @@ section {
     width: 0;
     height: 0;
     border-top: 7px solid transparent;
-    border-right: 7px solid white;
+    border-right: 7px solid var(--bg-inverted);
     border-bottom: 7px solid transparent;
     content: '';
   }
 }
 
 .slider-label {
-  width: 1em; 
+  width: 1em;
   display: inline-block;
 }
 
 button {
-  background-color: white;
+  background-color: var(--bg-inverted);
   border: none;
-  color: black;
+  color: var(--fg-on-inverted);
   padding: 15px 32px;
   text-align: center;
   text-decoration: none;
   font-weight: bold;
   display: inline-block;
-  // font-size: 16px;
 }
 
 button:hover {
-  background-color: #e6e6e6;
-  // color: white;
-  // text-shadow: 1px 1px grey;
+  background-color: var(--bg-inverted-h);
 }
 
 .regenerate-button {
@@ -540,5 +530,5 @@ button:hover {
 }
 
 .option-stats {
-  color: grey;
+  color: var(--fg-grey);
 }
