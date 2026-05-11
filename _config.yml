@@ -1,8 +1,24 @@
 # Site Info
 title:              "Sasha Kuznetsov's Blog"
-description:        "Writing about tech, finance, physics, and other things."
+description:        "Personal blog of Sasha Kuznetsov — a software engineer and engineering physicist writing about ML/CV, quantitative finance, physics, robotics, and side projects."
 author_name:        "Sasha Kuznetsov"
+author:
+  name:             "Sasha Kuznetsov"
+  url:              "https://skz.dev"
+  twitter:          skzv
 logo_url:           https://avatars.githubusercontent.com/u/11140296?v=4 # Get it from GitHub API: https://api.github.com/users/<username>
+lang:               en_US
+
+twitter:
+  username:         skzv
+  card:             summary_large_image
+
+social:
+  name:             Sasha Kuznetsov
+  links:
+    - https://github.com/skzv
+    - https://twitter.com/skzv
+    - https://skz.dev
 
 # Site Settings
 url:                https://blog.skz.dev # main url
@@ -25,6 +41,7 @@ exclude:            [ "LICENSE", "README.md", "vendor", "Gemfile", "script" ]
 plugins:
   - jekyll-sitemap
   - jekyll-feed
+  - jekyll-seo-tag
 
 
 

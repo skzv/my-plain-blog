@@ -2,42 +2,44 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+{% comment %}
+  jekyll-seo-tag emits title, description, canonical, og:*, twitter:*, JSON-LD.
+  We keep `og:image` / `twitter:image` here because posts encode preview images
+  via `page.previewurl` + `page.imgpath` rather than a single `page.image` field.
+{% endcomment %}
+{% seo title=false %}
+
+<title>{% if page.title %}{{ page.title }} · {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+
+{% comment %}
+  Force summary_large_image — jekyll-seo-tag hardcodes the card to "summary"
+  when page.image isn't set, even if site.twitter.card says otherwise. The
+  later <meta> wins in every parser we care about (Twitter, LinkedIn, FB).
+{% endcomment %}
+<meta name="twitter:card" content="summary_large_image">
+
 {% if page.previewurl %}
-	<meta property="og:image" content="{{page.previewurl | prepend: page.imgpath | prepend: site.baseurl | prepend: site.url}}">
-	<meta name="twitter:image" content="{{page.previewurl | prepend: page.imgpath | prepend: site.baseurl | prepend: site.url}}">
+	{% capture preview_url %}{{ page.previewurl | prepend: page.imgpath | prepend: site.baseurl | prepend: site.url }}{% endcapture %}
+	<meta property="og:image" content="{{ preview_url }}">
+	<meta name="twitter:image" content="{{ preview_url }}">
 {% else %}
 	<meta property="og:image" content="https://skz.dev/assets/img/preview-banner.png">
-	<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="600" />
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="600">
 	<meta name="twitter:image" content="https://skz.dev/assets/img/preview-banner.png">
 {% endif %}
 
-<meta name="author" content="Sasha Kuznetsov">
-
-{% if page.title %}
-	<title>{{ page.title }} · {{ site.title }}</title>
-	<meta property="og:title" content="{{ page.title }} · {{ site.title }}">
-	<meta name="twitter:title" content="{{ page.title }} · {{ site.title }}">
-{% else %}
-	<title>{{ site.title }}</title>
-	<meta property="og:title" content="{{ site.title }}">
-	<meta name="twitter:title" content="{{ site.title }}">
+{% if page.updated %}
+	<meta property="article:modified_time" content="{{ page.updated | date_to_xmlschema }}">
 {% endif %}
-
-<meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
-<meta property="og:description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
-<meta name="twitter:description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
 
 <link rel="icon" href="{{ "/assets/img/favicon.png" | prepend: site.baseurl | prepend: site.url }}">
 <link rel="apple-touch-icon" href="{{ "/assets/img/favicon.png" | prepend: site.baseurl | prepend: site.url }}">
 <link rel="stylesheet" href="{{ "/assets/css/core.css" | prepend: site.baseurl | prepend: site.url }}">
-<link rel="canonical" href="{{ page.url | prepend: site.baseurl | prepend: site.url }}">
-<link rel="alternate" type="application/atom+xml" title="{{ site.title }}" href="{{ "/feed.xml" | prepend: site.baseurl | prepend: site.url }}" />
+{% feed_meta %}
 
 {% if site.mathjax %}
 	{% unless page.url == '/index.html' or page.url == '/' %}
 		<script src="/assets/js/load-mathjax.js" async></script>
 	{% endunless %}
 {% endif %}
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:creator" content="@skzv">
