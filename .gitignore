@@ -3,6 +3,7 @@ _site/
 .jekyll-cache/
 .jekyll-metadata
 .DS_Store
+_og.html
 # Obsidian local settings
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
