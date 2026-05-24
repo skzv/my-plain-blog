@@ -18,6 +18,14 @@
 {% endcomment %}
 <meta name="twitter:card" content="summary_large_image">
 
+{% comment %}
+  Explicit og:type and og:url. jekyll-seo-tag usually emits these but
+  LinkedIn's Post Inspector flags them as missing on some pages.
+  Posts → "article", everything else → "website".
+{% endcomment %}
+<meta property="og:type" content="{% if page.layout == 'post' %}article{% else %}website{% endif %}">
+<meta property="og:url" content="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
+
 {% if page.previewurl %}
 	{% capture preview_url %}{{ page.previewurl | prepend: page.imgpath | prepend: site.baseurl | prepend: site.url }}{% endcapture %}
 	<meta property="og:image" content="{{ preview_url }}">
@@ -26,6 +34,7 @@
 	<meta property="og:image" content="https://blog.skz.dev/assets/img/preview-banner.png">
 	<meta property="og:image:width" content="1200">
 	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt" content="Sasha Kuznetsov. Blog.">
 	<meta name="twitter:image" content="https://blog.skz.dev/assets/img/preview-banner.png">
 {% endif %}
 
