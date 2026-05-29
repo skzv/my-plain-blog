@@ -370,67 +370,70 @@
    *  z_{l+1} = z_l + h*field(z_l), h = T / L. Slider = number of layers L.
    * ======================================================================= */
   function figEuler(container) {
-    var H = 380;
+    var H = 400;
     var c = makeCanvas(container, H);
-    var R = 3.2;
     // a smooth swirling field with gentle inward pull -> visible curvature
     function field(z) {
-      var x = z[0], y = z[1];
-      var rot = 0.9;
-      return [(-y) * rot - 0.15 * x, (x) * rot - 0.15 * y];
+      var x = z[0], y = z[1], rot = 0.9;
+      return [(-y) * rot - 0.18 * x, (x) * rot - 0.18 * y];
     }
     var start = [2.4, 0.0], T = 3.0;
     var L = 6;
 
-    function integrate(steps, h) {
+    function integrate(steps, hh) {
       var pts = [start.slice()], z = start.slice();
       for (var i = 0; i < steps; i++) {
         var f = field(z);
-        z = [z[0] + h * f[0], z[1] + h * f[1]];
+        z = [z[0] + hh * f[0], z[1] + hh * f[1]];
         pts.push(z.slice());
       }
       return pts;
     }
 
     var sl = makeSlider({
-      label: "layers &nbsp;<b>L</b>", min: 1, max: 60, step: 1, value: 6,
-      fmt: function (v) { return "L = " + v + "  (h=" + (T / v).toFixed(2) + ")"; },
+      label: "layers &nbsp;<b>L</b>", min: 3, max: 60, step: 1, value: 6,
+      fmt: function (v) { return "L = " + v + "  (h = " + (T / v).toFixed(2) + ")"; },
       onInput: function (v) { L = v; render(); }
     });
     container.appendChild(sl.el);
-    container.appendChild(caption("The true flow (the smooth <b style='color:" + C.data + "'>continuous-depth ODE</b>) is fixed. The <b style='color:" + C.flow2 + "'>residual network</b> approximates it with L discrete jumps, z<sub>&ell;+1</sub> = z<sub>&ell;</sub> + h&middot;f(z<sub>&ell;</sub>) — each dot is one layer. A handful of layers overshoots and cuts corners; add layers (shrink the step h) and the staircase melts into the curve. <b>Depth is time; a layer is one Euler step.</b>"));
+    container.appendChild(caption("The true flow (the smooth <b style='color:" + C.data + "'>continuous-depth ODE</b>, orange) is fixed. The <b style='color:" + C.flow2 + "'>residual network</b> (blue) approximates it with L discrete jumps, z<sub>&ell;+1</sub> = z<sub>&ell;</sub> + h&middot;f(z<sub>&ell;</sub>), one dot per layer. A few layers overshoots and cuts corners; add layers (shrink the step h) and the staircase melts into the curve. <b>Depth is time, and a layer is one Euler step.</b>"));
 
     function render() {
-      var ctx = c.ctx, w = c.w, h = c.h;
+      var ctx = c.ctx, w = c.w, h = c.h, pad = 18;
       ctx.clearRect(0, 0, w, h);
-      var ar = (R * h / w);
-      var v = makeView(w, h, -R, R, -ar, ar, 14);
-      // faint field arrows
-      for (var px = 22; px < w; px += 34) for (var py = 22; py < h; py += 34) {
-        var wx = -R + (px - 14) / v.sx, wy = ar - (py - 14) / v.sy;
-        var f = field([wx, wy]); var m = Math.hypot(f[0], f[1]) + 1e-9;
+      var truth = integrate(600, T / 600);
+      var path = integrate(L, T / L);
+      // Fit the view to BOTH curves so nothing is ever clipped, at any width or L.
+      var minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9;
+      function ext(p) { if (p[0] < minx) minx = p[0]; if (p[0] > maxx) maxx = p[0]; if (p[1] < miny) miny = p[1]; if (p[1] > maxy) maxy = p[1]; }
+      truth.forEach(ext); path.forEach(ext);
+      var mx = (maxx - minx) * 0.10 + 0.3, my = (maxy - miny) * 0.10 + 0.3;
+      minx -= mx; maxx += mx; miny -= my; maxy += my;
+      var s = Math.min((w - 2 * pad) / (maxx - minx), (h - 2 * pad) / (maxy - miny));
+      var ox = (w - (maxx - minx) * s) / 2, oy = (h - (maxy - miny) * s) / 2;
+      function X(x) { return ox + (x - minx) * s; }
+      function Y(y) { return h - (oy + (y - miny) * s); }
+      function invX(px) { return minx + (px - ox) / s; }
+      function invY(py) { return miny + (h - py - oy) / s; }
+      // faint field arrows over the visible region
+      for (var px = pad; px < w; px += 34) for (var py = pad; py < h; py += 34) {
+        var f = field([invX(px), invY(py)]); var m = Math.hypot(f[0], f[1]) + 1e-9;
         arrow(ctx, px, py, px + f[0] / m * 8, py - f[1] / m * 8, "rgba(255,255,255,0.10)", 2.6);
       }
-      // ground-truth trajectory (many tiny steps)
-      var truth = integrate(600, T / 600);
-      ctx.strokeStyle = C.data; ctx.lineWidth = 2.2; ctx.globalAlpha = 0.9;
-      ctx.beginPath();
-      for (var i = 0; i < truth.length; i++) { var X = v.X(truth[i][0]), Y = v.Y(truth[i][1]); if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); }
+      // ground-truth trajectory
+      ctx.strokeStyle = C.data; ctx.lineWidth = 2.2; ctx.globalAlpha = 0.92; ctx.beginPath();
+      truth.forEach(function (p, i) { var Xx = X(p[0]), Yy = Y(p[1]); if (i) ctx.lineTo(Xx, Yy); else ctx.moveTo(Xx, Yy); });
       ctx.stroke(); ctx.globalAlpha = 1;
       // discrete residual path
-      var path = integrate(L, T / L);
-      ctx.strokeStyle = C.flow2; ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      for (i = 0; i < path.length; i++) { X = v.X(path[i][0]); Y = v.Y(path[i][1]); if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); }
+      ctx.strokeStyle = C.flow2; ctx.lineWidth = 1.6; ctx.beginPath();
+      path.forEach(function (p, i) { var Xx = X(p[0]), Yy = Y(p[1]); if (i) ctx.lineTo(Xx, Yy); else ctx.moveTo(Xx, Yy); });
       ctx.stroke();
-      for (i = 0; i < path.length; i++) {
-        dot(ctx, v.X(path[i][0]), v.Y(path[i][1]), i === 0 ? 4 : 3, i === 0 ? C.ink : C.flow2, 1);
-      }
-      // labels
+      path.forEach(function (p, i) { dot(ctx, X(p[0]), Y(p[1]), i === 0 ? 4.5 : 3, i === 0 ? C.ink : C.flow2, 1); });
+      // legend, with a backdrop so it stays legible over the curve
+      ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.fillRect(10, 10, 236, 48);
       ctx.font = "12px " + MONO; ctx.textAlign = "left";
-      ctx.fillStyle = C.data; ctx.fillText("continuous ODE flow", 14, 22);
-      ctx.fillStyle = C.flow2; ctx.fillText("residual network (" + L + " layers)", 14, 40);
-      dot(ctx, v.X(start[0]), v.Y(start[1]), 4, C.ink, 1);
+      ctx.fillStyle = C.data; ctx.fillText("continuous ODE flow (true)", 20, 31);
+      ctx.fillStyle = C.flow2; ctx.fillText("residual network (" + L + " layers)", 20, 49);
     }
     c.onresize = render;
     render();

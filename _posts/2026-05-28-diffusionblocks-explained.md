@@ -68,6 +68,16 @@ A result from the 1950s called **Tweedie's formula** says something convenient e
 
 Read it slowly. The left side is the score, the abstract, normalizer-free compass we said was the whole game. The right side is "your best guess of the clean image, minus where you currently are." Of course that difference points from your noisy point toward the clean data; dividing by $$\sigma^2$$ just sets the length. The direction of increasing plausibility *is* the direction from noisy toward denoised. Estimating the score and denoising an image are literally the same task.
 
+It's worth seeing where this comes from, because the derivation is three lines and you know every move in it. The noised density is just the data blurred by a Gaussian, $$p_\sigma(\mathbf{z}) = \int \mathcal{N}(\mathbf{z};\mathbf{y},\sigma^2\mathbf{I})\,p(\mathbf{y})\,d\mathbf{y}$$. Differentiate in $$\mathbf{z}$$ (the only place $$\mathbf{z}$$ appears is inside the Gaussian), divide by $$p_\sigma(\mathbf{z})$$, and the integral collapses into a posterior average:
+
+{%include math.html content="
+\begin{align}
+\nabla_{\mathbf{z}} \mathcal{N}(\mathbf{z};\mathbf{y},\sigma^2\mathbf{I}) = \mathcal{N}(\mathbf{z};\mathbf{y},\sigma^2\mathbf{I})\,\frac{\mathbf{y}-\mathbf{z}}{\sigma^2} \quad\Longrightarrow\quad \nabla_{\mathbf{z}} \log p_\sigma(\mathbf{z}) = \frac{\mathbb{E}[\mathbf{y}\mid\mathbf{z}] - \mathbf{z}}{\sigma^2}.
+\end{align}
+"%}
+
+That posterior mean $$\mathbb{E}[\mathbf{y}\mid\mathbf{z}]$$ is exactly the best-guess denoiser $$D$$, so you've recovered eq $$\eqref{eq:tweedie}$$ with nothing fancier than the chain rule. The Gaussian is what makes the clean $$(\mathbf{y}-\mathbf{z})/\sigma^2$$ factor fall out; other noise families have their own Tweedie identity, but they lose this exact form.
+
 And this matters, because one of these tasks is hard to set up and one is trivial. You cannot directly supervise "the score," since you don't have ground-truth arrows. But you can absolutely supervise a denoiser: take clean data, add noise *yourself* (so you know the answer), and train a network to undo it. That's a plain regression problem:
 
 {%include math.html content="
@@ -93,6 +103,8 @@ The clean way to state the walk is as a differential equation. There's a famous 
 "%}
 
 An ODE like this is just a rule that says "at this position and this noise level, here is the velocity." A *vector field*. To generate, you start at the top, a sample of pure noise at $$\sigma_{\max}$$, and integrate this velocity downward as $$\sigma$$ shrinks toward zero, and you land on the manifold. (The deterministic ODE and the random SDE share the same *marginal distributions* at every $$\sigma$$. That means if you ran either process many times and looked at the cloud of points at a given $$\sigma$$, you'd see the identical distribution, even though any single deterministic run traces a different path than any single random one.)
+
+That shared-marginals fact is load-bearing, and it has a clean reason worth a sentence. As $$\sigma$$ grows, the VE process is just points doing a driftless random walk, so the density $$p_\sigma$$ obeys a diffusion (heat) equation. Any such spreading can be rewritten as a *continuity equation*, the bookkeeping a physicist uses for a fluid that is neither created nor destroyed: the density changes only because probability flows somewhere, at some velocity. Solve for the velocity that reproduces the heat equation's spreading and it comes out to exactly $$-\sigma\,\nabla_{\mathbf{z}}\log p_\sigma$$, which is eq $$\eqref{eq:pfode}$$. The random walk and the deterministic flow are two ways to shove the same density around, which is why they agree at every noise level. The minus sign and the $$\sigma$$ aren't free knobs; they're what makes the two descriptions match.
 
 Now substitute Tweedie's formula $$\eqref{eq:tweedie}$$ into the ODE $$\eqref{eq:pfode}$$ to get rid of the abstract score and put our trainable denoiser front and center:
 
@@ -126,6 +138,16 @@ Here's the whole reverse process running. Pure noise at the top, thirty-two Eule
 
 <div id="db-reverse"></div>
 
+Watch the arrows over a full run, because they answer a question you might be sitting on: why does a particle keep changing direction on the way down? It falls straight out of the velocity, $$(\mathbf{z}-D)/\sigma$$, and the fact that the denoiser $$D$$ is itself a function of $$\sigma$$.
+
+At high $$\sigma$$ the denoiser is hedging. With that much noise on its input, $$D$$ genuinely can't tell which data point you came from, so its best guess is close to the *average* of all of them: one blurry blob sitting at the center of the data. Every particle, wherever it starts, gets pulled toward that same place, so early in the run the field is smooth and slow and barely varies from point to point. The big decisions haven't been made yet.
+
+As $$\sigma$$ shrinks, $$D$$ sharpens. Now the noise is small enough that the nearest data point dominates the guess, so $$D$$ stops reporting the global average and starts reporting *which mode you actually belong to*. The field reorganizes from "everything flows to the center" into "each region flows to its own data point," with sharp ridges along the borders between basins. A particle that was drifting toward the middle commits to a specific cluster. That is the direction change you see. It isn't randomness; it's the denoiser changing its mind as the falling noise level lets it resolve finer structure.
+
+The same fact explains the other thing you notice, that the arrows are lazy out in the open and frantic near the data. Two effects stack. The $$1/\sigma$$ out front scales the whole field up as $$\sigma \to 0$$. And near a data point, nudging $$\mathbf{z}$$ a little swings the direction toward it a lot (and crossing the border between two points flips $$D$$ from one to the other), so the field turns fastest exactly where the data is densest. Far from any data there's nothing to resolve, and the arrows just point home.
+
+The compact way to say all of it: $$p_\sigma$$ is the data distribution blurred by a Gaussian of width $$\sigma$$, and the score can only "see" structure coarser than $$\sigma$$. Large $$\sigma$$ blurs everything into a single hill, so the field is coarse and smooth. Small $$\sigma$$ resolves the individual data points, so the field grows sharp features right where they sit. This is why diffusion paints coarse-to-fine: the layout first, the detail last. It's also a preview of the partitioning section, where the *middle* noise levels, the ones busy reorganizing the field from "one center" into "specific modes," turn out to be where the real work happens.
+
 Every one of those steps is a single application of $$\eqref{eq:euler}$$: state, plus a correction toward the denoiser's guess. That shape, `state + correction`, is about to show up somewhere familiar.
 
 ## A residual block is one Euler step
@@ -137,6 +159,8 @@ If you've looked at the guts of a ResNet or a Transformer, you know the residual
 \mathbf{z}_\ell = \mathbf{z}_{\ell-1} + f_{\theta_\ell}(\mathbf{z}_{\ell-1}) \tag{6} \label{eq:residual}
 \end{align}
 "%}
+
+Unpacking the symbols: $$\mathbf{z}_{\ell-1}$$ is the activation flowing *into* layer $$\ell$$ (for a Transformer, the whole sequence of token vectors, a tensor of shape tokens $$\times$$ $$d$$), $$\mathbf{z}_\ell$$ is what flows *out* to the next layer, and $$f_{\theta_\ell}$$ is that layer's own learned transformation (its attention and MLP, with weights $$\theta_\ell$$). The residual connection says layer $$\ell$$ doesn't build $$\mathbf{z}_\ell$$ from scratch. It computes a *correction* $$f_{\theta_\ell}(\mathbf{z}_{\ell-1})$$ and adds it to what it received, so each layer only has to learn how to *adjust* the running state, not regenerate it.
 
 This single design decision is most of why deep networks train at all. It's the idea behind [ResNets](https://arxiv.org/abs/1512.03385), and it's in every Transformer block ever shipped. Now put it next to the Euler step $$\eqref{eq:euler}$$:
 
@@ -152,7 +176,11 @@ You can feel it. Below, the smooth red curve is a true continuous-depth ODE flow
 
 <div id="db-euler"></div>
 
-The match is structural, not exact. A vanilla residual block is a crude, step-size-one Euler step, and an off-the-shelf ResNet won't converge to a clean Neural ODE without some care. But the shape is real, and the shape is all DiffusionBlocks needs. Now for the question the paper is built on: what if we *deliberately* made the residual blocks into denoising Euler steps, and trained each one with the diffusion objective?
+The match is structural, not exact. A vanilla residual block is a crude, step-size-one Euler step, and an off-the-shelf ResNet won't converge to a clean Neural ODE without some care. But the shape is real, and the shape is all DiffusionBlocks needs.
+
+There's one coefficient a ResNet-literate reader will immediately want to chase down. A vanilla residual block adds its correction with weight one; the honest Euler step $$\eqref{eq:euler}$$ adds it with weight $$\Delta\sigma/\sigma_{\text{prev}}$$, which differs for every block and shrinks as you approach clean data. DiffusionBlocks doesn't make the network learn to fight that factor. The block predicts only the denoised guess $$D$$, a plain regression target, and the known noise schedule supplies the $$\Delta\sigma/\sigma$$ multiplier when the Euler update is assembled around it. The learned part is just denoising; the geometry of the step is bookkeeping the schedule already knows.
+
+Now for the question the paper is built on: what if we *deliberately* made the residual blocks into denoising Euler steps, and trained each one with the diffusion objective?
 
 ## The synthesis: every block becomes its own denoiser
 
@@ -166,6 +194,8 @@ The recipe is three steps, and none of them is heavy.
 
 **Three, tell each block it's a denoiser.** Feed the block a noised input and condition it on the noise level $$\sigma$$, meaning you feed $$\sigma$$ in as an extra input so the same block can adapt its behavior across its whole noise band. (The standard mechanism, [AdaLN](https://arxiv.org/abs/2212.09748), nudges each layer's normalization based on $$\sigma$$; it's the same conditioning DiT uses.) The block now plays the role of $$D$$ in the Euler update $$\eqref{eq:euler}$$, and its job is to predict the clean target $$\mathbf{y}$$ from a noisy input within *its* assigned noise range.
 
+That conditioning is where the ODE reading stops being a metaphor. A plain residual layer has no clock; the same $$f_\theta$$ runs no matter where in the stack you are. But the velocity $$(\mathbf{z}-D)/\sigma$$ depends explicitly on $$\sigma$$, so a block standing in for it has to be told its noise level. Feeding in $$\sigma$$ is exactly what turns a fixed layer into a genuine time-dependent velocity field $$v(\mathbf{z},\sigma)$$, an honest right-hand side for the differential equation rather than a slogan about depth.
+
 That third step is the one that breaks the chains. Look back at the training loss $$\eqref{eq:loss}$$. It's an expectation over noise levels, and the target at $$\sigma = 5$$ (the clean data) has nothing to do with the target at $$\sigma = 0.1$$. In ordinary diffusion those per-$$\sigma$$ problems still fight over one shared set of weights $$\boldsymbol\theta$$. DiffusionBlocks removes even that coupling: give each block its own parameters *and* a disjoint slice of $$\sigma$$, and now nothing links them, not the target and not the weights. Each block has a complete, self-contained objective:
 
 {%include math.html content="
@@ -178,11 +208,59 @@ Here $$\mathbf{x}$$ is whatever the network is conditioned on (the class label, 
 
 And the obvious worry, the one a careful reader feels immediately: if block $$b$$ never sees block $$b+1$$'s output during training, how do the handoffs line up at the end? The answer is the quiet crux of the whole paper. No block is ever trained against another block's output. Every block is trained against the same fixed ground truth, real data with fresh noise added at its own $$\sigma$$. The reverse ODE only ever needs the correct denoiser *at each noise level*, and that target is identical whether one network learns all the levels or $$B$$ separate blocks split them up. Get each band right on its own and the global trajectory is automatically right. This is the relay race that finally works, and it works because earlier block-wise methods invented a local objective and *hoped* the blocks would cohere, whereas here the local objective is derived. It's the denoising-score-matching loss for that block's noise band, and the diffusion theory guarantees that consistent local denoising rebuilds the global reverse process.
 
+Be precise about what changes between training and running, because that's where the doubt lives. In training, no block ever sees another block's output; each gets fresh-noised real data at its own $$\sigma$$. At generation the blocks run in sequence, and block $$b{+}1$$ consumes whatever block $$b$$ actually produced, imperfections and all. So if a block denoises imperfectly its output drifts off $$p_\sigma$$, and that error feeds downstream. This is the diffusion cousin of *exposure bias*: train on truth, run on your own approximations. It's real, and it isn't peculiar to splitting the network. A single shared diffusion model has the identical problem, since it too is fed its own previous output while sampling, and it copes because each step's error is small (Euler's per-step error shrinks like $$\Delta\sigma^2$$) and the velocity field keeps contracting toward the data over most of the trip. Block-wise training adds no new source of mismatch, since the learning target never references another block. The paper does hedge the seam in one concrete way: it lets adjacent blocks overlap a little, training each on a noise range stretched about 5% past its own boundaries on each side, so every block has already seen inputs from just outside its slice before it has to accept a handoff there.
+
 What you buy is memory. You only ever hold one block's activations live, so training memory drops from $$L$$ layers to $$L/B$$, a $$B$$-fold reduction, and the model's parameter count doesn't change at all. The paper measures exactly that: a clean $$3\times$$ reduction for its $$B{=}3$$ diffusion model, $$4\times$$ for the $$B{=}4$$ autoregressive one. (Gradient checkpointing, the usual trick for trading compute to save activation memory, helps the constant factor but doesn't remove the coupling between blocks the way this does.) Both panels below train the *same* twelve-layer network; the left does it end-to-end with the memory meter pinned at 100%, the right does it block-wise with the meter near $$1/B$$:
 
 <div id="db-memory"></div>
 
 What about generation, once everything is trained? It's just the forward pass you already know. You feed a noisy input in at the top, and the blocks run in order: each applies its Euler update over its own $$\sigma$$-band, state plus a correction toward its denoised guess, and hands the result down to the next. The bottom of the stack is your sample. The network runs exactly like any residual network at inference; we changed how it's *trained*, not how it *runs*. (For a plain diffusion model you can be lazier still and call only the one block whose noise band a given denoising step falls in.)
+
+A word on bookkeeping, because three different things have all been called a "step." One residual layer is one Euler step of the hidden ODE. A block is several layers, so a block is a short run, not a single step. And the reverse demo earlier took thirty-two steps. So how do three or four blocks cover a fine trajectory? They don't have to: the number of Euler steps is a separate dial from the number of blocks. By default the paper takes one step per block, the coarse setting, but you can take more, and at each step the sampler just calls whichever block owns the current $$\sigma$$ and re-conditions it. Block count is a memory decision; step count is an accuracy decision; the two are independent, and more steps still track the true curve better.
+
+### What it looks like in practice
+
+A fair objection has been building. The diffusion story put $$\mathbf{z}$$ in data space, the same shape as the image, but the state running between Transformer blocks is a hidden activation, nothing like a picture. How can a residual block denoise an image it never sees? It doesn't. DiffusionBlocks runs the whole diffusion in the model's *hidden* space, not in pixel space. A shared read-in lifts the noised target up to hidden width once at the top, and a shared read-out maps the final hidden state back to whatever the task needs. Both sit outside the $$B$$ blocks and are the only pieces every block shares. In between, the $$\mathbf{z}$$ each block corrects is a hidden vector, and the clean target is the hidden representation of the answer. The dimension that must match, block in to block out, is the hidden width, which is exactly why a residual stack qualifies and a U-Net that resizes partway does not.
+
+This is also how the framework swallows a classifier, which has no image to denoise. Take the vision Transformer. The thing being denoised isn't the picture, it's the *label*: the clean target $$\mathbf{y}$$ is the (normalized) embedding of the correct class, the image is fed in as the conditioning $$\mathbf{x}$$, the noised label-embedding rides through the blocks as an extra token, and the read-out turns the denoised embedding into class logits. The block is doing ordinary denoising regression on a label embedding while looking at the image. The next-token Llama works the same way: the noise lives in the continuous embedding space the model already has, never on the discrete token ids, and the read-out maps the denoised embedding back to a token. You're never adding Gaussian noise to a word or a pixel; you're denoising a continuous representation and decoding it at the end.
+
+Let me make all of that concrete. Say the base network is a 12-layer Transformer over a sequence of $$n$$ tokens, each a $$d$$-dimensional vector, so an activation is a tensor of shape $$n \times d$$. Pick $$B = 4$$, so each block is 3 consecutive layers with its own parameters $$\theta_1,\dots,\theta_4$$. Take the noise range $$[\sigma_{\min},\sigma_{\max}] = [0.002,\ 80]$$ from EDM; the equi-probability boundaries (next section) land near $$\{0.002,\ 0.13,\ 0.30,\ 0.68,\ 80\}$$, so the blocks own:
+
+- **block 1** &rarr; $$\sigma \in [0.68,\ 80]$$ &nbsp;(the heavy-noise end; coarse layout),
+- **block 2** &rarr; $$[0.30,\ 0.68]$$,
+- **block 3** &rarr; $$[0.13,\ 0.30]$$,
+- **block 4** &rarr; $$[0.002,\ 0.13]$$ &nbsp;(nearly clean; fine detail),
+
+and each band carries exactly a quarter of the training mass.
+
+Now one training step, say for block 2. Draw a clean target $$\mathbf{y}$$ from the data (shape $$n \times d$$) and whatever conditioning $$\mathbf{x}$$ goes with it. Sample a noise level from block 2's band, say $$\sigma = 0.45$$. Build the noised input $$\mathbf{z} = \mathbf{y} + 0.45\,\boldsymbol{\epsilon}$$ with fresh Gaussian $$\boldsymbol{\epsilon}$$ (same $$n \times d$$ shape). Feed $$(\mathbf{x}, \mathbf{z})$$ into block 2, conditioned on $$\sigma = 0.45$$, and it returns a prediction $$\hat{\mathbf{y}}$$ of the clean target. The loss is a single number, $$w(0.45)\,\lVert \hat{\mathbf{y}} - \mathbf{y}\rVert^2$$. Backprop touches **only** $$\theta_2$$ (three layers' weights and activations); blocks 1, 3, and 4 are not in the graph at all. Step the optimizer and repeat. The other three blocks are trained the exact same way on their own bands, in any order, even on separate machines:
+
+```python
+# One optimizer step for block b. Every block's step is identical and independent.
+x, y   = sample_batch()                 # y: clean target, shape [n, d]
+sigma  = sample_noise_level(band[b])    # drawn from block b's slice, e.g. [0.30, 0.68]
+z      = y + sigma * randn_like(y)      # noised input, shape [n, d]
+y_hat  = block[b](x, z, sigma)          # block predicts the clean y (AdaLN injects sigma)
+loss   = w(sigma) * mse(y_hat, y)       # a scalar
+loss.backward()                         # gradient flows ONLY into block[b]'s params
+opt[b].step()                           # update theta_b alone  ->  ~L/B layers in memory
+```
+
+(One honest omission from that loss: in practice the bare network is wrapped in EDM's $$\sigma$$-dependent preconditioning, input and output scalings $$c_\text{in}, c_\text{skip}, c_\text{out}$$ plus a transformed $$\sigma$$ fed to the conditioning, which keeps the regression target unit-scaled across a huge range of noise levels. The plain MSE above is the idea; the preconditioned version is what actually trains well.)
+
+Generation runs the same blocks in sequence, walking the noise level down from $$\sigma_{\max}$$ to $$\sigma_{\min}$$. Each block takes the running state, asks its denoiser where the clean data is, and takes one Euler step of that size toward it:
+
+```python
+# Generation: one pass down the blocks, high noise -> low noise.
+z = sigma_max * randn(n, d)                       # start from pure noise
+for b in [1, 2, 3, 4]:                            # block 1 owns the highest-noise band
+    s_prev, s_next = band[b]                       # this block's slice; sigma steps DOWN
+    y_hat = block[b](x, z, s_prev)                 # the block's clean-data guess (this is D)
+    z = z + (s_prev - s_next) / s_prev * (y_hat - z)   # Euler step (5): move toward D
+return z                                           # a finished sample
+```
+
+That is the whole system: $$B$$ small denoisers, each trained alone against real data with fresh noise, chained at inference into one residual network. Same forward pass everyone already runs, a quarter of the training memory.
 
 ## Cutting the noise range fairly
 
@@ -212,11 +290,11 @@ The main result should sound impossible given the history. Trained block-wise, w
 
 That last one is worth a beat. An autoregressive Llama-style Transformer predicts the next token; it has no notion of a noise level. DiffusionBlocks converts it anyway (augment the input, add noise conditioning, slice it into blocks, train each as a denoiser) and it works, reaching comparable quality while only ever training three layers at a time, since the model has twelve layers in $$B=4$$ blocks. The framework doesn't care that the architecture wasn't born for it. As long as there are residual connections, there's an ODE hiding inside, and an ODE can be sliced.
 
-The cleanest demonstration is on *recurrent-depth* models, networks like [Huginn](https://arxiv.org/abs/2502.05171) that apply the *same* block over and over, looping to "think longer." Training those leans on backpropagation through time, and even the affordable version truncates the loop (Huginn backprops through 8 of its 32 iterations), with you still paying for every step you keep. But a loop of $$\mathbf{z}_k = \mathbf{z}_{k-1} + f_\theta(\mathbf{z}_{k-1})$$ is exactly our `state + correction` shape; it's already a discretized ODE. DiffusionBlocks trains it with a single forward pass per step instead, roughly a 10× cut in *training compute*, and comes out ahead on the benchmark. A 10× cut and it scores higher is the kind of result that makes you trust the abstraction.
+The cleanest demonstration is on *recurrent-depth* models, networks like [Huginn](https://arxiv.org/abs/2502.05171) that apply the *same* block over and over, looping to "think longer." Training those leans on backpropagation through time, and even the affordable version truncates the loop (Huginn backprops through 8 of its 32 iterations), with you still paying for every step you keep. But a loop of $$\mathbf{z}_k = \mathbf{z}_{k-1} + f_\theta(\mathbf{z}_{k-1})$$ is exactly our `state + correction` shape; it's already a discretized ODE. DiffusionBlocks trains it with a single forward pass per step instead, roughly a 10× cut in *training compute*, and comes out ahead on the benchmark. The arithmetic is direct: backprop-through-time has to keep every looped iteration it trains through alive at once and run a backward pass over all of them, while DiffusionBlocks trains each iteration as its own denoiser against the fixed clean target, one forward pass and a local backward with nothing upstream held live. Many cheap independent steps instead of one expensive coupled chain, which is where the order of magnitude comes from. A 10× cut and it scores higher is the kind of result that makes you trust the abstraction.
 
-One last thing, and the paper says so itself. Sometimes block-wise training doesn't just match end-to-end, it *beats* it (on ImageNet, a DiT-L gets FID $$10.6$$ block-wise versus $$12.1$$ end-to-end). Why would chopping a network into independently-trained pieces ever help? The authors don't claim to know; they offer a hypothesis, and I think it's the right one. Equi-probability partitioning hands each block a task of calibrated, balanced difficulty, that curriculum again, and ties each block directly to the clean target through its own denoising objective instead of a long, noisy chain of gradients from the output. That's a different optimization landscape, and apparently sometimes a friendlier one. Whether that intuition becomes a theorem is, as they say, future work.
+One last thing, and the paper says so itself. Sometimes block-wise training doesn't just match end-to-end, it *beats* it (on ImageNet, a DiT-L gets FID $$10.6$$ block-wise versus $$12.1$$ end-to-end). It's the same architecture with the same parameter count, only the training changes, so this isn't a bigger model sneaking in; "matches" and "beats" mean equal or better quality at equal capacity, not that block-wise training rediscovers the weights end-to-end would. Why would chopping a network into independently-trained pieces ever help? The authors don't claim to know; they offer a hypothesis, and I think it's the right one. Equi-probability partitioning hands each block a task of calibrated, balanced difficulty, that curriculum again, and ties each block directly to the clean target through its own denoising objective instead of a long, noisy chain of gradients from the output. That's a different optimization landscape, and apparently sometimes a friendlier one. Whether that intuition becomes a theorem is, as they say, future work.
 
-The limits are real. The trick needs each block's input and output to have matching dimensions, so a classic U-Net with its changing resolutions doesn't fit yet, and everything here is trained from scratch, which leaves converting an already-trained large model by fine-tuning as the obvious, tantalizing next step.
+The limits are real. The trick needs each block's input and output to have matching dimensions, which is less an extra rule than a direct echo of the Euler step itself: $$\mathbf{z}_{\text{next}} = \mathbf{z} + \text{correction}$$ only typechecks when $$\mathbf{z}$$ and $$\mathbf{z}_{\text{next}}$$ live in the same space. A classic U-Net deliberately changes resolution between stages, so its blocks break that identity and it doesn't fit yet. And everything here is trained from scratch, which leaves converting an already-trained large model by fine-tuning as the obvious, tantalizing next step.
 
 Step back and the argument is four facts long. A residual connection is an Euler step. An Euler step solves a diffusion ODE. A diffusion ODE is driven by a denoiser, and a denoiser is trained by simple regression, independently at each noise level. Chain those four and a stubborn decade-old problem quietly dissolves: you can train a deep network one slice at a time, with a principled target for each slice, and pay for only a fraction of the memory. The residual connections were diffusion steps the whole time. We just hadn't been reading them that way.
 
