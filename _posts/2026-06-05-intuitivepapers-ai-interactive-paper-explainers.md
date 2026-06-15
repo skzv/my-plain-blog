@@ -13,9 +13,9 @@ The obvious move in 2026 is to paste the PDF into a chatbot and ask for a summar
 
 What I actually wanted was the thing a really good teacher gives you. Intuition first, then the math. One analogy per hard idea, with a note about where it breaks. A picture you can poke at. And every claim checked against the source, because the reason to build it at all is to be more trustworthy than the paper-shaped guesses, not less.
 
-## The one I made by hand
+## The one I made the hard way
 
-A couple of weeks ago I wrote one of these by hand: a [full explainer of the DiffusionBlocks paper](https://intuitivepapers.ai/diffusionblocks/). The idea behind the paper is genuinely lovely: the residual connections already sitting in every Transformer are, if you squint, the steps of a diffusion model. To explain it properly I had to first build up diffusion, score matching, ODEs, and the residual-as-ODE-step trick, each with its own interactive figure you could drag around.
+A couple of weeks ago I made one of these myself: a [full explainer of the DiffusionBlocks paper](https://intuitivepapers.ai/diffusionblocks/), written with Claude and reworked draft after draft until it was right. The idea behind the paper is genuinely lovely: the residual connections already sitting in every Transformer are, if you squint, the steps of a diffusion model. To explain it properly I had to first build up diffusion, score matching, ODEs, and the residual-as-ODE-step trick, each with its own interactive figure you could drag around.
 
 It came out well. It also took the better part of a week, and the most valuable part wasn't the writing. It was the checking. To get the math right I went back to the original sources, and along the way the verification turned up a sign error in the paper's own equations, the kind of thing a summary would have cheerfully reproduced and I would have cheerfully believed. That's when it clicked: the checking was the real work, and the prose and figures were just how you hand it over.
 
