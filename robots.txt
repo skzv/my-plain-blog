@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+User-agent: EmailCollector
+Disallow: /
+
+Sitemap: https://blog.skz.dev/sitemap.xml
