@@ -9,7 +9,7 @@ previewurl: /home.png
 
 Machine learning papers are dense on purpose: each spends its pages on one new idea and assumes you can fill in the prerequisites, so you read with a dozen tabs open.
 
-The 2026 move is to paste the PDF into a chatbot and ask for a summary. I do it all the time, and it keeps failing me. The prose gets the shape right, but when a detail matters (which way a sign goes, exact or approximate, what variable is updated) it goes confidently wrong and you can't tell. I wanted what a good teacher gives you: intuition first, then the math, every claim checked against the source.
+The 2026 move is to paste the PDF into a chatbot and ask for a summary. I do it all the time, and it keeps failing me. The prose gets the shape right, but when a detail matters (which way a sign goes, exact or approximate, what variable is updated) it goes confidently wrong and you can't tell. I wanted what a good teacher gives you: intuition first, then the math in plain language, every claim checked against the source.
 
 ## The one I made by iterating
 
@@ -28,7 +28,7 @@ The catalogue covers Attention, BERT, GANs, VAEs, CLIP, PPO, Mamba, Adam, and mo
 
 ## Reading one
 
-Each one reads as a long essay with the math built up in order and figures in the prose where you need them. You don't read that PPO clips the policy ratio, you drag the ratio and watch the gradient go to zero outside the trust band.
+Each one reads as a long essay with the math built up in order. A concept tower down the side lists the prerequisites in dependency order, so you get the foundations before the new idea. Where an idea is clearer in code than in symbols, it shows a few real lines of the implementation. The figures sit in the prose: you don't read that PPO clips the policy ratio, you drag the ratio and watch the gradient go to zero outside the trust band.
 
 ![a figure inside the PPO explainer]({{ "/ppo-figure.png" | prepend: page.imgpath }})
 {% include caption.html content="The clipped objective from PPO. Drag the ratio, flip the sign of the advantage, watch the gradient go to zero outside the trust band." %}
