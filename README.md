@@ -26,6 +26,14 @@ To run locally, run:
 To serve drafts, add the `--drafts` option, like:
 `bundle exec jekyll serve --drafts`
 
+## Checking posts and SEO
+
+Run `bash script/cibuild.sh` to build the site and check metadata, structured data,
+the sitemap, RSS, images, and local links. The checks support the extensionless
+URLs used by GitHub Pages.
+
+See [the SEO notes](docs/seo.md) for post metadata and the scope of these checks.
+
 ## License
 
 [MIT](LICENSE)

@@ -1,15 +1,21 @@
 ---
 title: Monte Carlo Options Pricing
-updated: 2021-12-17 00:00
+last_modified_at: 2021-12-17 00:00
 imgpath: /assets/img/monte-carlo-stocks
 previewurl: /gbm-example.png
+description: "Explore Monte Carlo options pricing with interactive simulations of geometric Brownian motion, stock returns, volatility, and discounted option payoffs."
+image: /assets/img/monte-carlo-stocks/gbm-example.png
+image_width: 1810
+image_height: 990
+image_alt: "Simulated stock price paths using geometric Brownian motion"
+mathjax: true
 ---
 
-#### _The options casino_
+_The options casino_
 
 Predicting the movement of stock prices is an alluring challenge with the promise of riches. Unfortunately, predicting future stock prices consistently and reliably is generally considered impossible. However, we can use models to make useful predictions, manage risk, and profit *probalistically*. 
 
-# Geometric Brownian Motion
+## Geometric Brownian Motion
 One such commonly used model is geometric Brownian motion ([1](https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.04%3A_Geometric_Brownian_Motion), [2](http://www.columbia.edu/~ks20/FE-Notes/4700-07-Notes-GBM.pdf)) - in fact, the famous [Black-Scholes options pricing formula](https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model) assumes this model as well. This has the form
 
 {%include math.html content=
@@ -47,7 +53,7 @@ where $$B(t)$$ is standard Brownian motion. If we let $$S(0)$$ to be the initial
 
 So, what does this mean, and why is this a good model for security prices?
 
-## Logarithmic Returns
+### Logarithmic Returns
 In quantitative finance it is common to deal with continuously compounded returns rather than simple returns. What that means is that instead of examining a simple return between trading periods $$1 + R_t = \frac{S(t)}{S(t-1)}$$ we will examine the compounding return $$r_t = \ln{(1 + R_t)} = \ln{\frac{S(t)}{S(t-1))}}$$. This has the very nice property that one can recover the price of a stock by simply summing up the logarithmic returns as:
 
 {%include math.html content=
@@ -68,7 +74,7 @@ This model also works well because it only permits positive security prices. Sec
 So, we want a process that generates a series of normally distributed returns $$r_t$$ - which invites Brownian motion as a natural choice.
 
 
-# Brownian motion
+## Brownian motion
 [Brownian motion](https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.01%3A_Standard_Brownian_Motion) describes the motion of a particle in a fluid or gas. Such a particle bounces around "randomly" within the fluid surrounding it. The path it creates appears quite noisy and random. It can essentially be considered a limiting form of the random walk where both the time between steps and the step length approach zero (with some caveats: namely, if the time step is $$t$$, the step length must be $$\sqrt{t}$$ - this produces a process whose variance scales exactly with time). Consider flipping a coin to determine whether to take a step forward or backward. Now let the time between steps approach zero. You would trace a path that looks like this:
 
 ![1-D Brownian Motion]({{ "/wiener-process-zoom.png" | prepend: page.imgpath }})
@@ -92,7 +98,7 @@ Of particular interest here is the drift rate $$\mu - \frac{\sigma^2}{2}$$ which
 
 There's also a philsophical argument to be made for choosing Brownian motion as the basis for this model. A common assumption made in finance is that markets are efficient, so there should be no arbitrage opportunities. Hence, the market should be unpredictable - if an actor could predict it, that would be an arbitrage opportunity that would be exploited away. Hence, random noise (which is what Brownian motion is, essentially) is a good choice for modelling markets.
 
-# Option Pricing
+## Option Pricing
 
 Monte-Carlo simulation is a statistical technique inspired by the casinos of Monaco. Much like gamblers resigning their fates to probability, we hand over the results of statistical analysis to chance. By running enough trials, we can make conclusions with statistical significance. 
 
@@ -112,7 +118,7 @@ We can increase the number of trials to increase the statistical certainty of th
 <div id='sigma-2'>0</div>
 <div id='option-mean-2'>0</div>
 
-# More Advanced Scenarios
+## More Advanced Scenarios
 Monte-Carlo simulation of terminal values is a relatively simple simulation, and one that is not too useful as this analysis can probably be completed analytically. The true power of Monte-Carlo simulation is unlocked when analysing scenarios that are more difficult to solve analytically, if not impossible. For example, if we wanted to analyse an American-style option, which can be exercised anytime, we might want to count the probability of a stock price exceeding the strike price at any time during the lifetime of that option. We could do this by counting how many trials cross the strike price boundry, which is easy to do with a Monte-Carlo simulation.
 
 <script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>

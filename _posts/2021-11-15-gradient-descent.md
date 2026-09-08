@@ -1,11 +1,17 @@
 ---
 title: Interactive Gradient Descent Demo
-updated: 2021-11-08 00:00
+last_modified_at: 2021-11-15 00:00
 imgpath: /assets/img/gradient-descent
 previewurl: /gradient-descent-preview.png
+description: "An interactive gradient descent demo explaining gradients, learning rates, and local minima. Adjust the parameters and watch the algorithm find a minimum."
+image: /assets/img/gradient-descent/gradient-descent-preview.png
+image_width: 1564
+image_height: 808
+image_alt: "Interactive gradient descent visualization"
+mathjax: true
 ---
 
-#### _What is this special algorithm?_
+_What is this special algorithm?_
 
 Gradient descent is an optimization algorithm for finding the (local) minimum of a function.
 

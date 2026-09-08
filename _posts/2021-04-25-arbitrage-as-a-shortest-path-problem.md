@@ -1,12 +1,18 @@
 ---
 title: Arbitrage as a Shortest Path Problem
-updated: 2021-04-25 00:00
+last_modified_at: 2021-04-25 00:00
 imgpath: /assets/img/arbitrage-as-a-shortest-path-problem
 previewurl: /currency-graph-on-black.png
+description: "How currency arbitrage becomes a graph problem, using logarithms and the Bellman-Ford algorithm to find profitable trading cycles."
+image: /assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-on-black.png
+image_width: 448
+image_height: 283
+image_alt: "Currency exchange graph used to explain arbitrage"
+mathjax: true
 ---
 {% include description.html content="An explanation of arbitrage and a look at an efficient algorithm to find riskless instantaneous arbitrage opportunities." %}
 
-#### _Who doesn't like to make money?_
+_Who doesn't like to make money?_
 
 And what if you could turn the problem of making money into the problem of finding the shortest-path? We can do that in at least one particular way: by exploiting arbitrage opportunities.
 

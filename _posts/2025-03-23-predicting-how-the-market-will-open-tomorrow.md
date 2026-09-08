@@ -1,11 +1,17 @@
 ---
 title: Predicting How the Market Will Open Tomorrow
-updated: 2025-03-23 00:00
+last_modified_at: 2025-03-23 00:00
 imgpath: /assets/img/predicting-market-open
 previewurl: /preview.png
+description: "How index futures, interest rates, and dividend yields can estimate the next market open, with a cost of carry calculation and my impliedopen.com dashboard."
+image: /assets/img/predicting-market-open/preview.png
+image_width: 632
+image_height: 384
+image_alt: "Implied market opening dashboard"
+mathjax: true
 ---
 
-#### _Predicting the Future_
+_Predicting the Future_
 
 One weekend there was bad economic news, and I was wondering how it would impact the market at open on Monday. I looked into this question, and I learned that
 while the stock market is closed, futures trading of underlying indices continues, and we can look to the futures market to understand how traders are already reacting to and pricing in new information - like a crystal ball 🔮. 
@@ -22,7 +28,7 @@ Below, I walk through all the pieces of this calculation, culminating in a dashb
 ![A preview of the dashboard I built which gives us a sneak peek of market movements the next day.]({{ "/save-game.png" | prepend: page.imgpath }})
 {% include caption.html content="A preview of the dashboard I built which gives us a sneak peek of market movements the next day." %}
 
-# Futures
+## Futures
 
 Futures (future contracts) are instruments that allow traders to bet on the *future* price of an underlying asset at the future contract's date of expiry. Note the price and expiry date of the SP500 future below. It's currently trading higher than the SP500 price, but what does this tell us about what the current value of the SP500 is?
 
@@ -48,7 +54,7 @@ We can express this relationship as:
 where $$F$$ is the futures price, $$S$$ is the current stock price, $$r$$ is the risk-free interest
 rate, $$q$$ is the dividend yield, and $$t$$ is the time to maturity.
 
-# Going Back in Time
+## Going Back in Time
 
 To calculate the current fair value of the stock price from the futures price, we can discount the futures price backwards in time, inverting the above formula:
 
@@ -62,7 +68,7 @@ To calculate the current fair value of the stock price from the futures price, w
 
 Before the market opens, the fair value is our best estimate of the opening price of the index.
 
-# Risk Free Rate
+## Risk Free Rate
 
 Does a risk-free investment even exist? Well, treasury bills - debt issued by the US treasury - are considered (nearly) riskless because:
 - US government has a low chance of default; it can print its own money has a good history of paying debts
@@ -77,7 +83,7 @@ For the risk-free rate in these calculations, I choose the 3 month T-bill.
 
 We assume that the underlying assets will grow at atleast the risk-free rate, because otherwise investors wouldn't bother putting their money in these instruments.
 
-# Dividend Yield
+## Dividend Yield
 
 While we assume that the underlying instruments will grow at atleast the risk-free rate, we have to account for the fact that the underlying indices will drop when dividends are paid out by a commensurate amount. To do this, I am using the most recent dividend yield of each index - but a more accurate model will probably anticipate what the forward looking dividend yield will be. 
 
@@ -86,7 +92,7 @@ Below is the latest SP500 dividend yield which I use for my calculations.
 ![Latest SP500 Yield]({{ "/sp500-dividend-yield.png" | prepend: page.imgpath }})
 {% include caption.html content="Latest SP500 Dividend Yield" %}
 
-# Putting it All Together
+## Putting it All Together
 
 I collect the last index price, the current trading futures price, my best estimate of the dividend yield, risk-free rate, and time to expiry, and calculate my current best estimate of the fair value of each major index. I've put all the pieces together on [impliedopen.com](https://impliedopen.com), which I've embedded below:
 
@@ -97,7 +103,7 @@ This dashboard is most useful when the futures market is open but the regular ma
 ![Market Status View]({{ "/market-status.png" | prepend: page.imgpath }})
 {% include caption.html content="Market Status View" %}
 
-# Final Notes
+## Final Notes
 
 I put this dashboard together pretty quickly, and ended up just scraping a lot of the values which I cache once a minute on my own API :) My apologies if things break or it goes down - at some point I will replace things with proper APIs, or this dashboard will become irrelevant as markets move towards 24/7 trading. In any case, I wanted to put together this blog post for permenance. 
 
@@ -105,6 +111,3 @@ I put this dashboard together pretty quickly, and ended up just scraping a lot o
 {% include caption.html content="It is what it is." %}
 
 If you notice errors in my calculations or have suggestions or other feedback, please reach out to me and let me know!
-
-<script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

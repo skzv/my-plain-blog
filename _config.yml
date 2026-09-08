@@ -1,13 +1,14 @@
 # Site Info
 title:              "Sasha Kuznetsov's Blog"
-description:        "Personal blog of Sasha Kuznetsov — a software engineer and engineering physicist writing about ML/CV, quantitative finance, physics, robotics, and side projects."
+description:        "Sasha Kuznetsov's experiments and explanations in machine learning, computer vision, quantitative finance, and software, with interactive demos and side projects."
 author_name:        "Sasha Kuznetsov"
 author:
   name:             "Sasha Kuznetsov"
   url:              "https://skz.dev"
   twitter:          skzv
 logo_url:           https://avatars.githubusercontent.com/u/11140296?v=4 # Get it from GitHub API: https://api.github.com/users/<username>
-lang:               en_US
+lang:               en-US
+locale:             en_US
 
 twitter:
   username:         skzv
@@ -37,7 +38,7 @@ sass:
 
 # Other Params
 include:            [ "robots.txt" ]
-exclude:            [ "LICENSE", "README.md", "vendor", "Gemfile", "script" ]
+exclude:            [ "LICENSE", "README.md", "CLAUDE.md", "AGENTS.md", "vendor", "Gemfile", "Gemfile.lock", "script", "tests", "docs", "node_modules", "package.json", "package-lock.json" ]
 plugins:
   - jekyll-sitemap
   - jekyll-feed
@@ -50,7 +51,11 @@ defaults:
     scope:
       path:         ""
     values:
-      layout:       "null"
+      layout:       null
+      image:        /assets/img/preview-banner.png
+      image_width:  1200
+      image_height: 630
+      image_alt:    "Sasha Kuznetsov's Blog"
   -
     scope:
       type:         "pages"

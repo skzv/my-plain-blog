@@ -1,18 +1,22 @@
 ---
 layout: default
-description: "Writing about tech, finance, physics, and other things."
+description: "Sasha Kuznetsov's experiments and explanations in machine learning, computer vision, quantitative finance, and software, with interactive demos and side projects."
+seo:
+  name: "Sasha Kuznetsov's Blog"
 ---
 
 <section>
+	<h1 class="index-title">{{ site.title | escape }}</h1>
+	<p class="index-description">Writing about machine learning, finance, physics, and things I build.</p>
 
 	{% for post in site.posts %}
 		{% unless post.next %}
-			<h3 class="code">{{ post.date | date: '%Y' }}</h3>
+			<h2 class="code archive-year">{{ post.date | date: '%Y' }}</h2>
 		{% else %}
 			{% capture year %}{{ post.date | date: '%Y' }}{% endcapture %}
 			{% capture nyear %}{{ post.next.date | date: '%Y' }}{% endcapture %}
 			{% if year != nyear %}
-				<h3 class="code">{{ post.date | date: '%Y' }}</h3>
+				<h2 class="code archive-year">{{ post.date | date: '%Y' }}</h2>
 			{% endif %}
 		{% endunless %}
 
@@ -22,7 +26,7 @@ description: "Writing about tech, finance, physics, and other things."
 					<span>{{ post.date | date: "%b %d" }}</span>
 				</div>
 				<div class="title">
-					<a href="{{ post.url | prepend: site.baseurl | prepend: site.url }}">{{ post.title }}</a>
+					<a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
 				</div>
 			</li>
 		</ul>

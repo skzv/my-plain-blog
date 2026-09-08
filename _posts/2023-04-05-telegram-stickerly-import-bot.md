@@ -1,8 +1,14 @@
 ---
 title: A Telegram Bot for Importing Sticker.ly Packs
-updated: 2023-04-05 00:00
+last_modified_at: 2023-04-05 00:00
 imgpath: /assets/img/telegram-stickerly-import-bot
 previewurl: /telegram-stickerly-import-bot.png
+description: "A Telegram bot I built to import animated Sticker.ly packs. Send a pack URL to convert its stickers and add them to your Telegram library."
+image: /assets/img/telegram-stickerly-import-bot/telegram-stickerly-import-bot.png
+image_width: 422
+image_height: 350
+image_alt: "Sticker.ly sticker pack import bot for Telegram"
+mathjax: false
 ---
 {% include description.html content="Import animated Sticker.ly packs into Telegram with ease" %}
 

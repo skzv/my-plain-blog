@@ -4,7 +4,7 @@ published: true
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ site.lang | default: 'en-US' }}">
 
 	<head>
 		{% include head.html %}
@@ -14,9 +14,9 @@ published: true
 
 		{% include header.html %}
 
-		<div id="content">
+		<main id="content">
 			{{ content }}
-		</div>
+		</main>
 
 		{% include footer.html %}
 
