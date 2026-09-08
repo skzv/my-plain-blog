@@ -368,6 +368,10 @@ article {
 }
 .page-navigation {
   margin: 50px auto 0 auto;
+  a.block {
+    display: block;
+    margin: 12px 0;
+  }
   a {
     display: inline-block;
     text-decoration: none;
@@ -426,6 +430,24 @@ section {
       }
     }
   }
+}
+.index-title {
+  font-size: 1.4rem;
+  text-align: center;
+}
+.index-description {
+  color: var(--fg-grey);
+  text-align: center;
+  line-height: 1.7;
+}
+.archive-year {
+  font-size: 1.25rem;
+  margin-top: 1.5rem;
+}
+article p.post-meta {
+  font-size: 0.8rem;
+  color: var(--fg-grey);
+  time { color: inherit; }
 }
 @keyframes bounce {0% {
     transform: translate3d( 0, -1000px, 0 );

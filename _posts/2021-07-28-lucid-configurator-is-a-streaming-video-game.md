@@ -1,8 +1,14 @@
 ---
 title: The Lucid Motors Configurator is A Video Game Streaming to Your Browser
-updated: 2021-07-28 00:00
+last_modified_at: 2021-07-28 00:00
 imgpath: /assets/img/lucid-configurator-is-a-streaming-video-game
 previewurl: /lucid-configurator.png
+description: "How the Lucid Motors car configurator uses Unity, cloud rendering, and WebRTC to stream an interactive 3D showroom to your browser."
+image: /assets/img/lucid-configurator-is-a-streaming-video-game/lucid-configurator.png
+image_width: 1958
+image_height: 845
+image_alt: "Lucid Motors interactive 3D car configurator"
+mathjax: false
 ---
 
 {% include description.html content="It makes sense when you realize video game engines are the best simulators out there." %}

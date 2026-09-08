@@ -1,13 +1,19 @@
 ---
 title: 3D Reconstruction From Public Photos with Machine Learning
-updated: 2025-08-21 00:00
+last_modified_at: 2025-08-21 00:00
 imgpath: /assets/img/3d-reconstruction
 previewurl: /3d-reconstruction-preview.png
+description: "Reconstructing public photos in 3D with Apple Depth Pro, camera projection, and Open3D. Examples show depth estimates, point clouds, and model limitations."
+image: /assets/img/3d-reconstruction/3d-reconstruction-preview.png
+image_width: 1200
+image_height: 630
+image_alt: "3D reconstruction of a public photo using estimated depth"
+mathjax: true
 ---
 
 {% include description.html content="Can we reconstruct the world from public photos?" %}
 
-#### Mapping the World
+## Mapping the World
 
 The internet provides an abundance of public photos from various sources: Reddit, Youtube, Google Maps photo uploads, and so forth.
 
@@ -54,7 +60,7 @@ And even an image of a forest:
 
 To achieve this, I used an ML depth model and some linear algebra.
 
-### Camera Projection
+## Camera Projection
 
 We can consider a camera as performing a projection from 3D to 2D, as in the image below. This removes information about the 3rd dimension: depth.
 
@@ -63,7 +69,7 @@ We can consider a camera as performing a projection from 3D to 2D, as in the ima
 
 Our task is to recover this 3rd dimension, and then figure out how to undo this projection.
 
-### Camera Intrinsics 
+## Camera Intrinsics
 
 It is not sufficient to know the depth for every pixel in the image to reconstruct it in 3D. This is because the properties of the camera - most importantly the focal length - determine how points in 3D get mapped to pixels in 2D, and so to undo this mapping, we need to have these properties of the camera. Consider the demonstration of this below, where different focal lengths produce significantly different images:
 
@@ -102,7 +108,7 @@ Note, it's also possible to describe the full transformation between 3D and 2D c
 ![Complete Camera Model]({{ "/complete-camera-model.jpg" | prepend: page.imgpath }})
 {% include caption.html content="Complete Camera Model. Source: [3]" %}
 
-### Depth Masks
+## Depth Masks
 
 Apple's recently released [DepthPro model](https://github.com/apple/ml-depth-pro) made this project possible. While depth models have existed for a long time, I noticed this model was different in two ways:
     1. It provided depth in an absolute, metric scale, which meant 3D reconstructions would actually have metric proportions, even when generated from a single mono image
@@ -130,11 +136,11 @@ I then used equations $$(2)$$ to map each pixel back into 3D, created a point cl
     </video>
 </div>
 
-### 3D Reconstruction
+## 3D Reconstruction
 
 Check out all my examples, below. Notably, check out the NYC skyline example. I was curious to see how well it would work on a huge scene, like the skyline of NYC. As expected, the depth pro model did not produce a good depth mask. The training dataset almost certainly focused on smaller scales.
 
-#### COEX Mall
+### COEX Mall
 
 ![Coex Mall Input Image]({{ "/coex-0.jpg" | prepend: page.imgpath }})
 {% include caption.html content="Public COEX Mall input image." %}
@@ -151,7 +157,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 
 <div class="divider"></div>
 
-#### Forest
+### Forest
 
 ![Forest Input Image]({{ "/forest-0.jpg" | prepend: page.imgpath }})
 {% include caption.html content="Public Forest input image." %}
@@ -168,7 +174,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 
 <div class="divider"></div>
 
-#### NYC Skyline
+### NYC Skyline
 
 ![NYC Input Image]({{ "/nyc-0.jpg" | prepend: page.imgpath }})
 {% include caption.html content="Public NYC input image." %}
@@ -185,7 +191,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 
 <div class="divider"></div>
 
-#### Safeway 1
+### Safeway 1
 
 ![Safeway Input Image 0]({{ "/safeway-0.webp" | prepend: page.imgpath }})
 {% include caption.html content="Public Safeway input image 0." %}
@@ -202,7 +208,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 
 <div class="divider"></div>
 
-#### Safeway 2
+### Safeway 2
 
 ![Safeway Input Image 1]({{ "/safeway-1.webp" | prepend: page.imgpath }})
 {% include caption.html content="Public Safeway input image 1." %}
@@ -219,7 +225,7 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 
 <div class="divider"></div>
 
-#### Singapore Airport
+### Singapore Airport
 
 ![SG Airport Input Image]({{ "/sg-airport-0.jpeg" | prepend: page.imgpath }}){:height="600px"}
 {% include caption.html content="Public SG Airport input image." %}
@@ -236,13 +242,9 @@ Check out all my examples, below. Notably, check out the NYC skyline example. I 
 
 <div class="divider"></div> 
 
-#### Footnotes
+## Footnotes
 
 1. Camera projection from 3D to 2D. Source: [ResearchGate](https://www.researchgate.net/figure/The-perspective-projection-of-a-camera-model_fig2_324584663)
 2. A demonstration of the effect of focal length on image. Source: [DIY Photography](https://www.diyphotography.net/gif-explains-changing-focal-length-impacts-portrait)
 3. Complete Camera Model. Source: [Robot Academy](https://robotacademy.net.au/lesson/summary-of-image-geometry/)
 4. Depth Pro Teaser. Source: [Apple](https://github.com/apple/ml-depth-pro)
-
-
-<script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

@@ -1,53 +1,78 @@
 ---
-title: "I built a machine that turns AI papers into interactive explainers"
-updated: 2026-06-05 00:00
+title: "Interactive AI Paper Explainers with intuitivepapers.ai"
+last_modified_at: 2026-09-08 00:00
 imgpath: /assets/img/intuitivepapers
 previewurl: /home.png
+description: "How I built intuitivepapers.ai to turn machine learning papers into interactive explainers, with prerequisite concepts, source checks, and custom figures."
+image: /assets/img/intuitivepapers/home.png
+image_width: 1280
+image_height: 820
+image_alt: "intuitivepapers.ai interactive AI paper explainers"
+mathjax: false
 ---
 
-{% include description.html content="LLM paper summaries are shallow and subtly wrong about the parts that matter. I wanted the opposite, so I built a pipeline that makes them, and pointed it at twenty papers." %}
+{% include description.html content="Can we use AI to explain machine learning papers properly, with the prerequisites, math, and interactive figures?" %}
 
-Machine learning papers are dense on purpose: each spends its pages on one new idea and assumes you can fill in the prerequisites, so you read with a dozen tabs open.
+When I read a machine learning paper, I often spend a lot of time looking up the ideas it builds on. A paper describes a new contribution, but understanding that contribution may require working through several other papers first.
 
-The 2026 move is to paste the PDF into a chatbot and ask for a summary. I do it all the time, and it keeps failing me. The prose gets the shape right, but when a detail matters (which way a sign goes, exact or approximate, what variable is updated) it goes confidently wrong and you can't tell. I wanted what a good teacher gives you: intuition first, then the math in plain language, every claim checked against the source.
+I sometimes ask an LLM to explain a paper to me. This is useful for getting started, but I have found that the explanations can sound convincing while getting important details wrong. A sign in an equation, whether a result is exact or approximate, or which variable is being updated can change the meaning quite a bit. And if I don't already understand the paper, these errors are difficult to notice.
 
-## The one I made by iterating
+I wanted explanations that build up the intuition and math together, with figures I could interact with. I've explored this on a smaller scale in my [gradient descent demo]({% post_url 2021-11-15-gradient-descent %}): changing a parameter and watching what happens can make an algorithm much easier to understand.
 
-A couple of weeks ago I built one with Claude, iterating over about a week: a [full explainer of the DiffusionBlocks paper](https://intuitivepapers.ai/diffusionblocks/). Getting the math right meant going back to the original sources, and that turned up a sign error in the paper's own equations, the kind of thing a summary would reproduce and I'd believe. So I wondered whether I could build a machine that does the week of work: read the sources, verify the claims, design the figures, write it the way a person would, then check the draft.
+## Starting With One Paper
 
-## intuitivepapers.ai
+I first worked on an [explainer of the DiffusionBlocks paper](https://intuitivepapers.ai/diffusionblocks/) with Claude. This took about a week of iteration. Getting the math right meant going back to the original sources, and in the process I found what appeared to be a sign error in the paper's equations.
 
-I put that machine live at [intuitivepapers.ai](https://intuitivepapers.ai). There are twenty explainers up, and a new one goes up most days.
+This made me wonder how much of the process I could automate. Could I put together a system that reads a paper and its references, works through the math, creates interactive figures, and checks the resulting explanation?
 
-![intuitivepapers.ai homepage]({{ "/home.png" | prepend: page.imgpath }})
-{% include caption.html content="Deep, interactive explainers, intuition first, every claim checked against the source." %}
+The result is [intuitivepapers.ai](https://intuitivepapers.ai/). At the time of the original post, I had used it to produce twenty explainers, covering papers such as Attention, BERT, GANs, VAEs, CLIP, PPO, Mamba, and Adam.
 
-The catalogue covers Attention, BERT, GANs, VAEs, CLIP, PPO, Mamba, Adam, and more.
-![the intuitivepapers library]({{ "/library.png" | prepend: page.imgpath }})
-{% include caption.html content="Twenty papers, each card a live preview of the signature figure from the explainer behind it." %}
+![intuitivepapers.ai homepage with interactive machine learning paper explainers]({{ "/home.png" | prepend: page.imgpath }})
+{% include caption.html content="The intuitivepapers.ai homepage." %}
 
-## Reading one
+![Library of twenty AI paper explainers with figure previews]({{ "/library.png" | prepend: page.imgpath }})
+{% include caption.html content="The paper library. Each card previews a figure from the corresponding explainer." %}
 
-Each one reads as a long essay with the math built up in order. A concept tower down the side lists the prerequisites in dependency order, so you get the foundations before the new idea. Where an idea is clearer in code than in symbols, it shows a few real lines of the implementation. The figures sit in the prose: you don't read that PPO clips the policy ratio, you drag the ratio and watch the gradient go to zero outside the trust band.
+<div class="divider"></div>
 
-![a figure inside the PPO explainer]({{ "/ppo-figure.png" | prepend: page.imgpath }})
-{% include caption.html content="The clipped objective from PPO. Drag the ratio, flip the sign of the advantage, watch the gradient go to zero outside the trust band." %}
+## Interactive Explanations
 
-![an explainer on a phone]({{ "/mobile-ppo.png" | prepend: page.imgpath }}){:height="520px"}
-{% include caption.html content="An explainer on a phone, the same figures inline." %}
+Each explainer starts with the prerequisites and works towards the paper's main idea. A navigation panel, called the concept tower, lists these concepts in the order they depend on each other. Where it helps, the explanation also includes code to connect the math to an implementation.
 
-![CLIP contrastive grid]({{ "/clip-grid.png" | prepend: page.imgpath }})
-{% include caption.html content="Every image scored against every caption. The bright diagonal is the real pairs CLIP pulls together; everything off it gets pushed apart." %}
+The figures are interactive. For example, PPO uses a clipped objective to limit the incentive for certain changes to a policy. In the figure below, you can change the probability ratio and the sign of the advantage, and see where the objective becomes flat. This makes it easier to see when clipping takes effect than by looking at the equation alone.
 
-## How the machine works
+![Interactive PPO clipped objective showing the probability ratio and advantage]({{ "/ppo-figure.png" | prepend: page.imgpath }})
+{% include caption.html content="Exploring PPO's clipped objective by changing the probability ratio and the sign of the advantage." %}
 
-A single explain-this-paper call gives you the subtly wrong summary. The quality comes from a pipeline of separate steps that verify every claim against the paper, the primary literature, and the authors' code, then hand the draft to a panel of adversarial critics before it ships. It runs on a timer on the Mac mini under my desk, mostly without a human in the loop, picking the next paper off a queue and deploying the result. A reader's fix from the feedback form goes into that page and into the rules for the next one.
+The figures also work on a phone:
 
-![a Mamba block figure]({{ "/mamba-block-fig.jpeg" | prepend: page.imgpath }})
-{% include caption.html content="A Mamba block, broken down. There are well over a hundred custom figures across the library, all hand-drawn canvas, no charting library." %}
+![PPO paper explainer with an inline figure on a phone]({{ "/mobile-ppo.png" | prepend: page.imgpath }}){:height="520px"}
+{% include caption.html content="The PPO explainer on a phone." %}
 
-## Where it's going
+Another example is CLIP, which learns to associate images with text. The grid below shows the scores for pairs of images and captions. The diagonal contains the matching pairs; the other cells are mismatches. We can use this to see what the training objective is trying to achieve.
 
-The supply of papers is exploding and the supply of understanding isn't, because understanding is bottlenecked on teaching time. A machine that does the patient, figure-by-figure work of a good teacher and checks every claim against the source moves that bottleneck.
+![CLIP similarity grid comparing images with matching and mismatched captions]({{ "/clip-grid.png" | prepend: page.imgpath }})
+{% include caption.html content="CLIP's image and caption scores. The matching pairs lie along the diagonal." %}
 
-If there's a paper you've been meaning to understand, [intuitivepapers.ai](https://intuitivepapers.ai) has a queue where you can request it or upvote someone else's, and the machine works down the list. I built it for myself, mostly. If it saves someone else a few hours, even better.
+<div class="divider"></div>
+
+## Generating an Explainer
+
+Asking an LLM to explain a paper in one pass wasn't sufficient for what I wanted. I split the work into stages: reading the sources, checking the claims and equations, designing the figures, writing the explanation, and reviewing the draft.
+
+The checks use the paper itself, the primary literature it refers to, and the authors' code. Separate critic passes then look for problems in the draft before it is published. The idea is to make verification an explicit part of the process, rather than assume that a plausible explanation is correct.
+
+The pipeline runs on a timer on the Mac mini under my desk. It takes the next paper from a queue and works through these steps, including deploying the finished page, mostly without my involvement. Feedback submitted by readers is used to correct the page and update the instructions for future explainers.
+
+Below is another example of the output, showing the pieces of a Mamba block. The library had over a hundred custom figures when I put this post together, drawn using canvas rather than a charting library.
+
+![Diagram showing the components of a Mamba block]({{ "/mamba-block-fig.jpeg" | prepend: page.imgpath }})
+{% include caption.html content="A breakdown of a Mamba block, from the Mamba explainer." %}
+
+<div class="divider"></div>
+
+## Final Notes
+
+This started with a paper I wanted to understand, and became an experiment in automating the work of explaining one. Checking the sources is useful, but it doesn't make an automatically generated explanation infallible. The feedback and correction process is part of the project too.
+
+If there's a paper you've been meaning to work through, take a look at [intuitivepapers.ai](https://intuitivepapers.ai/). You can request a paper or upvote one that's already in the queue. And if you notice an error in an explanation, please send feedback through the page so it can be corrected.

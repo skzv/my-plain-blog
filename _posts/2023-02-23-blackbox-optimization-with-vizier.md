@@ -1,8 +1,14 @@
 ---
 title: Blackbox Optimization and Hyperparameter Tuning With Google's Vizier
-updated: 2023-02-23 00:00
+last_modified_at: 2023-02-23 00:00
 imgpath: /assets/img/blackbox-optimization-with-vizier
 previewurl: /black-box-optimization.png
+description: "A worked example of blackbox optimization with Google Vizier: define conditional parameters, evaluate trials, and tune a model to fit a noisy signal."
+image: /assets/img/blackbox-optimization-with-vizier/black-box-optimization.png
+image_width: 629
+image_height: 319
+image_alt: "Blackbox optimization inputs and outputs"
+mathjax: true
 ---
 {% include description.html content="Automatically and intelligently optimize any kind of system" %}
 

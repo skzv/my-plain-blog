@@ -1,8 +1,14 @@
 ---
 title: Bringing Colour and Life to Black and White Photos
-updated: 2021-06-12 00:00
+last_modified_at: 2021-06-12 00:00
 imgpath: /assets/img/colourising-black-and-white-photos
 previewurl: /mama-and-vova-colorized.jpg
+description: "Colourising family photos with AI and the DeepAI API, with examples, a batch processing script, and a look at the limitations of colour restoration."
+image: /assets/img/colourising-black-and-white-photos/mama-and-vova-colorized.jpg
+image_width: 800
+image_height: 616
+image_alt: "A family photograph restored in colour with AI"
+mathjax: false
 ---
 
 {% include description.html content="Machine learning allows us to colourise black and white photos with ease, but at what risk?" %}

@@ -1,54 +1,34 @@
 <meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-{% comment %}
-  jekyll-seo-tag emits title, description, canonical, og:*, twitter:*, JSON-LD.
-  We keep `og:image` / `twitter:image` here because posts encode preview images
-  via `page.previewurl` + `page.imgpath` rather than a single `page.image` field.
-{% endcomment %}
+{% comment %}One source for canonical URLs, descriptions, social previews, and JSON-LD.{% endcomment %}
 {% seo title=false %}
+<title>{% if page.title %}{{ page.title | escape }} · {% endif %}{{ site.title | escape }}</title>
 
-<title>{% if page.title %}{{ page.title }} · {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
-
-{% comment %}
-  Force summary_large_image — jekyll-seo-tag hardcodes the card to "summary"
-  when page.image isn't set, even if site.twitter.card says otherwise. The
-  later <meta> wins in every parser we care about (Twitter, LinkedIn, FB).
-{% endcomment %}
-<meta name="twitter:card" content="summary_large_image">
-
-{% comment %}
-  Explicit og:type and og:url. jekyll-seo-tag usually emits these but
-  LinkedIn's Post Inspector flags them as missing on some pages.
-  Posts → "article", everything else → "website".
-{% endcomment %}
-<meta property="og:type" content="{% if page.layout == 'post' %}article{% else %}website{% endif %}">
-<meta property="og:url" content="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
-
-{% if page.previewurl %}
-	{% capture preview_url %}{{ page.previewurl | prepend: page.imgpath | prepend: site.baseurl | prepend: site.url }}{% endcapture %}
-	<meta property="og:image" content="{{ preview_url }}">
-	<meta name="twitter:image" content="{{ preview_url }}">
-{% else %}
-	<meta property="og:image" content="https://blog.skz.dev/assets/img/preview-banner.png">
-	<meta property="og:image:width" content="1200">
-	<meta property="og:image:height" content="630">
-	<meta property="og:image:alt" content="Sasha Kuznetsov. Blog.">
-	<meta name="twitter:image" content="https://blog.skz.dev/assets/img/preview-banner.png">
+{% unless page.date %}
+  <meta property="og:type" content="website">
+{% endunless %}
+{% comment %}Keep image as a URL: jekyll-seo-tag 2.7.1 emits an invalid imageObject type for image hashes.{% endcomment %}
+{% if page.image_width and page.image_height %}
+  <meta property="og:image:width" content="{{ page.image_width }}">
+  <meta property="og:image:height" content="{{ page.image_height }}">
+{% endif %}
+{% if page.image_alt %}
+  <meta property="og:image:alt" content="{{ page.image_alt | escape }}">
+  <meta name="twitter:image:alt" content="{{ page.image_alt | escape }}">
+{% endif %}
+{% if page.date and page.last_modified_at %}
+  <meta property="article:modified_time" content="{{ page.last_modified_at | date_to_xmlschema }}">
+{% endif %}
+{% if page.robots %}
+  <meta name="robots" content="{{ page.robots | escape }}">
 {% endif %}
 
-{% if page.updated %}
-	<meta property="article:modified_time" content="{{ page.updated | date_to_xmlschema }}">
-{% endif %}
+<link rel="icon" href="{{ '/assets/img/favicon.png' | relative_url }}">
+<link rel="apple-touch-icon" href="{{ '/assets/img/favicon.png' | relative_url }}">
+<link rel="stylesheet" href="{{ '/assets/css/core.css' | relative_url }}">
+<link rel="alternate" type="application/rss+xml" title="{{ site.title | escape }}" href="{{ '/feed.xml' | absolute_url }}">
 
-<link rel="icon" href="{{ "/assets/img/favicon.png" | prepend: site.baseurl | prepend: site.url }}">
-<link rel="apple-touch-icon" href="{{ "/assets/img/favicon.png" | prepend: site.baseurl | prepend: site.url }}">
-<link rel="stylesheet" href="{{ "/assets/css/core.css" | prepend: site.baseurl | prepend: site.url }}">
-{% feed_meta %}
-
-{% if site.mathjax %}
-	{% unless page.url == '/index.html' or page.url == '/' %}
-		<script src="/assets/js/load-mathjax.js" async></script>
-	{% endunless %}
+{% if site.mathjax and page.mathjax %}
+  <script src="{{ '/assets/js/load-mathjax.js' | relative_url }}" async></script>
 {% endif %}
