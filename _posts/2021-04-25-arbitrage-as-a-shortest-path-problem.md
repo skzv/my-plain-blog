@@ -4,10 +4,12 @@ last_modified_at: 2021-04-25 00:00
 imgpath: /assets/img/arbitrage-as-a-shortest-path-problem
 previewurl: /currency-graph-on-black.png
 description: "How currency arbitrage becomes a graph problem, using logarithms and the Bellman-Ford algorithm to find profitable trading cycles."
-image: /assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-on-black.png
-image_width: 448
-image_height: 283
+image: /assets/img/arbitrage-as-a-shortest-path-problem/og-preview.png
+image_width: 1200
+image_height: 630
 image_alt: "Currency exchange graph used to explain arbitrage"
+tags: [quant-finance, algorithms]
+toc: true
 mathjax: true
 ---
 {% include description.html content="An explanation of arbitrage and a look at an efficient algorithm to find riskless instantaneous arbitrage opportunities." %}
@@ -94,7 +96,7 @@ Graphs are an incredibly important structure that has found its uses in numerous
 
 In our case, let’s treat each currency as a node. Moving from node to node corresponds to trading one currency for another.
 
-![Simplified Currency Graph]({{ "/currency-graph-white.png" | prepend: page.imgpath }})
+![Simplified Currency Graph]({{ "/currency-graph-white.png" | prepend: page.imgpath }}){: width="448" height="283" loading="lazy" decoding="async"}
 {% include caption.html content="Simplified graph — there should be a distinct edge in each direction." %}
 
 So moving along an edge, between nodes, should transform the amount of currency by the exchange rate.
@@ -105,7 +107,7 @@ Note that the exchange rate in each direction will be _approximately_ the recipr
 
 The reason that the exchange rates in both directions are only _approximately_ reciprocal is due to small differences in the prices to buy and sell currencies, known as the buy-sell spread. For example, if at a given moment you can buy pounds at 0.8 pounds/dollar (the current price somebody will sell to you), but can sell dollars for pounds at 0.82 pounds/dollar (or 1.22 dollars/pound, and the current price somebody will buy from you), your graph model will look like this (excluding the other exchange rates for simplicity):
 
-![Currency Graph with Exchange Rates]({{ "/currency-graph-w-exchange-rates-white.png" | prepend: page.imgpath }})
+![Currency Graph with Exchange Rates]({{ "/currency-graph-w-exchange-rates-white.png" | prepend: page.imgpath }}){: width="451" height="378" loading="lazy" decoding="async"}
 
 A series of trades can be modeled by moving along edges in this graph, and the result of the trades is computed by **_multiplying_** the edge weights as you move along them.
 
@@ -219,7 +221,7 @@ We’re close, but not quite there. The final step, to reduce our problem to one
 
 Which we know the Bellman-Ford algorithm can do! Constructing a graph as specified and executing the Bellman-Ford algorithm on it will quickly and efficiently find arbitrage opportunities for us, because we’ve turned the arbitrage problem into the problem of finding the shortest path — _the infinitely shortest path_.
 
-![Negative Log Currency Graph]({{ "/neg-log-currency-graph-white.png" | prepend: page.imgpath }})
+![Negative Log Currency Graph]({{ "/neg-log-currency-graph-white.png" | prepend: page.imgpath }}){: width="448" height="283" loading="lazy" decoding="async"}
 {% include caption.html content="We need to find a negative weight cycle, where the weights are the negative logarithm of the exchange rates." %}
 
 In hindsight, it’s obvious that there should be a correspondence between a negative weight cycle — which lowers the cost of the path every time you traverse it — to an arbitrage opportunity, which makes you a profit every time you traverse it. The key insight is transforming a problem of finding a product greater than 1 into finding a sum less than 0, by applying -log to the edge weights.
@@ -267,4 +269,4 @@ Since an arbitrage opportunity corresponds to a negative weight cycle, it seems 
 
 The liquidity — the volume available before the price changes significantly- available for any arbitrage opportunity is limited, and is quickly exploited by algorithmic traders pushing the boundaries of computing technology and the laws of physics to beat each other.
 
-That being said, I hope you found this exercise in applying graph theory and a well known shortest path algorithm to solving a problem in the finance domain — and making money — as interesting as I always have.
+That being said, I hope you found this exercise in applying graph theory and a well known shortest path algorithm to solving a problem in the finance domain — and making money — as interesting as I always have. If you enjoy quantitative finance, you might also like my posts on [Monte Carlo options pricing]({% post_url 2021-12-17-monte-carlo-options-pricing %}) and [estimating the market open from index futures]({% post_url 2025-03-23-predicting-how-the-market-will-open-tomorrow %}).

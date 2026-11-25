@@ -8,6 +8,7 @@ image: /assets/img/gradient-descent/gradient-descent-preview.png
 image_width: 1564
 image_height: 808
 image_alt: "Interactive gradient descent visualization"
+tags: [machine-learning, optimization]
 mathjax: true
 ---
 
@@ -71,7 +72,7 @@ Another interesting property of the gradient is that it gives the direction of t
 
 Below, I plot the negative gradient of $$f(x,y)$$ with Mathematica. This gives us the direction of steepest descent at every point on $$f$$.
 
-![Gradient of f]({{ "/gradient.png" | prepend: page.imgpath }})
+![Gradient of f]({{ "/gradient.png" | prepend: page.imgpath }}){: width="360" height="361" loading="lazy" decoding="async"}
 {% include caption.html content="Gradient of f plotted as a vector field." %}
 
 ## Follow the steepest part down
@@ -139,8 +140,8 @@ You may also notice that increasing the descent rate $$\alpha$$ reduces the numb
 
 ## Machine learning
 
-You've probably heard of gradient descent in the context of machine learning. In that context, the cost function represents the error of our machine learning model. For example, it may be the error of classifying images, and the inputs to the cost function are the weights of the model we are varying. Hence, we can use gradient descent to find the optimal configuration of weights that minimize the classification error of the neural network! In this field, the descent rate $$\alpha$$ has a special name: it is known as the *learning rate*. Maybe it's what our brains have been doing all along. 
+You've probably heard of gradient descent in the context of machine learning. In that context, the cost function represents the error of our machine learning model. For example, it may be the error of classifying images, and the inputs to the cost function are the weights of the model we are varying. Hence, we can use gradient descent to find the optimal configuration of weights that minimize the classification error of the neural network! In this field, the descent rate $$\alpha$$ has a special name: it is known as the *learning rate*. Maybe it's what our brains have been doing all along. (And when a system doesn't expose gradients at all, you can turn to [blackbox optimization with tools like Google's Vizier]({% post_url 2023-02-23-blackbox-optimization-with-vizier %}).)
 
-<script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="/assets/js/gradient-descent.js" async></script>
+<script defer fetchpriority="low" src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
+<script defer fetchpriority="low" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="/assets/js/gradient-descent.js"></script>

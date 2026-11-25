@@ -1,14 +1,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
 
-{% comment %}One source for canonical URLs, descriptions, social previews, and JSON-LD.{% endcomment %}
-{% seo title=false %}
-<title>{% if page.title %}{{ page.title | escape }} · {% endif %}{{ site.title | escape }}</title>
+{% comment %}
+  Keep jekyll-seo-tag metadata, replacing its anonymous JSON-LD author with a
+  unified @graph anchored to https://skz.dev/#person.
+{% endcomment %}
+{% capture seo_output %}{% seo title=false %}{% endcapture %}
+{{ seo_output | split: '<script type="application/ld+json">' | first }}
+<!-- End Jekyll SEO metadata -->
+<title>{% if page.seo_title %}{{ page.seo_title | escape }} · {{ site.short_title | escape }}{% elsif page.title %}{{ page.title | escape }} · {{ site.short_title | escape }}{% else %}{{ site.home_title | escape }}{% endif %}</title>
 
 {% unless page.date %}
   <meta property="og:type" content="website">
 {% endunless %}
-{% comment %}Keep image as a URL: jekyll-seo-tag 2.7.1 emits an invalid imageObject type for image hashes.{% endcomment %}
+{% assign preview_image = page.image | default: '/assets/img/preview-banner.png' %}
+{% if preview_image contains '.jpg' or preview_image contains '.jpeg' %}
+  <meta property="og:image:type" content="image/jpeg">
+{% elsif preview_image contains '.webp' %}
+  <meta property="og:image:type" content="image/webp">
+{% else %}
+  <meta property="og:image:type" content="image/png">
+{% endif %}
 {% if page.image_width and page.image_height %}
   <meta property="og:image:width" content="{{ page.image_width }}">
   <meta property="og:image:height" content="{{ page.image_height }}">
@@ -17,18 +30,25 @@
   <meta property="og:image:alt" content="{{ page.image_alt | escape }}">
   <meta name="twitter:image:alt" content="{{ page.image_alt | escape }}">
 {% endif %}
+<meta name="twitter:description" content="{{ page.description | default: site.description | smartify | strip_html | strip | escape }}">
 {% if page.date and page.last_modified_at %}
   <meta property="article:modified_time" content="{{ page.last_modified_at | date_to_xmlschema }}">
 {% endif %}
 {% if page.robots %}
   <meta name="robots" content="{{ page.robots | escape }}">
+{% else %}
+  <meta name="robots" content="max-image-preview:large">
 {% endif %}
+{% include structured-data.html %}
 
 <link rel="icon" href="{{ '/assets/img/favicon.png' | relative_url }}">
 <link rel="apple-touch-icon" href="{{ '/assets/img/favicon.png' | relative_url }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ '/assets/css/core.css' | relative_url }}">
 <link rel="alternate" type="application/rss+xml" title="{{ site.title | escape }}" href="{{ '/feed.xml' | absolute_url }}">
 
 {% if site.mathjax and page.mathjax %}
-  <script src="{{ '/assets/js/load-mathjax.js' | relative_url }}" async></script>
+  <script src="{{ '/assets/js/load-mathjax.js' | relative_url }}" async fetchpriority="low"></script>
 {% endif %}

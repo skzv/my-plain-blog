@@ -4,10 +4,11 @@ last_modified_at: 2025-03-23 00:00
 imgpath: /assets/img/predicting-market-open
 previewurl: /preview.png
 description: "How index futures, interest rates, and dividend yields can estimate the next market open, with a cost of carry calculation and my impliedopen.com dashboard."
-image: /assets/img/predicting-market-open/preview.png
-image_width: 632
-image_height: 384
+image: /assets/img/predicting-market-open/og-preview.png
+image_width: 1200
+image_height: 630
 image_alt: "Implied market opening dashboard"
+tags: [quant-finance]
 mathjax: true
 ---
 
@@ -25,7 +26,7 @@ will likely open <span style="color: #66ff66;">higher</span> or <span style="col
 Below, I walk through all the pieces of this calculation, culminating in a dashboard I built that gives us a sneak preview of the the next day's opening movements at [impliedopen.com](https://impliedopen.com).
 
 
-![A preview of the dashboard I built which gives us a sneak peek of market movements the next day.]({{ "/save-game.png" | prepend: page.imgpath }})
+![A preview of the dashboard I built which gives us a sneak peek of market movements the next day.]({{ "/save-game.webp" | prepend: page.imgpath }}){: width="1168" height="1312" fetchpriority="high" decoding="async"}
 {% include caption.html content="A preview of the dashboard I built which gives us a sneak peek of market movements the next day." %}
 
 ## Futures
@@ -34,12 +35,12 @@ Futures (future contracts) are instruments that allow traders to bet on the *fut
 
 To relate the futures' price to the current fair value being priced by the futures market, we have to account for the time between now and the future expiry date.
 
-![SP500 Future Contract]({{ "/futures-price.png" | prepend: page.imgpath }})
+![SP500 Future Contract]({{ "/futures-price.webp" | prepend: page.imgpath }}){: width="943" height="826" loading="lazy" decoding="async"}
 {% include caption.html content="SP500 Future Contract" %}
 
 We do this by using the cost of carry model, which takes into account the risk-free interest rate,
 the dividend yield, and the time to maturity. It assumes that the price of the index should grow at the current
-risk-free rate (essentialy a no arbitrage assumption) minus decreases in price due to divedends being paid out.
+risk-free rate (essentially a no-[arbitrage]({% post_url 2021-04-25-arbitrage-as-a-shortest-path-problem %}) assumption) minus decreases in price due to dividends being paid out.
 
 We can express this relationship as:
 
@@ -78,7 +79,7 @@ Does a risk-free investment even exist? Well, treasury bills - debt issued by th
 
 For the risk-free rate in these calculations, I choose the 3 month T-bill.
 
-![3 Month US Treasury Yield]({{ "/3m-bond-yield-1.png" | prepend: page.imgpath }})
+![3 Month US Treasury Yield]({{ "/3m-bond-yield-1.png" | prepend: page.imgpath }}){: width="993" height="633" loading="lazy" decoding="async"}
 {% include caption.html content="3 Month US Treasury Yield" %}
 
 We assume that the underlying assets will grow at atleast the risk-free rate, because otherwise investors wouldn't bother putting their money in these instruments.
@@ -89,25 +90,25 @@ While we assume that the underlying instruments will grow at atleast the risk-fr
 
 Below is the latest SP500 dividend yield which I use for my calculations.
 
-![Latest SP500 Yield]({{ "/sp500-dividend-yield.png" | prepend: page.imgpath }})
+![Latest SP500 Yield]({{ "/sp500-dividend-yield.png" | prepend: page.imgpath }}){: width="873" height="641" loading="lazy" decoding="async"}
 {% include caption.html content="Latest SP500 Dividend Yield" %}
 
 ## Putting it All Together
 
 I collect the last index price, the current trading futures price, my best estimate of the dividend yield, risk-free rate, and time to expiry, and calculate my current best estimate of the fair value of each major index. I've put all the pieces together on [impliedopen.com](https://impliedopen.com), which I've embedded below:
 
-<iframe src="https://impliedopen.com" width="100%" height="1200px"></iframe>
+<iframe src="https://impliedopen.com" title="Implied Open live index futures dashboard" loading="lazy" width="100%" height="1200"></iframe>
 
 This dashboard is most useful when the futures market is open but the regular market is closed - so we can use the futures market to understand what traders are pricing in before the regular market open. When the regular market is open, it provides the "true" current value of each index - as priced by the market. 
 
-![Market Status View]({{ "/market-status.png" | prepend: page.imgpath }})
+![Market Status View]({{ "/market-status.png" | prepend: page.imgpath }}){: width="751" height="159" loading="lazy" decoding="async"}
 {% include caption.html content="Market Status View" %}
 
 ## Final Notes
 
 I put this dashboard together pretty quickly, and ended up just scraping a lot of the values which I cache once a minute on my own API :) My apologies if things break or it goes down - at some point I will replace things with proper APIs, or this dashboard will become irrelevant as markets move towards 24/7 trading. In any case, I wanted to put together this blog post for permenance. 
 
-![It is what it is.]({{ "/it-is-what-it-is.png" | prepend: page.imgpath }})
+![It is what it is.]({{ "/it-is-what-it-is.png" | prepend: page.imgpath }}){: width="690" height="365" loading="lazy" decoding="async"}
 {% include caption.html content="It is what it is." %}
 
 If you notice errors in my calculations or have suggestions or other feedback, please reach out to me and let me know!

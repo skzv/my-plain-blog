@@ -17,9 +17,40 @@ layout: default
 
 	<div class="divider"></div>
 
+	{% include toc.html %}
+
 	{{ content }}
 
 </article>
+
+{% if page.tags and page.tags.size > 0 %}
+	{% assign related_count = 0 %}
+	{% capture related_items %}
+		{% for candidate in site.posts %}
+			{% if candidate.url != page.url and related_count < 3 %}
+				{% assign shared = false %}
+				{% for tag in page.tags %}
+					{% if candidate.tags contains tag %}
+						{% assign shared = true %}
+					{% endif %}
+				{% endfor %}
+				{% if shared %}
+					{% assign related_count = related_count | plus: 1 %}
+					<li>
+						<a href="{{ candidate.url | relative_url }}">{{ candidate.title | escape }}</a>
+						{% if candidate.description %}<span class="related-desc">{{ candidate.description | escape }}</span>{% endif %}
+					</li>
+				{% endif %}
+			{% endif %}
+		{% endfor %}
+	{% endcapture %}
+	{% if related_count > 0 %}
+		<section class="related-posts" aria-labelledby="related-heading">
+			<h2 id="related-heading" class="code">Related posts</h2>
+			<ul>{{ related_items }}</ul>
+		</section>
+	{% endif %}
+{% endif %}
 
 <nav class="page-navigation code" aria-label="Post navigation">
 	{% if page.next.url %}

@@ -9,7 +9,7 @@
 	{% endif %}
 
 	<a href="{{ link | relative_url }}" aria-label="{{ prompt }}">
-		<img src="{{ site.logo_url }}" alt="Sasha Kuznetsov" width="90" height="90" class="logo-avatar">
+		<img src="{{ site.logo_url | relative_url }}" alt="Sasha Kuznetsov" width="90" height="90" decoding="async" class="logo-avatar">
 	</a>
 	<span class="logo-prompt code">{{ prompt }}</span>
 

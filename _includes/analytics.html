@@ -1,10 +1,24 @@
-<script async defer src="https://api.skz.dev/latest.js"></script>
+<script>
+(function () {
+  var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (!mq) return;
+  function syncReducedMotion(reduce) {
+    if (!reduce) return;
+    document.querySelectorAll('video[autoplay]').forEach(function (v) {
+      v.removeAttribute('autoplay');
+      v.pause();
+    });
+  }
+  syncReducedMotion(mq.matches);
+  if (mq.addEventListener) mq.addEventListener('change', function (e) { syncReducedMotion(e.matches); });
+}());
+</script>
+<script async defer fetchpriority="low" src="https://api.skz.dev/latest.js"></script>
 <noscript><img src="https://api.skz.dev/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade" /></noscript>
-<!-- <script async defer data-domain="blog.skz.dev" src="https://a-api.skz.dev/js/index.js"></script> -->
 
 {% if jekyll.environment == "production" %}
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HEZ4SVYD62"></script>
+<script async fetchpriority="low" src="https://www.googletagmanager.com/gtag/js?id=G-HEZ4SVYD62"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}

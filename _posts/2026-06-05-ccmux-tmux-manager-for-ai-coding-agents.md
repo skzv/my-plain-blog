@@ -8,6 +8,7 @@ image: /assets/img/ccmux/preview.png
 image_width: 1200
 image_height: 630
 image_alt: "ccmux dashboard for managing coding agent sessions"
+tags: [ai-tools, systems]
 mathjax: false
 ---
 
@@ -19,19 +20,34 @@ What I wanted was to kick off a session on the Mac mini, walk away, get a notifi
 
 So together with Daniel Mandragona and Mike Choi, I built [ccmux](https://ccmux.ai/), a cross-device tmux session manager for AI coding agents. Below, I walk through how it works, how the pieces fit together, and what we built for mobile.
 
-![ccmux terminal interface showing coding agent sessions across projects]({{ "/hero.gif" | prepend: page.imgpath }})
+<div style="text-align:center">
+  <video autoplay loop muted playsinline disableRemotePlayback preload="metadata" width="1280" height="640" poster="/assets/video/ccmux/hero-poster.webp" style="width:100%;height:auto">
+    <source src="/assets/video/ccmux/hero.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
 {% include caption.html content="A quick tour of ccmux, with five agent sessions running across four projects." %}
 
 ## The Dashboard
 
 When you open `ccmux`, you get a single list of every coding agent session running across your machines, colour-coded by what each agent is doing - active (generating output), idle, or waiting for your input. On the right side, there's a Devices panel listing the other machines on your network, along with a usage panel that tracks Claude's 5-hour quota so you can see when you're getting close to the limit.
 
-![ccmux dashboard with session status, connected devices, and Claude usage]({{ "/dashboard.gif" | prepend: page.imgpath }})
+<div style="text-align:center">
+  <video autoplay loop muted playsinline disableRemotePlayback loading="lazy" preload="metadata" width="1280" height="640" poster="/assets/video/ccmux/dashboard-poster.webp" style="width:100%;height:auto">
+    <source src="/assets/video/ccmux/dashboard.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
 {% include caption.html content="The dashboard. Session rows are colour-coded by state, with connected devices and Claude usage on the right." %}
 
 To jump into any session, you select it and press `Enter`, which attaches you straight to the agent's tmux session. When you're done, `Ctrl-b d` detaches and brings you back to the dashboard while the agent keeps running on whichever machine started it.
 
-![Attaching to a tmux session and returning to the ccmux dashboard]({{ "/attach-detach.gif" | prepend: page.imgpath }})
+<div style="text-align:center">
+  <video autoplay loop muted playsinline disableRemotePlayback loading="lazy" preload="metadata" width="1280" height="640" poster="/assets/video/ccmux/attach-detach-poster.webp" style="width:100%;height:auto">
+    <source src="/assets/video/ccmux/attach-detach.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
 {% include caption.html content="Pressing Enter to attach to a session, then Ctrl-b d to detach back to the dashboard." %}
 
 <div class="divider"></div>
@@ -59,25 +75,35 @@ Using agents from my phone was the main reason I wanted to build this. The troub
 
 When ccmux detects a narrow terminal (under 120 columns), it automatically collapses the dashboard into a single scrollable column so the same interface works on a phone screen:
 
-![ccmux dashboard in a narrow mobile terminal]({{ "/phone.gif" | prepend: page.imgpath }}){:height="420px"}
+<div style="text-align:center">
+  <video autoplay loop muted playsinline disableRemotePlayback loading="lazy" preload="metadata" width="430" height="900" poster="/assets/video/ccmux/phone-poster.webp" style="max-height:420px;width:auto">
+    <source src="/assets/video/ccmux/phone.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
 {% include caption.html content="The TUI collapsing to a phone-width layout over Mosh." %}
 
 Notifications ended up being pretty simple to implement. Whenever a session transitions to `needs_input`, the daemon rings the standard terminal bell (`BEL`). iOS terminal apps that watch for the bell turn it straight into a push notification, with no cloud relay in the middle. In [Moshi](https://getmoshi.app/) - a Mosh client for iOS - ccmux can also wire up `moshi-hook` with Claude Code's hooks to send categorized notifications (like approval needed vs. task complete) and let you tap straight into the session.
 
-![ccmux running in the Moshi terminal app on an iPhone]({{ "/moshi.png" | prepend: page.imgpath }}){:height="520px"}
+![ccmux running in the Moshi terminal app on an iPhone]({{ "/moshi.webp" | prepend: page.imgpath }}){: width="610" height="1323" loading="lazy" decoding="async" style="max-height:520px;width:auto"}
 {% include caption.html content="ccmux running inside Moshi on an iPhone." %}
 
 Still, driving a terminal UI on a phone screen can feel cramped, especially when you just want to glance at your sessions or write out a longer prompt. So we also built a native iOS app that talks directly to `ccmuxd` over Tailscale. You pair a phone by running `ccmux pair` on your Mac and scanning the QR code in the terminal. From there, the app streams live session states over SSE and attaches to interactive tmux panes through a WebSocket PTY bridge rendered with SwiftTerm.
 
 <div style="text-align:center">
-<img src="{{ "/ios-dashboard.png" | prepend: page.imgpath }}" alt="ccmux iOS app listing coding agent sessions" height="460" style="display:inline-block;margin:0 6px" />
-<img src="{{ "/ios-terminal.png" | prepend: page.imgpath }}" alt="Interactive tmux terminal in the ccmux iOS app" height="460" style="display:inline-block;margin:0 6px" />
+<img src="{{ "/ios-dashboard.webp" | prepend: page.imgpath }}" alt="ccmux iOS app listing coding agent sessions" width="1206" height="2622" loading="lazy" decoding="async" style="display:inline-block;margin:0 6px;max-height:460px;width:auto" />
+<img src="{{ "/ios-terminal.webp" | prepend: page.imgpath }}" alt="Interactive tmux terminal in the ccmux iOS app" width="1206" height="2622" loading="lazy" decoding="async" style="display:inline-block;margin:0 6px;max-height:460px;width:auto" />
 </div>
 {% include caption.html content="The native iOS app: session dashboard on the left, live terminal on the right." %}
 
 One thing we ran into quickly on iOS is that terminal input and prompt writing want opposite keyboards. Driving a terminal needs raw keystrokes, arrow keys, and fast backspace without autocorrect getting in the way, whereas writing a paragraph of instructions to an agent with no autocorrect or text selection is painful. So we added a toggle right in the terminal view between Raw mode (every keystroke goes straight to the PTY) and Chat mode (a normal iMessage-style text box for composing prompts).
 
-![Switching between Raw and Chat input modes in the ccmux iOS app]({{ "/ios-mode-toggle.gif" | prepend: page.imgpath }}){:height="460px"}
+<div style="text-align:center">
+  <video autoplay loop muted playsinline disableRemotePlayback loading="lazy" preload="metadata" width="400" height="870" poster="/assets/video/ccmux/ios-mode-toggle-poster.webp" style="max-height:460px;width:auto">
+    <source src="/assets/video/ccmux/ios-mode-toggle.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
 {% include caption.html content="Switching between Raw terminal input and Chat mode for composing prompts." %}
 
 <div class="divider"></div>
@@ -93,4 +119,4 @@ curl -fsSL https://raw.githubusercontent.com/skzv/ccmux/main/scripts/install.sh 
 ccmux setup
 ```
 
-The [setup docs](https://ccmux.ai/docs/) cover connecting multiple machines over Tailscale and hooking up mobile access.
+The [setup docs](https://ccmux.ai/docs/) cover connecting multiple machines over Tailscale and hooking up mobile access. (For another AI project I built around the same time, see [interactive AI paper explainers with intuitivepapers.ai]({% post_url 2026-06-05-intuitivepapers-ai-interactive-paper-explainers %}).)
