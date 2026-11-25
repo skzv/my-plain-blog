@@ -1,9 +1,9 @@
 ---
 title: "Interactive AI Paper Explainers with intuitivepapers.ai"
-last_modified_at: 2026-09-08 00:00
+last_modified_at: 2026-11-25 00:00
 imgpath: /assets/img/intuitivepapers
 previewurl: /home.png
-description: "How I built intuitivepapers.ai to turn machine learning papers into interactive explainers, with prerequisite concepts, source checks, and custom figures."
+description: "How I built intuitivepapers.ai, an automated pipeline that turns machine learning papers into verified interactive explainers with custom canvas figures."
 image: /assets/img/intuitivepapers/home.png
 image_width: 1280
 image_height: 820
@@ -11,68 +11,82 @@ image_alt: "intuitivepapers.ai interactive AI paper explainers"
 mathjax: false
 ---
 
-{% include description.html content="Can we use AI to explain machine learning papers properly, with the prerequisites, math, and interactive figures?" %}
+{% include description.html content="Can we automate turning dense machine learning papers into verified, interactive explainers?" %}
 
-When I read a machine learning paper, I often spend a lot of time looking up the ideas it builds on. A paper describes a new contribution, but understanding that contribution may require working through several other papers first.
+Reading machine learning papers can be frustratingly slow. A paper usually spends its pages on whatever is new and assumes you already have the five prerequisite ideas fresh in your head, so half the time I end up jumping down a chain of older references before the actual paper makes sense.
 
-I sometimes ask an LLM to explain a paper to me. This is useful for getting started, but I have found that the explanations can sound convincing while getting important details wrong. A sign in an equation, whether a result is exact or approximate, or which variable is being updated can change the meaning quite a bit. And if I don't already understand the paper, these errors are difficult to notice.
+The easy shortcut now is to drop the PDF into an LLM and ask for an explanation. I do that plenty, and it's helpful for a rough first pass, but it also gets subtle details wrong surprisingly often. A flipped sign in an equation, whether a derivation is exact or an approximation, or which variable is actually being updated can completely change what an algorithm is doing. And if you don't already know the paper well, it's really hard to notice those mistakes when the explanation otherwise sounds completely plausible.
 
-I wanted explanations that build up the intuition and math together, with figures I could interact with. I've explored this on a smaller scale in my [gradient descent demo]({% post_url 2021-11-15-gradient-descent %}): changing a parameter and watching what happens can make an algorithm much easier to understand.
+What I wanted were explanations that build up the intuition and the math together, with figures you can actually play with. I saw how much difference that makes when I put together my [interactive gradient descent demo]({% post_url 2021-11-15-gradient-descent %}) a few years ago - dragging a slider and watching an algorithm overshoot or converge teaches you things a static equation never really conveys.
 
-## Starting With One Paper
+## Starting With DiffusionBlocks
 
-I first worked on an [explainer of the DiffusionBlocks paper](https://intuitivepapers.ai/diffusionblocks/) with Claude. This took about a week of iteration. Getting the math right meant going back to the original sources, and in the process I found what appeared to be a sign error in the paper's equations.
+I started by building a single [explainer for Sakana AI's DiffusionBlocks paper](https://intuitivepapers.ai/diffusionblocks/) together with Claude. It took about a week of back-and-forth to get it into good shape. A lot of that time went into checking every equation back against the primary sources (like the EDM paper) and the authors' official GitHub repository.
 
-This made me wonder how much of the process I could automate. Could I put together a system that reads a paper and its references, works through the math, creates interactive figures, and checks the resulting explanation?
+While doing that, the verification caught a real sign error printed in the paper itself. The paper defines `Δσ = σ_prev - σ_next > 0` and writes its Eq. (4) Euler update with `(z - D)`, which actually steps *away* from the denoiser's prediction. Discretizing their Eq. (1) gives `(D - z)`, and sure enough, checking the authors' code (`model.py`) confirmed the implementation uses the corrected sign. An ordinary LLM summary would have just repeated the printed typo, and I probably never would have noticed.
 
-The result is [intuitivepapers.ai](https://intuitivepapers.ai/). At the time of the original post, I had used it to produce twenty explainers, covering papers such as Attention, BERT, GANs, VAEs, CLIP, PPO, Mamba, and Adam.
+That got me wondering how much of that whole week of work I could automate. Could I build a pipeline that pulls a paper's actual source, verifies the prerequisite math against primary literature and code, builds interactive figures, and reviews its own draft before publishing?
+
+The result is [intuitivepapers.ai](https://intuitivepapers.ai/). It started out with twenty explainers - covering classics and newer papers like Attention, BERT, GANs, VAEs, CLIP, PPO, Mamba, and Adam - and has since grown past 150 explainers as the pipeline keeps running on a schedule.
 
 ![intuitivepapers.ai homepage with interactive machine learning paper explainers]({{ "/home.png" | prepend: page.imgpath }})
 {% include caption.html content="The intuitivepapers.ai homepage." %}
 
 ![Library of twenty AI paper explainers with figure previews]({{ "/library.png" | prepend: page.imgpath }})
-{% include caption.html content="The paper library. Each card previews a figure from the corresponding explainer." %}
+{% include caption.html content="The original library of twenty papers. Each card renders a live preview of a figure from its explainer." %}
 
 <div class="divider"></div>
 
-## Interactive Explanations
+## What an Explainer Looks Like
 
-Each explainer starts with the prerequisites and works towards the paper's main idea. A navigation panel, called the concept tower, lists these concepts in the order they depend on each other. Where it helps, the explanation also includes code to connect the math to an implementation.
+Each page starts with the prerequisites and builds up to the paper's main idea in dependency order. On desktop, a sidebar I call the concept tower maps out that dependency chain so you can see how the pieces stack together, and short code blocks connect the notation back to what actually runs.
 
-The figures are interactive. For example, PPO uses a clipped objective to limit the incentive for certain changes to a policy. In the figure below, you can change the probability ratio and the sign of the advantage, and see where the objective becomes flat. This makes it easier to see when clipping takes effect than by looking at the equation alone.
+My favourite part is the interactive figures. For example, PPO uses a clipped objective to stop policy updates from moving too far in a single step. In the figure below, you can drag the probability ratio and flip the sign of the advantage to watch exactly where the objective goes flat and stops producing a gradient. Playing with it for ten seconds makes the clipping logic click much faster than staring at the `min` expression on its own.
 
 ![Interactive PPO clipped objective showing the probability ratio and advantage]({{ "/ppo-figure.png" | prepend: page.imgpath }})
-{% include caption.html content="Exploring PPO's clipped objective by changing the probability ratio and the sign of the advantage." %}
+{% include caption.html content="Exploring PPO's clipped objective by dragging the probability ratio and flipping the advantage sign." %}
 
-The figures also work on a phone:
+Everything also scales down to work on a phone, which is where I end up doing a lot of my own reading:
 
 ![PPO paper explainer with an inline figure on a phone]({{ "/mobile-ppo.png" | prepend: page.imgpath }}){:height="520px"}
-{% include caption.html content="The PPO explainer on a phone." %}
+{% include caption.html content="The PPO explainer on a phone, with the same interactive figure inline." %}
 
-Another example is CLIP, which learns to associate images with text. The grid below shows the scores for pairs of images and captions. The diagonal contains the matching pairs; the other cells are mismatches. We can use this to see what the training objective is trying to achieve.
+Another example is CLIP, which trains image and text encoders to line up matching pairs. The interactive grid below scores every image against every caption in a batch - the bright diagonal holds the real pairs being pulled together, while everything off the diagonal is a mismatch being pushed apart.
 
 ![CLIP similarity grid comparing images with matching and mismatched captions]({{ "/clip-grid.png" | prepend: page.imgpath }})
-{% include caption.html content="CLIP's image and caption scores. The matching pairs lie along the diagonal." %}
+{% include caption.html content="CLIP's image-caption similarity grid. Matching pairs sit along the diagonal." %}
 
 <div class="divider"></div>
 
-## Generating an Explainer
+## How the Pipeline Works
 
-Asking an LLM to explain a paper in one pass wasn't sufficient for what I wanted. I split the work into stages: reading the sources, checking the claims and equations, designing the figures, writing the explanation, and reviewing the draft.
+A single "explain this paper" prompt produces the exact shallow summaries I was trying to get away from. To get more reliable output, I split the generation into a multi-stage pipeline with several automated checks sitting between the draft and deployment.
 
-The checks use the paper itself, the primary literature it refers to, and the authors' code. Separate critic passes then look for problems in the draft before it is published. The idea is to make verification an explicit part of the process, rather than assume that a plausible explanation is correct.
+First, instead of letting a model paraphrase equations from memory, the pipeline fetches the arXiv HTML render (`arxiv.org/html/<id>`) and converts MathML to LaTeX with `pandoc` so the paper's equations and numbers are extracted verbatim.
 
-The pipeline runs on a timer on the Mac mini under my desk. It takes the next paper from a queue and works through these steps, including deploying the finished page, mostly without my involvement. Feedback submitted by readers is used to correct the page and update the instructions for future explainers.
+Next, it verifies the prerequisite concepts against primary sources - checking definitions, signs, and conventions - and when the paper's prose leaves a detail ambiguous, it reads the authors' official code and cites the exact file and line numbers in a provenance panel at the bottom of the page. All of that gets consolidated into a verified reference card that the writer works from, rather than drafting straight from the raw paper.
 
-Below is another example of the output, showing the pieces of a Mamba block. The library had over a hundred custom figures when I put this post together, drawn using canvas rather than a charting library.
+From there, the pipeline builds custom interactive figures directly on HTML5 canvas (no charting library) and writes the explainer in dependency order, pairing equations with concrete worked numbers and short pseudocode.
+
+Before anything ships, the draft goes through a mix of deterministic checks and model critics:
+
+1. A free deterministic pass checks the prose for common AI tells, validates KaTeX syntax, verifies that narrow mobile versions of equations are mathematically equivalent to the desktop ones without overflowing a phone screen, and sweeps every interactive figure across desktop and mobile slider and button states to catch overlapping or clipped labels.
+2. Separate critics then review accuracy against the paper, clarity, voice, figures, and rendered screenshots.
+3. Confirmed findings go to a fix pass, the site rebuilds, and only the failing checks re-run for up to a few rounds. If anything still fails at the end, the pipeline fails closed and opens a draft PR instead of publishing automatically.
+
+The whole pipeline runs on a daily `launchd` schedule on the Mac mini under my desk. Each morning it grabs the highest-upvoted paper from the queue (combining a curated backlog with reader submissions), waits out model session limits and resumes automatically if a run hits a quota reset, and deploys the finished page once the build and review gate pass cleanly.
+
+Below is one of the custom canvas diagrams from the Mamba explainer, breaking down the pieces of a Mamba block.
 
 ![Diagram showing the components of a Mamba block]({{ "/mamba-block-fig.jpeg" | prepend: page.imgpath }})
-{% include caption.html content="A breakdown of a Mamba block, from the Mamba explainer." %}
+{% include caption.html content="A breakdown of a Mamba block, drawn on canvas for the Mamba explainer." %}
 
 <div class="divider"></div>
 
 ## Final Notes
 
-This started with a paper I wanted to understand, and became an experiment in automating the work of explaining one. Checking the sources is useful, but it doesn't make an automatically generated explanation infallible. The feedback and correction process is part of the project too.
+This started because I wanted to properly understand one paper, and turned into an experiment in seeing how far automated verification can go. Checking primary sources, reading the authors' code, and sweeping figure states catches a lot of subtle mistakes, though it definitely doesn't make the output infallible. Complex interactive figures are still the hardest part to get right reliably without human eyes, and occasionally a clunky explanation or edge-case bug slips through.
 
-If there's a paper you've been meaning to work through, take a look at [intuitivepapers.ai](https://intuitivepapers.ai/). You can request a paper or upvote one that's already in the queue. And if you notice an error in an explanation, please send feedback through the page so it can be corrected.
+To help with that, every page has a feedback box at the bottom. Reader reports get used to fix errors on the page and tighten the pipeline's rules so future explainers avoid the same mistakes.
+
+If there's an ML paper you've been meaning to work through properly, check out [intuitivepapers.ai](https://intuitivepapers.ai/). You can request a paper or upvote one in the queue, and if you spot an error in any of the explainers, please send it through the feedback box so I can get it fixed.
