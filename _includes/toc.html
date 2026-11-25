@@ -1,0 +1,18 @@
+{% if page.toc %}
+  {% assign sections = content | split: '<h2 id="' %}
+  {% if sections.size > 2 %}
+    <nav class="toc" aria-label="Table of contents">
+      <div class="toc-title code">Contents</div>
+      <ol>
+        {% for section in sections offset:1 %}
+          {% assign id_and_rest = section | split: '">' %}
+          {% assign heading_id = id_and_rest[0] %}
+          {% assign heading_label = id_and_rest[1] | split: '</h2>' | first | strip_html | strip %}
+          {% if heading_id != '' and heading_label != '' %}
+            <li><a href="#{{ heading_id }}">{{ heading_label }}</a></li>
+          {% endif %}
+        {% endfor %}
+      </ol>
+    </nav>
+  {% endif %}
+{% endif %}

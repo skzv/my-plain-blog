@@ -8,6 +8,7 @@ image: /assets/img/intuitivepapers/home.png
 image_width: 1280
 image_height: 820
 image_alt: "intuitivepapers.ai interactive AI paper explainers"
+tags: [machine-learning, ai-tools]
 mathjax: false
 ---
 
@@ -17,7 +18,7 @@ Reading machine learning papers can be frustratingly slow. A paper usually spend
 
 The easy shortcut now is to drop the PDF into an LLM and ask for an explanation. I do that plenty, and it's helpful for a rough first pass, but it also gets subtle details wrong surprisingly often. A flipped sign in an equation, whether a derivation is exact or an approximation, or which variable is actually being updated can completely change what an algorithm is doing. And if you don't already know the paper well, it's really hard to notice those mistakes when the explanation otherwise sounds completely plausible.
 
-What I wanted were explanations that build up the intuition and the math together, with figures you can actually play with. I saw how much difference that makes when I put together my [interactive gradient descent demo]({% post_url 2021-11-15-gradient-descent %}) a few years ago - dragging a slider and watching an algorithm overshoot or converge teaches you things a static equation never really conveys.
+What I wanted were explanations that build up the intuition and the math together, with figures you can actually play with. I saw how much difference that makes when I put together my [interactive gradient descent demo]({% post_url 2021-11-15-gradient-descent %}) and [Monte Carlo options pricing simulations]({% post_url 2021-12-17-monte-carlo-options-pricing %}) a few years ago - dragging a slider and watching an algorithm overshoot or converge teaches you things a static equation never really conveys.
 
 ## Starting With DiffusionBlocks
 
@@ -29,10 +30,10 @@ That got me wondering how much of that whole week of work I could automate. Coul
 
 The result is [intuitivepapers.ai](https://intuitivepapers.ai/). It started out with twenty explainers - covering classics and newer papers like Attention, BERT, GANs, VAEs, CLIP, PPO, Mamba, and Adam - and has since grown past 150 explainers as the pipeline keeps running on a schedule.
 
-![intuitivepapers.ai homepage with interactive machine learning paper explainers]({{ "/home.png" | prepend: page.imgpath }})
+![intuitivepapers.ai homepage with interactive machine learning paper explainers]({{ "/home.webp" | prepend: page.imgpath }}){: width="1280" height="820" fetchpriority="high" decoding="async"}
 {% include caption.html content="The intuitivepapers.ai homepage." %}
 
-![Library of twenty AI paper explainers with figure previews]({{ "/library.png" | prepend: page.imgpath }})
+![Library of twenty AI paper explainers with figure previews]({{ "/library.webp" | prepend: page.imgpath }}){: width="1280" height="2621" loading="lazy" decoding="async"}
 {% include caption.html content="The original library of twenty papers. Each card renders a live preview of a figure from its explainer." %}
 
 <div class="divider"></div>
@@ -43,17 +44,17 @@ Each page starts with the prerequisites and builds up to the paper's main idea i
 
 My favourite part is the interactive figures. For example, PPO uses a clipped objective to stop policy updates from moving too far in a single step. In the figure below, you can drag the probability ratio and flip the sign of the advantage to watch exactly where the objective goes flat and stops producing a gradient. Playing with it for ten seconds makes the clipping logic click much faster than staring at the `min` expression on its own.
 
-![Interactive PPO clipped objective showing the probability ratio and advantage]({{ "/ppo-figure.png" | prepend: page.imgpath }})
+![Interactive PPO clipped objective showing the probability ratio and advantage]({{ "/ppo-figure.png" | prepend: page.imgpath }}){: width="1280" height="820" loading="lazy" decoding="async"}
 {% include caption.html content="Exploring PPO's clipped objective by dragging the probability ratio and flipping the advantage sign." %}
 
 Everything also scales down to work on a phone, which is where I end up doing a lot of my own reading:
 
-![PPO paper explainer with an inline figure on a phone]({{ "/mobile-ppo.png" | prepend: page.imgpath }}){:height="520px"}
+![PPO paper explainer with an inline figure on a phone]({{ "/mobile-ppo.png" | prepend: page.imgpath }}){: width="400" height="840" loading="lazy" decoding="async" style="max-height:520px;width:auto"}
 {% include caption.html content="The PPO explainer on a phone, with the same interactive figure inline." %}
 
 Another example is CLIP, which trains image and text encoders to line up matching pairs. The interactive grid below scores every image against every caption in a batch - the bright diagonal holds the real pairs being pulled together, while everything off the diagonal is a mismatch being pushed apart.
 
-![CLIP similarity grid comparing images with matching and mismatched captions]({{ "/clip-grid.png" | prepend: page.imgpath }})
+![CLIP similarity grid comparing images with matching and mismatched captions]({{ "/clip-grid.png" | prepend: page.imgpath }}){: width="664" height="593" loading="lazy" decoding="async"}
 {% include caption.html content="CLIP's image-caption similarity grid. Matching pairs sit along the diagonal." %}
 
 <div class="divider"></div>
@@ -78,7 +79,7 @@ The whole pipeline runs on a daily `launchd` schedule on the Mac mini under my d
 
 Below is one of the custom canvas diagrams from the Mamba explainer, breaking down the pieces of a Mamba block.
 
-![Diagram showing the components of a Mamba block]({{ "/mamba-block-fig.jpeg" | prepend: page.imgpath }})
+![Diagram showing the components of a Mamba block]({{ "/mamba-block-fig.jpeg" | prepend: page.imgpath }}){: width="1280" height="900" loading="lazy" decoding="async"}
 {% include caption.html content="A breakdown of a Mamba block, drawn on canvas for the Mamba explainer." %}
 
 <div class="divider"></div>

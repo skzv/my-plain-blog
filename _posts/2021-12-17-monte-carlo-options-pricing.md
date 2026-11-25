@@ -8,6 +8,8 @@ image: /assets/img/monte-carlo-stocks/gbm-example.png
 image_width: 1810
 image_height: 990
 image_alt: "Simulated stock price paths using geometric Brownian motion"
+tags: [quant-finance, simulation]
+toc: true
 mathjax: true
 ---
 
@@ -66,7 +68,7 @@ In quantitative finance it is common to deal with continuously compounded return
 
 This is also convenient because a common assumption in finance is that the logarithmic returns of a stock are independent and normally distributed with mean $$\mu$$ and variance $$\sigma^2$$. Note that for small returns, simple returns $$R_t$$ approximate logarthmic returns $$r_t$$ since $$r_t = \ln{(1 + R_t)} \approx R_t$$, so the difference between the two returns is not substantial, and thus one can assume both simple and logarathmic returns are normally distributed. Next, if the logarithmic returns are normally distributed, then this in turn implies the stock price is *lognormally* distributed. This has been observed empirically to some extent, although in real life stock prices tend to have "fatter tails" - meaning rare events happen more often than a normal distribution would predict. Here are the monthly returns for IBM stock showing this behaviour. 
 
-![IBM monthly returns]({{ "/IBM-returns.png" | prepend: page.imgpath }})
+![IBM monthly returns]({{ "/IBM-returns.webp" | prepend: page.imgpath }}){: width="1282" height="1008" loading="lazy" decoding="async"}
 {% include caption.html content="Monthly simple and logarithmic returns of IBM stock with fitted normal distributions. We observe more returns at the extremities of the distributions than the normal distribution would predict. We call these 'fat tails' or 'excess kurtosis'. This image has been taken from 'Analysis of Financial Time Series, 3rd Ed.' by Ruey S. Tsay." %}
 
 This model also works well because it only permits positive security prices. Securities tend to only have positive prices (although in some cases they can go negative - see the [oil crash of 2020](https://assets.weforum.org/editor/kE8TpkO7bzo3dLFWEh9UDvgqRuZPOmURhnh0FfwOVYc.png)).
@@ -77,7 +79,7 @@ So, we want a process that generates a series of normally distributed returns $$
 ## Brownian motion
 [Brownian motion](https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.01%3A_Standard_Brownian_Motion) describes the motion of a particle in a fluid or gas. Such a particle bounces around "randomly" within the fluid surrounding it. The path it creates appears quite noisy and random. It can essentially be considered a limiting form of the random walk where both the time between steps and the step length approach zero (with some caveats: namely, if the time step is $$t$$, the step length must be $$\sqrt{t}$$ - this produces a process whose variance scales exactly with time). Consider flipping a coin to determine whether to take a step forward or backward. Now let the time between steps approach zero. You would trace a path that looks like this:
 
-![1-D Brownian Motion]({{ "/wiener-process-zoom.png" | prepend: page.imgpath }})
+![1-D Brownian Motion]({{ "/wiener-process-zoom.png" | prepend: page.imgpath }}){: width="800" height="600" loading="lazy" decoding="async"}
 {% include caption.html content="1 dimensional [arithmetic] Brownian motion. Geometric Brownian motion is the exponential of this process. <a target='_blank' href='http://creativecommons.org/licenses/by-sa/3.0/' title='Creative Commons Attribution-Share Alike 3.0'>CC BY-SA 3.0</a>, <a target='_blank' href='https://commons.wikimedia.org/w/index.php?curid=1426987'>Source</a>" %}
 
 Brownian motion has the very nice property that the trajectories are normally distributed, which is exactly what we are looking for. We can simulate a Brownian process with discrete steps by sampling from a normal distribution (although if you only cared about the terminal value of a time series, you could sample from any distribution with unit variance; due to the central limit theorem the sum of random variables would approach a Gaussian distribution in the long term anyway).
@@ -96,7 +98,7 @@ Taking the exponential of this process, we've recovered an equation for modellin
 
 Of particular interest here is the drift rate $$\mu - \frac{\sigma^2}{2}$$ which causes the process to drift linearly, as the name suggests. $$\mu$$ is obvious - it's the mean continuosly compounding return for the stock, and in the absence of noise (or volatility), the stock price would only grow (or decrease) by this compounding amount. But what about $$\frac{\sigma^2}{2}$$? Well, it turns out that the expected value of a lognormally distributed variable is $$\exp(\mu + \sigma^2/2)$$. Since the stock price is *lognormally distributed* (while returns are *normally distributed*), and since we require that the expected value of the stock price after continuous compounding to be $$S(0)\exp(\mu t)$$, we must apply the correction term of $$- \frac{\sigma^2}{2}$$ to the process.
 
-There's also a philsophical argument to be made for choosing Brownian motion as the basis for this model. A common assumption made in finance is that markets are efficient, so there should be no arbitrage opportunities. Hence, the market should be unpredictable - if an actor could predict it, that would be an arbitrage opportunity that would be exploited away. Hence, random noise (which is what Brownian motion is, essentially) is a good choice for modelling markets.
+There's also a philsophical argument to be made for choosing Brownian motion as the basis for this model. A common assumption made in finance is that markets are efficient, so there should be no [arbitrage opportunities]({% post_url 2021-04-25-arbitrage-as-a-shortest-path-problem %}). Hence, the market should be unpredictable - if an actor could predict it, that would be an arbitrage opportunity that would be exploited away. Hence, random noise (which is what Brownian motion is, essentially) is a good choice for modelling markets.
 
 ## Option Pricing
 
@@ -121,6 +123,6 @@ We can increase the number of trials to increase the statistical certainty of th
 ## More Advanced Scenarios
 Monte-Carlo simulation of terminal values is a relatively simple simulation, and one that is not too useful as this analysis can probably be completed analytically. The true power of Monte-Carlo simulation is unlocked when analysing scenarios that are more difficult to solve analytically, if not impossible. For example, if we wanted to analyse an American-style option, which can be exercised anytime, we might want to count the probability of a stock price exceeding the strike price at any time during the lifetime of that option. We could do this by counting how many trials cross the strike price boundry, which is easy to do with a Monte-Carlo simulation.
 
-<script src='https://cdn.plot.ly/plotly-2.4.2.min.js'></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="/assets/js/monte-carlo-options.js" async></script>
+<script defer fetchpriority="low" src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
+<script defer fetchpriority="low" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js" integrity="sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="/assets/js/monte-carlo-options.js"></script>

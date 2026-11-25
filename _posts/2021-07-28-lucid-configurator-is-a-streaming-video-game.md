@@ -1,5 +1,6 @@
 ---
 title: The Lucid Motors Configurator is A Video Game Streaming to Your Browser
+seo_title: "Lucid Motors Configurator: Cloud-Streamed 3D Showroom"
 last_modified_at: 2021-07-28 00:00
 imgpath: /assets/img/lucid-configurator-is-a-streaming-video-game
 previewurl: /lucid-configurator.png
@@ -8,6 +9,7 @@ image: /assets/img/lucid-configurator-is-a-streaming-video-game/lucid-configurat
 image_width: 1958
 image_height: 845
 image_alt: "Lucid Motors interactive 3D car configurator"
+tags: [computer-vision, 3d-graphics, systems]
 mathjax: false
 ---
 
@@ -17,7 +19,7 @@ mathjax: false
 
 [Lucid Motors went public on Monday](https://www.barrons.com/articles/lucid-churchill-merger-ipo-ev-51627308359), and although I am not going to be buying a Lucid anytime soon, I found myself looking at [their vehicle configurator](https://www.lucidmotors.com/air/configure/) out of curiosity. It is a piece of art. It allows you to observe and interact with the vehicle from almost every direction, inside and out:
 
-{% include video.html content="https://streamable.com/e/cudr66" %}
+{% include video.html content="https://streamable.com/e/cudr66" title="Lucid Air Dream interactive 3D configurator demo" %}
 <p class="caption video-caption">Lucid's configurator for their flagship elite vehicle, the Lucid Air Dream.</p>
 
 You can simulate various colours and trims, open and close the doors, and even retract the center console display. The backdrop of the Golden Gate bridge reflects off the glassy puddles. The configurator preserves all sorts of details of the vehicle, including lights under the door handles that activate when you are using them. I feel like I got an accurate enough feel for the vehicle, I don't even have to see it in person anymore. 
@@ -30,44 +32,44 @@ So how did Lucid manage to pull this off? Can you expect the average user's web 
 
 Initially, I naively assumed that the model was being rendered in my browser via the latest [WebGL library](https://en.wikipedia.org/wiki/WebGL) (an API for rendering 2D and 3D graphics in web browsers with hardware acceleration). And since the model must have been rendered locally, it had to exist in my RAM somewhere, so I could extract it and load it up in a 3D model editor. Specifically, I wanted to see if I could remove the sun visors interrupting the almost seamless glass canopy - an effect achieved by Tesla's Model X, I'm not sure why Lucid didn't follow. 
 
-![Lucid Air sun visors interrupting the glass canopy]({{ "/lucid-air-sun-visors.png" | prepend: page.imgpath }})
+![Lucid Air sun visors interrupting the glass canopy]({{ "/lucid-air-sun-visors.webp" | prepend: page.imgpath }}){: width="1600" height="994" loading="lazy" decoding="async"}
 {% include caption.html content="Lucid Air sun visors interrupting the glass canopy." %}
 
 So I dove into the code. After some time with the browser debug tools, skimming thousands of lines of minified Javascript, recording and examining the network requests between my laptop and Lucid's servers, I realized the answer was quite literally just being printed in the console the whole time:
 
-![The Configurator is a Video Stream]({{ "/zlbolt-webrtc.png" | prepend: page.imgpath }})
+![The Configurator is a Video Stream]({{ "/zlbolt-webrtc.png" | prepend: page.imgpath }}){: width="691" height="156" loading="lazy" decoding="async"}
 {% include caption.html content="The Configurator is a webRTC stream." %}
 
 There's no local model being rendered. What I'm seeing is a video.
 
 So what's happening here? The configurator initializes with a 2D display - that is, a choppy panorama of images which provide the illusion of a 3D interaction. This is how most online interactive 3D displays are constructed. You can see a demo of that below: 
 
-{% include video.html content="https://streamable.com/e/ptjitc" %}
+{% include video.html content="https://streamable.com/e/ptjitc" title="2D panorama fallback view in the Lucid configurator" %}
 <p class="caption video-caption">A choppy 3D view, created by a series of 2D images.</p>
 
 Then, the client tests my bandwidth and latency, and if it's fast enough to support a realtime video feed, it upgrades the session to 3D:
 
-![Latency Test]({{ "/latency-test.png" | prepend: page.imgpath }})
-![Bandwidth Test]({{ "/bandwidth-test.png" | prepend: page.imgpath }})
+![Latency Test]({{ "/latency-test.png" | prepend: page.imgpath }}){: width="755" height="25" loading="lazy" decoding="async"}
+![Bandwidth Test]({{ "/bandwidth-test.png" | prepend: page.imgpath }}){: width="706" height="21" loading="lazy" decoding="async"}
 {% include caption.html content="You upgrade to a 3D session if you have the bandwidth." %}
 
 This initiates a webRTC connection. [WebRTC](https://en.wikipedia.org/wiki/WebRTC) is a peer-to-peer streaming protocol. The scene is rendered elsewhere, and streamed via webRTC to my browser.
 
 Inspecting the contents of their `get_token` request reveals some more details about their mechanics. 
 
-![Contents of the get_token request]({{ "/get-token-request.png" | prepend: page.imgpath }})
+![Contents of the get_token request]({{ "/get-token-request.png" | prepend: page.imgpath }}){: width="829" height="402" loading="lazy" decoding="async"}
 {% include caption.html content="Contents of the get_token request." %}
 
 The first box reveals that, to test your bandwidth, they partially download from [a 25 MB test image](https://libzl.zlthunder.net/bandwidth-test-img.png) to your device, and time how long that takes. This is the image, if you're curious (don't worry, I've compressed it down 10x).
 
-![Bandwidth Test Image]({{ "/bandwidth-test-image.png" | prepend: page.imgpath }})
+![Bandwidth Test Image]({{ "/bandwidth-test-image.webp" | prepend: page.imgpath }}){: width="895" height="1263" loading="lazy" decoding="async"}
 {% include caption.html content="Doesn't have much to do with automobiles, but it will test your bandwidth just fine." %}
 
-By the way, [this image seems to be an effect produced by the plasma plugin from GIMP](https://www.gimp.org/tutorials/Floating_Logo/Plasma.jpg). It loads quite slowly; as it resembles noise it must be largely incompressible.
+By the way, [this image seems to be an effect produced by the plasma plugin from GIMP](https://docs.gimp.org/en/gimp-filter-plasma.html). It loads quite slowly; as it resembles noise it must be largely incompressible.
 
 Opening up [chrome://webrtc-internals/](chrome://webrtc-internals/) reveals some details about the webRTC connection streaming the 3D scene to my browser.
 
-![WebRTC Info]({{ "/lucid-webrtc.png" | prepend: page.imgpath }})
+![WebRTC Info]({{ "/lucid-webrtc.png" | prepend: page.imgpath }}){: width="851" height="399" loading="lazy" decoding="async"}
 {% include caption.html content="Chrome's debug tools provide more information about the webRTC connection." %}
 
 At this point, you may have noticed that none of the URLs here are on a lucid domain, but rather under zlthunder. Who are they?
@@ -78,12 +80,12 @@ At this point, you may have noticed that none of the URLs here are on a lucid do
 
 Searching the web for zlthunder brings you to a company called [ZeroLight](https://zerolight.com/). They indicate that they provide cloud-based 3D visualization, specializing in automotive. It all makes sense now!  
 
-![Zero Light]({{ "/zero-light.png" | prepend: page.imgpath }})
+![Zero Light]({{ "/zero-light.webp" | prepend: page.imgpath }}){: width="1600" height="640" loading="lazy" decoding="async"}
 {% include caption.html content="Cloud based 3D visualization specialists." %}
 
-It wasn't much longer until I found [this blog post from Unity](https://unity3d.com/showcase/case-stories/zerolight) (the prominent video game engine) explaining how ZeroLight leveraged the engine to create a realistic virtual showroom, with optimized physics, reflections, and all. 
+It wasn't much longer until I found a case study from [Unity](https://unity.com/) (the prominent video game engine) explaining how [ZeroLight](https://zerolight.com/) leveraged the engine to create a realistic virtual showroom, with optimized physics, reflections, and all. 
 
-![Zero Light]({{ "/unity-zero-light.png" | prepend: page.imgpath }})
+![Zero Light]({{ "/unity-zero-light.webp" | prepend: page.imgpath }}){: width="1203" height="658" loading="lazy" decoding="async"}
 {% include caption.html content="Video games have brought us a long way." %}
 
 Now I put all the pieces together. When I connect to the site, they load a 2D configurator. If my internet connection can handle it, they connect me to an instance of Unity - a 3D video game engine - running on an AWS server. The server receives my mouse inputs, rotating and zooming the field of view, renders the results in the cloud, and streams them back to me. 
@@ -94,7 +96,7 @@ Now I put all the pieces together. When I connect to the site, they load a 2D co
 
 Imagine you have a 1,000 users connected to the site: you need a 1,000 hardware accelerated instances of a video game engine receiving inputs and streaming back large amounts of realtime video- just like the cloud video games products that are Stadia and GeForce Now, among others. But it seems they're very aware of that: to save on costs, they disconnect you after 60s of inactavity: 
 
-![Inactivity downgrade]({{ "/inactivity-downgrade.png" | prepend: page.imgpath }})
+![Inactivity downgrade]({{ "/inactivity-downgrade.png" | prepend: page.imgpath }}){: width="524" height="60" loading="lazy" decoding="async"}
 {% include caption.html content="Downgrading on idle must save a lot of money." %}
 
 <div class="divider"></div>

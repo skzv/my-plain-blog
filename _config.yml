@@ -1,25 +1,30 @@
 # Site Info
 title:              "Sasha Kuznetsov's Blog"
+short_title:        "skz.dev"
+home_title:         "Sasha Kuznetsov's Blog — AI, Physics, Quant & Software"
 description:        "Sasha Kuznetsov's experiments and explanations in machine learning, computer vision, quantitative finance, and software, with interactive demos and side projects."
 author_name:        "Sasha Kuznetsov"
 author:
   name:             "Sasha Kuznetsov"
   url:              "https://skz.dev"
-  twitter:          skzv
-logo_url:           https://avatars.githubusercontent.com/u/11140296?v=4 # Get it from GitHub API: https://api.github.com/users/<username>
+  twitter:          _skzv
+logo_url:           /assets/img/avatar.webp
 lang:               en-US
 locale:             en_US
 
 twitter:
-  username:         skzv
+  username:         _skzv
   card:             summary_large_image
 
 social:
   name:             Sasha Kuznetsov
   links:
-    - https://github.com/skzv
-    - https://twitter.com/skzv
     - https://skz.dev
+    - https://directory.skz.dev
+    - https://www.linkedin.com/in/skzv
+    - https://github.com/skzv
+    - https://twitter.com/_skzv
+    - https://instagram.com/_skzv7
 
 # Site Settings
 url:                https://blog.skz.dev # main url
@@ -38,7 +43,28 @@ sass:
 
 # Other Params
 include:            [ "robots.txt" ]
-exclude:            [ "LICENSE", "README.md", "CLAUDE.md", "AGENTS.md", "vendor", "Gemfile", "Gemfile.lock", "script", "tests", "docs", "node_modules", "package.json", "package-lock.json" ]
+exclude:
+  - LICENSE
+  - README.md
+  - CLAUDE.md
+  - AGENTS.md
+  - vendor
+  - Gemfile
+  - Gemfile.lock
+  - script
+  - tests
+  - docs
+  - node_modules
+  - package.json
+  - package-lock.json
+  - assets/img/colourising-black-and-white-photos/mama.tif
+  - assets/img/colourising-black-and-white-photos/my-grandmother-allarkadina.tif
+  - assets/video/3d-reconstruction/coex-recording.mov
+  - assets/video/3d-reconstruction/forest-recording.mov
+  - assets/video/3d-reconstruction/nyc-recording.mov
+  - assets/video/3d-reconstruction/safeway-0-recording.mov
+  - assets/video/3d-reconstruction/safeway-1-recording.mov
+  - assets/video/3d-reconstruction/sg-airport-recording.mov
 plugins:
   - jekyll-sitemap
   - jekyll-feed
