@@ -1,6 +1,19 @@
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign locale = site.data.locales | where: "code", lang_code | first %}
+{% assign t = site.data.i18n[lang_code] %}
+{% assign page_ref = page.ref %}
+{% unless page_ref %}
+  {% if page.url == '/' or page.url == '/index.html' %}
+    {% assign page_ref = 'home' %}
+  {% elsif page.url == '/about' or page.url == '/about.html' %}
+    {% assign page_ref = 'about' %}
+  {% elsif page.date %}
+    {% assign page_ref = page.url | remove_first: '/' %}
+  {% endif %}
+{% endunless %}
 {% assign canonical_url = page.url | replace: 'index.html', '' | absolute_url %}
-{% assign page_desc = page.description | default: site.description | smartify | strip_html | strip %}
-{% assign site_desc = site.description | smartify | strip_html | strip %}
+{% assign page_desc = page.description | default: t.site_description | smartify | strip_html | strip %}
+{% assign site_desc = t.site_description | smartify | strip_html | strip %}
 {% assign image_path = page.image | default: '/assets/img/preview-banner.png' %}
 {% assign image_url = image_path | absolute_url %}
 {% assign modified_date = page.last_modified_at | default: page.date %}
@@ -12,9 +25,9 @@
       "@type": "Blog",
       "@id": "{{ site.url }}/#blog",
       "url": "{{ site.url }}/",
-      "name": {{ site.title | jsonify }},
+      "name": {{ t.site_title | jsonify }},
       "description": {{ site_desc | jsonify }},
-      "inLanguage": {{ site.lang | jsonify }},
+      "inLanguage": {{ locale.tag | jsonify }},
       "isPartOf": { "@id": "https://skz.dev/#website" },
       "author": { "@id": "https://skz.dev/#person" },
       "publisher": { "@id": "https://skz.dev/#person" }
@@ -41,7 +54,7 @@
       "image": {{ image_url | jsonify }},
       "datePublished": {{ page.date | date_to_xmlschema | jsonify }},
       "dateModified": {{ modified_date | date_to_xmlschema | jsonify }},
-      "inLanguage": {{ site.lang | jsonify }},
+      "inLanguage": {{ locale.tag | jsonify }},
       "wordCount": {{ page.content | strip_html | number_of_words }},
       {% if page.tags and page.tags.size > 0 %}"keywords": {{ page.tags | jsonify }},
       {% endif %}"author": { "@id": "https://skz.dev/#person" },
@@ -55,8 +68,8 @@
         {
           "@type": "ListItem",
           "position": 1,
-          "name": {{ site.title | jsonify }},
-          "item": "{{ site.url }}/"
+          "name": {{ t.site_title | jsonify }},
+          "item": {{ t.home_url | absolute_url | jsonify }}
         },
         {
           "@type": "ListItem",
@@ -65,7 +78,7 @@
           "item": {{ canonical_url | jsonify }}
         }
       ]
-    }{% elsif page.url == '/about' or page.url == '/about.html' %},
+    }{% elsif page_ref == 'about' %},
     {
       "@type": "AboutPage",
       "@id": "{{ canonical_url }}#webpage",
@@ -73,19 +86,19 @@
       "name": {{ page.title | jsonify }},
       "description": {{ page_desc | jsonify }},
       "image": {{ image_url | jsonify }},
-      "inLanguage": {{ site.lang | jsonify }},
+      "inLanguage": {{ locale.tag | jsonify }},
       "isPartOf": { "@id": "{{ site.url }}/#blog" },
       "about": { "@id": "https://skz.dev/#person" },
       "mainEntity": { "@id": "https://skz.dev/#person" }
-    }{% elsif page.url == '/' or page.url == '/index.html' %},
+    }{% elsif page_ref == 'home' %},
     {
       "@type": "CollectionPage",
-      "@id": "{{ site.url }}/#webpage",
-      "url": "{{ site.url }}/",
-      "name": {{ site.title | jsonify }},
+      "@id": "{{ canonical_url }}#webpage",
+      "url": {{ canonical_url | jsonify }},
+      "name": {{ t.site_title | jsonify }},
       "description": {{ page_desc | jsonify }},
       "image": {{ image_url | jsonify }},
-      "inLanguage": {{ site.lang | jsonify }},
+      "inLanguage": {{ locale.tag | jsonify }},
       "isPartOf": { "@id": "{{ site.url }}/#blog" },
       "about": { "@id": "https://skz.dev/#person" }
     }{% else %},
@@ -93,10 +106,10 @@
       "@type": "WebPage",
       "@id": "{{ canonical_url }}#webpage",
       "url": {{ canonical_url | jsonify }},
-      "name": {{ page.title | default: site.title | jsonify }},
+      "name": {{ page.title | default: t.site_title | jsonify }},
       "description": {{ page_desc | jsonify }},
       "image": {{ image_url | jsonify }},
-      "inLanguage": {{ site.lang | jsonify }},
+      "inLanguage": {{ locale.tag | jsonify }},
       "isPartOf": { "@id": "{{ site.url }}/#blog" }
     }{% endif %}
   ]

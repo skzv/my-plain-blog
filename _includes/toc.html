@@ -1,8 +1,10 @@
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign t = site.data.i18n[lang_code] %}
 {% if page.toc %}
   {% assign sections = content | split: '<h2 id="' %}
   {% if sections.size > 2 %}
-    <nav class="toc" aria-label="Table of contents">
-      <div class="toc-title code">Contents</div>
+    <nav class="toc" aria-label="{{ t.toc_aria | escape }}">
+      <div class="toc-title code">{{ t.toc_label }}</div>
       <ol>
         {% for section in sections offset:1 %}
           {% assign id_and_rest = section | split: '">' %}

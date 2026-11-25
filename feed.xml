@@ -1,25 +1,6 @@
 ---
 layout: null
+lang_code: en
 sitemap: false
 ---
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>{{ site.title | xml_escape }}</title>
-    <description>{{ site.description | xml_escape }}</description>
-    <link>{{ '/' | absolute_url | xml_escape }}</link>
-    <atom:link href="{{ '/feed.xml' | absolute_url | xml_escape }}" rel="self" type="application/rss+xml" />
-    <language>{{ site.lang }}</language>
-    {% for post in site.posts %}
-      {% unless post.draft %}
-        <item>
-          <title>{{ post.title | xml_escape }}</title>
-          <description>{{ post.content | xml_escape }}</description>
-          <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
-          <link>{{ post.url | prepend: site.baseurl | prepend: site.url }}</link>
-          <guid isPermaLink="true">{{ post.url | prepend: site.baseurl | prepend: site.url }}</guid>
-        </item>
-      {% endunless %}
-    {% endfor %}
-  </channel>
-</rss>
+{% include rss-feed.xml %}

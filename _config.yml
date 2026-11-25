@@ -34,6 +34,9 @@ timezone:           America/Los_Angeles # https://en.wikipedia.org/wiki/List_of_
 mathjax:            true  # enables support for mathjax - set to 'false' to disable
 
 # Site Build
+collections:
+  i18n_posts:
+    output: true
 highlighter:        rouge
 markdown:           kramdown
 kramdown:
@@ -90,5 +93,12 @@ defaults:
   -
     scope:
       type:         "posts"
+    values:
+      layout:       "post"
+      lang_code:    "en"
+      locale:       "en_US"
+  -
+    scope:
+      type:         "i18n_posts"
     values:
       layout:       "post"

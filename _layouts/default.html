@@ -2,9 +2,10 @@
 layout: compress
 published: true
 ---
-
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign locale = site.data.locales | where: "code", lang_code | first %}
 <!DOCTYPE html>
-<html lang="{{ site.lang | default: 'en-US' }}">
+<html lang="{{ locale.tag | default: 'en' }}">
 
 	<head>
 		{% include head.html %}

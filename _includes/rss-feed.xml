@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>{% assign lang_code = page.lang_code | default: 'en' %}{% assign locale = site.data.locales | where: "code", lang_code | first %}{% assign t = site.data.i18n[lang_code] %}{% if lang_code == 'en' %}{% assign feed_posts = site.posts %}{% else %}{% assign feed_posts = site.i18n_posts | where: "lang_code", lang_code | sort: "date" | reverse %}{% endif %}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{{ t.site_title | xml_escape }}</title>
+    <description>{{ t.site_description | xml_escape }}</description>
+    <link>{{ t.home_url | absolute_url | xml_escape }}</link>
+    <atom:link href="{{ t.feed_url | absolute_url | xml_escape }}" rel="self" type="application/rss+xml" />
+    <language>{{ locale.tag }}</language>
+    {% for post in feed_posts %}
+      {% unless post.draft %}
+        <item>
+          <title>{{ post.title | xml_escape }}</title>
+          <description>{{ post.content | xml_escape }}</description>
+          <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
+          <link>{{ post.url | absolute_url | xml_escape }}</link>
+          <guid isPermaLink="true">{{ post.url | absolute_url | xml_escape }}</guid>
+        </item>
+      {% endunless %}
+    {% endfor %}
+  </channel>
+</rss>

@@ -1,17 +1,41 @@
 ---
 layout: default
 ---
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign t = site.data.i18n[lang_code] %}
+{% if lang_code == 'en' %}
+	{% assign lang_posts = site.posts %}
+{% else %}
+	{% assign lang_posts = site.i18n_posts | where: "lang_code", lang_code | sort: "date" | reverse %}
+{% endif %}
+
+{% assign prev_post = nil %}
+{% assign next_post = nil %}
+{% for item in lang_posts %}
+	{% if item.url == page.url %}
+		{% assign current_index = forloop.index0 %}
+		{% if current_index > 0 %}
+			{% assign next_index = current_index | minus: 1 %}
+			{% assign next_post = lang_posts[next_index] %}
+		{% endif %}
+		{% assign prev_index = current_index | plus: 1 %}
+		{% if prev_index < lang_posts.size %}
+			{% assign prev_post = lang_posts[prev_index] %}
+		{% endif %}
+		{% break %}
+	{% endif %}
+{% endfor %}
 
 <article>
 
 	<div class="center">
 		<h1 class="title">{{ page.title | escape }}</h1>
-		<p class="post-meta">By <a href="{{ '/about' | relative_url }}" rel="author">{{ site.author_name | escape }}</a><br>
-		<time class="code" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: '%B %-d, %Y' }}</time>
+		<p class="post-meta">{{ t.by_prefix }} <a href="{{ t.about_url | relative_url }}" rel="author">{{ site.author_name | escape }}</a><br>
+		<time class="code" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: '%Y-%m-%d' }}</time>
 		{% assign published_day = page.date | date: '%Y-%m-%d' %}
 		{% assign modified_day = page.last_modified_at | date: '%Y-%m-%d' %}
 		{% if page.last_modified_at and modified_day > published_day %}
-		<br>Updated <time datetime="{{ page.last_modified_at | date_to_xmlschema }}">{{ page.last_modified_at | date: '%B %-d, %Y' }}</time>
+		<br>{{ t.updated_prefix }} <time datetime="{{ page.last_modified_at | date_to_xmlschema }}">{{ page.last_modified_at | date: '%Y-%m-%d' }}</time>
 		{% endif %}</p>
 	</div>
 
@@ -26,7 +50,7 @@ layout: default
 {% if page.tags and page.tags.size > 0 %}
 	{% assign related_count = 0 %}
 	{% capture related_items %}
-		{% for candidate in site.posts %}
+		{% for candidate in lang_posts %}
 			{% if candidate.url != page.url and related_count < 3 %}
 				{% assign shared = false %}
 				{% for tag in page.tags %}
@@ -46,18 +70,18 @@ layout: default
 	{% endcapture %}
 	{% if related_count > 0 %}
 		<section class="related-posts" aria-labelledby="related-heading">
-			<h2 id="related-heading" class="code">Related posts</h2>
+			<h2 id="related-heading" class="code">{{ t.related_label }}</h2>
 			<ul>{{ related_items }}</ul>
 		</section>
 	{% endif %}
 {% endif %}
 
-<nav class="page-navigation code" aria-label="Post navigation">
-	{% if page.next.url %}
-    <a class="next block" href="{{ page.next.url | relative_url }}" rel="next">&larr; {{ page.next.title | escape }}</a>
+<nav class="page-navigation code" aria-label="{{ t.nav_post_label | escape }}">
+	{% if next_post %}
+    <a class="next block" href="{{ next_post.url | relative_url }}" rel="next">&larr; {{ next_post.title | escape }}</a>
   {% endif %}
-		<a class="home" href="{{ "/" | prepend: site.baseurl | prepend: site.url }}" title="Back to Index">Index</a>
-  {% if page.previous.url %}
-    <a class="prev block" href="{{ page.previous.url | relative_url }}" rel="prev">{{ page.previous.title | escape }} &rarr;</a>
+		<a class="home" href="{{ t.home_url | relative_url }}" aria-label="{{ t.back_to_index | escape }}">{{ t.index_label }}</a>
+  {% if prev_post %}
+    <a class="prev block" href="{{ prev_post.url | relative_url }}" rel="prev">{{ prev_post.title | escape }} &rarr;</a>
   {% endif %}
 </nav>

@@ -1,16 +1,79 @@
-<aside class="logo">
-
-	{% if page.url == '/index.html' or page.url == '/' %}
-		{% assign link = '/about' %}
-		{% assign prompt = 'About the Author' %}
-	{% else %}
-		{% assign link = '/' %}
-		{% assign prompt = 'Back to Index' %}
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign locale = site.data.locales | where: "code", lang_code | first %}
+{% assign t = site.data.i18n[lang_code] %}
+{% assign page_ref = page.ref %}
+{% unless page_ref %}
+  {% if page.url == '/' or page.url == '/index.html' %}
+    {% assign page_ref = 'home' %}
+  {% elsif page.url == '/about' or page.url == '/about.html' %}
+    {% assign page_ref = 'about' %}
+  {% elsif page.date %}
+    {% assign page_ref = page.url | remove_first: '/' %}
+  {% endif %}
+{% endunless %}
+<header class="site-header">
+	{% if page_ref %}
+	<nav class="lang-nav" aria-label="{{ t.lang_label | escape }}">
+		<details class="lang-picker" data-language-picker>
+			<summary aria-label="{{ t.lang_label | escape }}: {{ locale.name | escape }}">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18M12 3c-5 5-5 13 0 18"/></svg>
+				<span>{{ locale.label }}</span>
+				<span class="lang-caret" aria-hidden="true">▾</span>
+			</summary>
+			<ul class="lang-menu">
+				{% for alt in site.data.locales %}
+					{% if page_ref == 'home' %}
+						{% assign alt_path = alt.prefix %}
+					{% elsif page_ref == 'about' %}
+						{% assign alt_path = alt.prefix | append: 'about' %}
+					{% else %}
+						{% assign alt_path = alt.prefix | append: page_ref %}
+					{% endif %}
+					<li><a href="{{ alt_path | relative_url }}" lang="{{ alt.tag }}" hreflang="{{ alt.tag }}"{% if alt.code == lang_code %} aria-current="page"{% endif %} data-language-switch>{{ alt.name }}</a></li>
+				{% endfor %}
+			</ul>
+		</details>
+	</nav>
 	{% endif %}
 
-	<a href="{{ link | relative_url }}" aria-label="{{ prompt }}">
-		<img src="{{ site.logo_url | relative_url }}" alt="Sasha Kuznetsov" width="90" height="90" decoding="async" class="logo-avatar">
-	</a>
-	<span class="logo-prompt code">{{ prompt }}</span>
+	<div class="logo">
+		{% if page_ref == 'home' %}
+			{% assign link = t.about_url %}
+			{% assign prompt = t.about_prompt %}
+		{% else %}
+			{% assign link = t.home_url %}
+			{% assign prompt = t.back_to_index %}
+		{% endif %}
 
-</aside>
+		<a href="{{ link | relative_url }}" aria-label="{{ prompt | escape }}">
+			<img src="{{ site.logo_url | relative_url }}" alt="Sasha Kuznetsov" width="90" height="90" decoding="async" class="logo-avatar">
+		</a>
+		<span class="logo-prompt code">{{ prompt }}</span>
+	</div>
+</header>
+{% if page_ref %}
+<script>
+(function () {
+	var picker = document.querySelector('[data-language-picker]');
+	if (!picker) return;
+	document.addEventListener('keydown', function (event) {
+		if (event.key === 'Escape' && picker.open) {
+			picker.open = false;
+			var summary = picker.querySelector('summary');
+			if (summary) summary.focus();
+		}
+	});
+	document.addEventListener('click', function (event) {
+		if (picker.open && !picker.contains(event.target)) picker.open = false;
+	});
+	picker.querySelectorAll('[data-language-switch]').forEach(function (link) {
+		link.addEventListener('click', function () {
+			var target = new URL(link.href);
+			target.search = window.location.search;
+			target.hash = window.location.hash;
+			link.href = target.href;
+		});
+	});
+}());
+</script>
+{% endif %}

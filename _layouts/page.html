@@ -1,10 +1,12 @@
 ---
 layout: default
 ---
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign t = site.data.i18n[lang_code] %}
 
 <article>
 
-	<h1 class="title">{{ page.title }}</h1>
+	<h1 class="title">{{ page.title | escape }}</h1>
 
 	<div class="divider"></div>
 
@@ -12,6 +14,6 @@ layout: default
 
 </article>
 
-<div class="page-navigation code">
-	<a class="home" href="{{ "/" | prepend: site.baseurl | prepend: site.url }}" title="Back to Index">&larr; Index</a>
-</div>
+<nav class="page-navigation code" aria-label="{{ t.nav_post_label | escape }}">
+	<a class="home" href="{{ t.home_url | relative_url }}">&larr; {{ t.index_label }}</a>
+</nav>

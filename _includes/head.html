@@ -1,3 +1,16 @@
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign locale = site.data.locales | where: "code", lang_code | first %}
+{% assign t = site.data.i18n[lang_code] %}
+{% assign page_ref = page.ref %}
+{% unless page_ref %}
+  {% if page.url == '/' or page.url == '/index.html' %}
+    {% assign page_ref = 'home' %}
+  {% elsif page.url == '/about' or page.url == '/about.html' %}
+    {% assign page_ref = 'about' %}
+  {% elsif page.date %}
+    {% assign page_ref = page.url | remove_first: '/' %}
+  {% endif %}
+{% endunless %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#000000">
@@ -9,7 +22,7 @@
 {% capture seo_output %}{% seo title=false %}{% endcapture %}
 {{ seo_output | split: '<script type="application/ld+json">' | first }}
 <!-- End Jekyll SEO metadata -->
-<title>{% if page.seo_title %}{{ page.seo_title | escape }} · {{ site.short_title | escape }}{% elsif page.title %}{{ page.title | escape }} · {{ site.short_title | escape }}{% else %}{{ site.home_title | escape }}{% endif %}</title>
+<title>{% if page.seo_title %}{{ page.seo_title | escape }} · {{ site.short_title | escape }}{% elsif page.title %}{{ page.title | escape }} · {{ site.short_title | escape }}{% else %}{{ t.home_title | escape }}{% endif %}</title>
 
 {% unless page.date %}
   <meta property="og:type" content="website">
@@ -30,15 +43,44 @@
   <meta property="og:image:alt" content="{{ page.image_alt | escape }}">
   <meta name="twitter:image:alt" content="{{ page.image_alt | escape }}">
 {% endif %}
-<meta name="twitter:description" content="{{ page.description | default: site.description | smartify | strip_html | strip | escape }}">
+<meta name="twitter:description" content="{{ page.description | default: t.site_description | smartify | strip_html | strip | escape }}">
 {% if page.date and page.last_modified_at %}
   <meta property="article:modified_time" content="{{ page.last_modified_at | date_to_xmlschema }}">
 {% endif %}
 {% if page.robots %}
   <meta name="robots" content="{{ page.robots | escape }}">
 {% else %}
-  <meta name="robots" content="max-image-preview:large">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
 {% endif %}
+
+{% unless page.robots contains 'noindex' %}
+  {% if page_ref %}
+    {% for alt in site.data.locales %}
+      {% if page_ref == 'home' %}
+        {% assign alt_path = alt.prefix %}
+      {% elsif page_ref == 'about' %}
+        {% assign alt_path = alt.prefix | append: 'about' %}
+      {% else %}
+        {% assign alt_path = alt.prefix | append: page_ref %}
+      {% endif %}
+      <link rel="alternate" hreflang="{{ alt.tag }}" href="{{ alt_path | absolute_url }}">
+    {% endfor %}
+    {% if page_ref == 'home' %}
+      {% assign default_path = '/' %}
+    {% elsif page_ref == 'about' %}
+      {% assign default_path = '/about' %}
+    {% else %}
+      {% assign default_path = '/' | append: page_ref %}
+    {% endif %}
+    <link rel="alternate" hreflang="x-default" href="{{ default_path | absolute_url }}">
+    {% for alt in site.data.locales %}
+      {% if alt.code != lang_code %}
+        <meta property="og:locale:alternate" content="{{ alt.og }}">
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endunless %}
+
 {% include structured-data.html %}
 
 <link rel="icon" href="{{ '/assets/img/favicon.png' | relative_url }}">
@@ -47,7 +89,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ '/assets/css/core.css' | relative_url }}">
-<link rel="alternate" type="application/rss+xml" title="{{ site.title | escape }}" href="{{ '/feed.xml' | absolute_url }}">
+<link rel="alternate" type="application/rss+xml" title="{{ t.site_title | escape }}" href="{{ t.feed_url | absolute_url }}">
 
 {% if site.mathjax and page.mathjax %}
   <script src="{{ '/assets/js/load-mathjax.js' | relative_url }}" async fetchpriority="low"></script>

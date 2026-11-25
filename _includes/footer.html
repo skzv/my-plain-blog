@@ -1,5 +1,7 @@
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign t = site.data.i18n[lang_code] %}
 <footer class="footer">
-  <nav aria-label="Blog navigation"><a href="{{ '/' | relative_url }}">Posts</a> &middot; <a href="{{ '/about' | relative_url }}">About Sasha</a> &middot; <a href="https://skz.dev">skz.dev</a> &middot; <a href="{{ '/feed.xml' | relative_url }}">RSS</a></nav>
-  <span class="block">&copy; {{ site.time | date: '%Y' }} <a href="https://skz.dev">{{ site.author_name }}</a></span>
-  <span class="block"><small>All projects &middot; <a href="https://directory.skz.dev">directory.skz.dev</a></small></span>
+  <nav aria-label="{{ t.nav_blog_label | escape }}"><a href="{{ t.home_url | relative_url }}">{{ t.posts_label }}</a> &middot; <a href="{{ t.about_url | relative_url }}">{{ t.about_sasha_label }}</a> &middot; <a href="{{ t.skz_url }}">skz.dev</a> &middot; <a href="{{ t.feed_url | relative_url }}">{{ t.rss_label }}</a></nav>
+  <span class="block">&copy; {{ site.time | date: '%Y' }} <a href="https://skz.dev" rel="me">{{ site.author_name }}</a></span>
+  <span class="block"><small>{{ t.all_projects_label }} &middot; <a href="https://directory.skz.dev">directory.skz.dev</a></small></span>
 </footer>

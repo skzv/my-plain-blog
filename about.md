@@ -1,5 +1,8 @@
 ---
 layout: page
+lang_code: en
+locale: en_US
+ref: about
 title: About
 description: "About Sasha Kuznetsov, a senior AI research software engineer at Google and engineering physicist writing about ML, finance, physics, and software projects."
 seo:

@@ -1,0 +1,7 @@
+---
+layout: null
+lang_code: es
+permalink: /es/feed.xml
+sitemap: false
+---
+{% include rss-feed.xml %}

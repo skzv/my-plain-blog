@@ -1,0 +1,30 @@
+{% assign lang_code = page.lang_code | default: 'en' %}
+{% assign t = site.data.i18n[lang_code] %}
+{% if lang_code == 'en' %}
+	{% assign posts = site.posts %}
+{% else %}
+	{% assign posts = site.i18n_posts | where: "lang_code", lang_code | sort: "date" | reverse %}
+{% endif %}
+<section>
+	<h1 class="index-title">{{ t.site_title | escape }}</h1>
+	<p class="index-description">{{ t.index_description | escape }}</p>
+
+	{% assign posts_by_year = posts | group_by_exp: "post", "post.date | date: '%Y'" %}
+	{% for group in posts_by_year %}
+		<h2 class="code archive-year">{{ group.name }}</h2>
+		<ul>
+			{% for post in group.items %}
+				<li>
+					<div class="post-date code">
+						<span>{{ post.date | date: "%b %d" }}</span>
+					</div>
+					<div class="title">
+						<a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
+						{% if post.description %}<p class="post-summary">{{ post.description | escape }}</p>{% endif %}
+					</div>
+				</li>
+			{% endfor %}
+		</ul>
+	{% endfor %}
+
+</section>

@@ -24,7 +24,7 @@
 
   --shadow-avatar:  0 1px 3px rgba(0, 0, 0, 0.15);
 
-  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans", "Apple SD Gothic Neo", Helvetica, Arial, sans-serif;
   --font-mono: Consolas, monaco, monospace;
 }
 
@@ -117,6 +117,104 @@ blockquote {
   margin: 40px 0;
   padding: 5px 30px;
   background: var(--bg-surface);
+}
+.site-header {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.lang-nav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 20;
+}
+.lang-picker {
+  position: relative;
+  summary {
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-block-size: 30px;
+    padding: 0 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-faint);
+    background: var(--bg-surface);
+    color: var(--fg-default);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+    &:hover {
+      border-color: var(--fg-default);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--fg-default);
+      outline-offset: 2px;
+    }
+  }
+  &[open] .lang-caret {
+    transform: rotate(180deg);
+  }
+}
+.lang-caret {
+  display: inline-block;
+  font-size: 10px;
+  transition: transform 140ms ease;
+}
+.lang-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  list-style: none;
+  margin: 0;
+  padding: 5px;
+  min-width: 175px;
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: 5px;
+  border: 1px solid var(--border-faint);
+  background: var(--bg-surface);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  text-align: left;
+  li {
+    margin: 0;
+    padding: 0;
+  }
+  a {
+    display: block;
+    min-block-size: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 3px;
+    color: var(--fg-default);
+    font-size: 13px;
+    &:hover {
+      background: #2f2f2f;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--fg-default);
+      outline-offset: -2px;
+    }
+    &[aria-current="page"] {
+      background: var(--bg-inverted);
+      color: var(--fg-on-inverted);
+      font-weight: 600;
+    }
+  }
+}
+@media (max-width: 520px) {
+  .lang-nav {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  }
 }
 .logo {
   position: relative;

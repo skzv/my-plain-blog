@@ -1,30 +1,11 @@
 ---
 layout: default
+lang_code: en
+locale: en_US
+ref: home
 description: "Sasha Kuznetsov's experiments and explanations in machine learning, computer vision, quantitative finance, and software, with interactive demos and side projects."
 seo:
   name: "Sasha Kuznetsov's Blog"
 ---
 
-<section>
-	<h1 class="index-title">{{ site.title | escape }}</h1>
-	<p class="index-description">Writing about machine learning, finance, physics, and things I build.</p>
-
-	{% assign posts_by_year = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
-	{% for group in posts_by_year %}
-		<h2 class="code archive-year">{{ group.name }}</h2>
-		<ul>
-			{% for post in group.items %}
-				<li>
-					<div class="post-date code">
-						<span>{{ post.date | date: "%b %d" }}</span>
-					</div>
-					<div class="title">
-						<a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
-						{% if post.description %}<p class="post-summary">{{ post.description | escape }}</p>{% endif %}
-					</div>
-				</li>
-			{% endfor %}
-		</ul>
-	{% endfor %}
-
-</section>
+{% include index-list.html %}
