@@ -1,0 +1,2002 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Блог Саши Кузнецова</title>
+    <description>Эксперименты и разборы Саши Кузнецова по машинному обучению, компьютерному зрению, количественным финансам и разработке, с интерактивными демо и пет-проектами.</description>
+    <link>https://blog.skz.dev/ru/</link>
+    <atom:link href="https://blog.skz.dev/ru/feed.xml" rel="self" type="application/rss+xml" />
+    <language>ru</language>
+    
+      
+        <item>
+          <title>Интерактивные разборы статей по ИИ на intuitivepapers.ai</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Можно ли автоматизировать превращение сложных статей по машинному обучению в проверенные интерактивные разборы?
+&lt;/p&gt;
+
+&lt;p&gt;Читать научные статьи по машинному обучению бывает мучительно медленно. Обычно статья концентрируется на том, что в ней нового, и молчаливо предполагает, что пять предыдущих концепций у вас уже свежи в памяти — в итоге половину времени приходится прыгать по цепочке более старых ссылок, прежде чем исходная статья вообще начнёт складываться в единую картину.&lt;/p&gt;
+
+&lt;p&gt;Самый быстрый обходной путь сегодня — закинуть PDF в LLM и попросить объяснить. Я сам так часто делаю, и для беглого первого знакомства это неплохо работает, но модели удивительно часто ошибаются в тонких деталях. Перепутанный знак в формуле, путаница между точным выводом и приближением или неверно указанная обновляемая переменная способны полностью исказить смысл алгоритма. А если вы ещё не знаете статью досконально, заметить такие промахи в гладко написанном и внешне убедительном объяснении почти невозможно.&lt;/p&gt;
+
+&lt;p&gt;Мне хотелось разборов, которые одновременно выстраивают и интуицию, и математику — с интерактивными графиками, которые можно покрутить руками. Я ещё несколько лет назад убедился, какую огромную разницу это даёт, когда сделал свою &lt;a href=&quot;/ru/gradient-descent&quot;&gt;интерактивную демонстрацию градиентного спуска&lt;/a&gt;: стоит потаскать ползунок и увидеть своими глазами, как алгоритм перескакивает минимум или сходится, — и ты понимаешь то, что статическая формула никогда не передаст.&lt;/p&gt;
+
+&lt;h2 id=&quot;начало-diffusionblocks&quot;&gt;Начало: DiffusionBlocks&lt;/h2&gt;
+
+&lt;p&gt;Я начал с того, что вместе с Claude собрал один-единственный &lt;a href=&quot;https://intuitivepapers.ai/diffusionblocks/&quot;&gt;разбор статьи DiffusionBlocks от Sakana AI&lt;/a&gt;. На то, чтобы довести его до ума, ушла примерно неделя итераций. Огромная часть этого времени ушла на сверку каждой формулы с первоисточниками (например, статьёй EDM) и официальным репозиторием авторов на GitHub.&lt;/p&gt;
+
+&lt;p&gt;В процессе эта проверка поймала настоящую опечатку со знаком прямо в опубликованной статье. Авторы определяют &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Δσ = σ_prev - σ_next &amp;gt; 0&lt;/code&gt;, но в своём уравнении (4) для шага Эйлера пишут &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(z - D)&lt;/code&gt;, из-за чего шаг фактически уводит &lt;em&gt;прочь&lt;/em&gt; от предсказания денойзера. Дискретизация их же уравнения (1) даёт &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(D - z)&lt;/code&gt;, и, как выяснилось при проверке кода авторов (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;model.py&lt;/code&gt;), в реальной реализации действительно используется исправленный знак. Обычное резюме от LLM просто повторило бы опечатку из PDF, и я, скорее всего, никогда бы её не заметил.&lt;/p&gt;
+
+&lt;p&gt;Тогда я задумался: какую часть этой недельной работы можно автоматизировать? Можно ли построить пайплайн, который сам забирает исходник статьи, сверяет базовую математику с первоисточниками и кодом, строит интерактивные иллюстрации и рецензирует собственный черновик перед публикацией?&lt;/p&gt;
+
+&lt;p&gt;Результатом стал &lt;a href=&quot;https://intuitivepapers.ai/&quot;&gt;intuitivepapers.ai&lt;/a&gt;. Проект стартовал с двадцати разборов — от классики до свежих работ вроде Attention, BERT, GAN, VAE, CLIP, PPO, Mamba и Adam — а с тех пор вырос уже более чем до 150 разборов, поскольку пайплайн продолжает работать по расписанию.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/home.webp&quot; alt=&quot;Главная страница intuitivepapers.ai с интерактивными разборами статей по машинному обучению&quot; width=&quot;1280&quot; height=&quot;820&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Главная страница intuitivepapers.ai.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/library.webp&quot; alt=&quot;Библиотека из двадцати разборов статей по ИИ с превью графиков&quot; width=&quot;1280&quot; height=&quot;2621&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Первоначальная библиотека из двадцати статей. На каждой карточке рендерится живое превью графика из её разбора.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;как-устроен-разбор&quot;&gt;Как устроен разбор&lt;/h2&gt;
+
+&lt;p&gt;Каждая страница начинается с необходимых базовых понятий и шаг за шагом поднимается к главной идее статьи в порядке зависимостей. На десктопе боковая панель — я называю её «башней концепций» (concept tower) — отображает эту цепочку зависимостей, чтобы сразу было видно, как элементы складываются друг на друга, а короткие фрагменты кода связывают математические обозначения с тем, что реально выполняется.&lt;/p&gt;
+
+&lt;p&gt;Моя любимая часть — интерактивные графики. Например, в PPO используется усечённая целевая функция (clipped objective), которая не даёт обновлению политики уйти слишком далеко за один шаг. На графике ниже можно подвигать отношение вероятностей и переключить знак преимущества (advantage), чтобы точно увидеть, в какой момент функция становится плоской и перестаёт давать градиент. Десять секунд возни с ползунком делают логику клиппинга понятной куда быстрее, чем разглядывание выражения с &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;min&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/ppo-figure.png&quot; alt=&quot;Интерактивный график усечённой целевой функции PPO с отношением вероятностей и преимуществом&quot; width=&quot;1280&quot; height=&quot;820&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Изучение усечённой целевой функции PPO: двигаем отношение вероятностей и меняем знак преимущества.
+&lt;/p&gt;
+
+&lt;p&gt;Всё это также адаптировано под экран телефона, с которого я сам читаю большую часть материалов:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/mobile-ppo.png&quot; alt=&quot;Разбор статьи PPO со встроенным интерактивным графиком на телефоне&quot; width=&quot;400&quot; height=&quot;840&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:520px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Разбор PPO на телефоне с тем же самым интерактивным графиком внутри текста.
+&lt;/p&gt;
+
+&lt;p&gt;Другой пример — CLIP, который обучает энкодеры изображений и текста сближать совпадающие пары. Интерактивная матрица ниже оценивает сходство каждой картинки с каждой подписью в батче: яркая диагональ соответствует настоящим парам, которые притягиваются друг к другу, а всё вне диагонали — несовпадающим парам, которые отталкиваются.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/clip-grid.png&quot; alt=&quot;Матрица сходства CLIP, сравнивающая изображения с подходящими и неподходящими подписями&quot; width=&quot;664&quot; height=&quot;593&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Матрица сходства изображений и подписей в CLIP. Совпадающие пары лежат на диагонали.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;как-работает-пайплайн&quot;&gt;Как работает пайплайн&lt;/h2&gt;
+
+&lt;p&gt;Одиночный промпт в духе «объясни эту статью» выдаёт именно те поверхностные пересказы, от которых я хотел уйти. Чтобы добиться более надёжного результата, я разбил генерацию на многоэтапный пайплайн с несколькими автоматическими проверками между черновиком и публикацией.&lt;/p&gt;
+
+&lt;p&gt;Во-первых, вместо того чтобы заставлять модель пересказывать формулы по памяти, пайплайн скачивает HTML-версию статьи с arXiv (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arxiv.org/html/&amp;lt;id&amp;gt;&lt;/code&gt;) и конвертирует MathML в LaTeX с помощью &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pandoc&lt;/code&gt;, извлекая формулы и числа буквально один в один.&lt;/p&gt;
+
+&lt;p&gt;Далее он проверяет базовые концепции по первоисточникам — сверяя определения, знаки и соглашения об обозначениях, — а если текст статьи оставляет какую-то деталь двусмысленной, читает официальный код авторов и приводит точные имена файлов и номера строк в панели источников (provenance) внизу страницы. Всё это собирается в верифицированную справочную карточку, на которую опирается автор текста, вместо того чтобы писать напрямую по сырой статье.&lt;/p&gt;
+
+&lt;p&gt;Отталкиваясь от этой карточки, пайплайн строит кастомные интерактивные графики прямо на HTML5 canvas (без графических библиотек) и пишет разбор в порядке зависимостей, подкрепляя формулы конкретными числовыми примерами и коротким псевдокодом.&lt;/p&gt;
+
+&lt;p&gt;Перед публикацией черновик проходит серию детерминированных проверок и рецензий от моделей-критиков:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Бесплатный детерминированный проход проверяет текст на типичные штампы ИИ, валидирует синтаксис KaTeX, убеждается, что компактные мобильные версии уравнений математически эквивалентны десктопным и не вылезают за границы экрана телефона, а также прогоняет все интерактивные графики через разные положения ползунков и кнопок на десктопе и мобильном, отлавливая наезжающие или обрезанные подписи.&lt;/li&gt;
+  &lt;li&gt;Затем отдельные критики проверяют точность относительно исходной статьи, ясность изложения, стиль, графики и отрендеренные скриншоты.&lt;/li&gt;
+  &lt;li&gt;Подтверждённые замечания уходят на этап исправлений, сайт пересобирается, и повторно запускаются только не прошедшие проверки — вплоть до нескольких раундов. Если в конце что-то всё ещё не проходит, пайплайн останавливается (fail-closed) и открывает черновой PR вместо автоматической публикации.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Весь пайплайн крутится по ежедневному расписанию &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;launchd&lt;/code&gt; на Mac mini у меня под столом. Каждое утро он берёт самую заплюсованную статью из очереди (объединяющей мой кураторский бэклог и заявки читателей), при достижении лимита сессии модели спокойно ждёт сброса квоты и продолжает работу автоматически, а когда сборка и проверки проходят чисто — выкладывает готовую страницу.&lt;/p&gt;
+
+&lt;p&gt;Ниже — одна из кастомных canvas-диаграмм из разбора Mamba, раскладывающая блок Mamba на составные части.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/mamba-block-fig.jpeg&quot; alt=&quot;Диаграмма устройства блока Mamba&quot; width=&quot;1280&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Разбор устройства блока Mamba, нарисованный на canvas для страницы о Mamba.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;заключительные-заметки&quot;&gt;Заключительные заметки&lt;/h2&gt;
+
+&lt;p&gt;Всё началось с желания как следует разобраться в одной-единственной статье и превратилось в эксперимент о том, как далеко можно зайти с автоматической верификацией. Сверка с первоисточниками, чтение авторского кода и автоматический прогон состояний графиков действительно ловят массу тонких ошибок — хотя, конечно, не делают результат безошибочным. Сложные интерактивные иллюстрации по-прежнему труднее всего доводить до идеала без человеческого взгляда, да и корявое объяснение или баг на редком краевом случае время от времени всё же проскальзывают.&lt;/p&gt;
+
+&lt;p&gt;Чтобы с этим бороться, внизу каждой страницы есть форма обратной связи. Сообщения читателей помогают исправлять ошибки на самой странице и ужесточать правила пайплайна, чтобы будущие разборы на те же грабли уже не наступали.&lt;/p&gt;
+
+&lt;p&gt;Если есть статья по машинному обучению, в которой вы давно хотели толком разобраться, загляните на &lt;a href=&quot;https://intuitivepapers.ai/&quot;&gt;intuitivepapers.ai&lt;/a&gt;. Там можно предложить новую статью или проголосовать за любую в очереди, а если заметите ошибку в одном из разборов — пожалуйста, напишите об этом через форму обратной связи, и я её исправлю.&lt;/p&gt;
+</description>
+          <pubDate>Fri, 05 Jun 2026 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ru/intuitivepapers-ai-interactive-paper-explainers</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/intuitivepapers-ai-interactive-paper-explainers</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>ccmux: управление ИИ-агентами для кодинга на разных устройствах</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Менеджер tmux-сессий, который я сделал с друзьями, чтобы следить за ИИ-агентами для кодинга на разных машинах и работать с ними с телефона.
+&lt;/p&gt;
+
+&lt;p&gt;Обычно у меня одновременно запущено около десяти агентов для кодинга на Mac mini и ноутбуке. Поддерживать их живыми в фоне через tmux довольно просто — настоящая головная боль начинается, когда нужно за всеми ними уследить: вспоминать, на какой машине запущена конкретная задача, заходить по SSH проверять, работает ли Claude дальше или уже час ждёт ответа на вопрос «да/нет», и не иметь нормального способа ответить, когда ты отошёл от стола.&lt;/p&gt;
+
+&lt;p&gt;Мне хотелось запускать сессию на Mac mini, уходить по делам, получать уведомление на телефон, когда агенту нужен ввод, отвечать прямо с телефона, а потом подхватывать ту же сессию на ноутбуке — не набирая каждый раз кучу команд SSH и tmux.&lt;/p&gt;
+
+&lt;p&gt;Поэтому вместе с Daniel Mandragona и Mike Choi мы сделали &lt;a href=&quot;https://ccmux.ai/&quot;&gt;ccmux&lt;/a&gt; — кросс-девайсный менеджер tmux-сессий для ИИ-агентов для кодинга. Ниже я расскажу, как он устроен, как связаны его компоненты и что мы сделали для мобильных устройств.&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/hero-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/hero.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Терминальный интерфейс ccmux со списком сессий ИИ-агентов в разных проектах
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Быстрый обзор ccmux: пять сессий агентов, запущенных одновременно в четырёх проектах.
+&lt;/p&gt;
+
+&lt;h2 id=&quot;дашборд&quot;&gt;Дашборд&lt;/h2&gt;
+
+&lt;p&gt;Когда вы открываете &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux&lt;/code&gt;, перед вами единый список всех сессий агентов, запущенных на ваших машинах, с цветовой индикацией состояния каждого агента: активен (генерирует вывод), простаивает или ждёт вашего ввода. Справа расположена панель Devices со списком остальных машин в сети, а также панель использования квоты Claude за 5-часовое окно, чтобы заранее видеть приближение к лимиту.&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/dashboard-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/dashboard.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Дашборд ccmux со статусами сессий, подключёнными устройствами и квотой Claude
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Дашборд. Строки сессий раскрашены по состоянию, а справа показаны подключённые устройства и расход квоты Claude.
+&lt;/p&gt;
+
+&lt;p&gt;Чтобы перейти в любую сессию, достаточно выбрать её и нажать &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Enter&lt;/code&gt; — вы сразу подключитесь к tmux-сессии этого агента. Когда закончите, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ctrl-b d&lt;/code&gt; отключает вас и возвращает обратно в дашборд, а агент продолжает спокойно работать на той машине, где был запущен.&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/attach-detach-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/attach-detach.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Подключение к tmux-сессии и возврат в дашборд ccmux
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Нажатие Enter подключает к сессии, а Ctrl-b d возвращает обратно в дашборд.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;как-всё-устроено-под-капотом&quot;&gt;Как всё устроено под капотом&lt;/h2&gt;
+
+&lt;p&gt;Мы хотели, чтобы единственным источником истины оставался сам tmux, а не какая-то закрытая обёртка вокруг сессий. Если вы когда-нибудь перестанете пользоваться ccmux, каждый запущенный агент останется обычной tmux-сессией, к которой можно подключиться вручную.&lt;/p&gt;
+
+&lt;p&gt;На каждой машине работают два бинарника на Go:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux&lt;/code&gt; — терминальный интерфейс (TUI), с которым вы взаимодействуете, построенный на стеке Bubble Tea от &lt;a href=&quot;https://charm.sh/&quot;&gt;Charm&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; — небольшой фоновый демон, который каждые пару секунд опрашивает tmux, определяет текущее состояние каждой сессии и отдаёт его через локальный Unix-сокет и опциональный HTTP API.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Определение состояния оказалось одной из самых капризных частей. Пока агент активно выводит текст, демон помечает его как активный. Как только появляется приглашение к вводу и панель остаётся тихой несколько секунд, демон переводит сессию в статус &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;needs_input&lt;/code&gt;. Кроме того, пока есть активные сессии, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; удерживает блокировку &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;caffeinate&lt;/code&gt; на macOS (или &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd-inhibit&lt;/code&gt; на Linux), чтобы Mac mini или ноутбук не уснули посреди долгой задачи — с опцией порога заряда батареи для ноутбуков, чтобы забытая машина не разрядилась в ноль.&lt;/p&gt;
+
+&lt;p&gt;Для обнаружения машин в сети мы использовали &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt;. При каждом обновлении ccmux запускает &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tailscale status --json&lt;/code&gt;, опрашивает доступные устройства на порту &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;7474&lt;/code&gt; (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/v1/health&lt;/code&gt;) и автоматически добавляет в дашборд все ответившие демоны. Так не приходится вручную вести список хостов или открывать порты в публичный интернет. Поскольку слой WireGuard в Tailscale уже обеспечивает шифрование и идентификацию устройств, демон общается по обычному HTTP внутри tailnet и отклоняет запросы с браузерными заголовками &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Origin&lt;/code&gt; или &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Sec-Fetch-*&lt;/code&gt;, чтобы случайные веб-страницы не могли к нему обратиться.&lt;/p&gt;
+
+&lt;p&gt;Когда вы нажимаете &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Enter&lt;/code&gt; на удалённой сессии, ccmux запускает настоящий &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tmux attach&lt;/code&gt; по SSH или Mosh напрямую к тому хосту, где работает агент, не проксируя терминал через лишнюю прослойку. По умолчанию используется Claude Code, но ccmux также поддерживает Codex, Cursor, Antigravity, Gemini CLI и другие инструменты, сохраняя выбранного агента для каждого проекта и подставляя нужные флаги запуска и возобновления сессии.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;работа-с-телефона&quot;&gt;Работа с телефона&lt;/h2&gt;
+
+&lt;p&gt;Возможность управлять агентами с телефона была главной причиной, по которой я взялся за этот проект. Проблема обычного SSH на телефоне в том, что соединение постоянно рвётся — стоит переключиться с Wi-Fi на сотовую сеть, заблокировать экран или зайти в зону без связи. &lt;a href=&quot;https://mosh.org/&quot;&gt;Mosh&lt;/a&gt; справляется с этим намного лучше: он спокойно переживает смену сети и сон устройства и мгновенно восстанавливает сессию, как только появляется сигнал.&lt;/p&gt;
+
+&lt;p&gt;Когда ccmux обнаруживает узкий терминал (меньше 120 колонок), он автоматически сворачивает дашборд в одну прокручиваемую колонку, чтобы тот же интерфейс удобно работал на экране смартфона:&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;430&quot; height=&quot;900&quot; poster=&quot;/assets/video/ccmux/phone-poster.webp&quot; style=&quot;max-height:420px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/phone.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Дашборд ccmux в узком мобильном терминале
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+TUI автоматически сворачивается под ширину экрана телефона поверх Mosh.
+&lt;/p&gt;
+
+&lt;p&gt;Уведомления оказались на удивление простыми в реализации. Как только сессия переходит в состояние &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;needs_input&lt;/code&gt;, демон подаёт стандартный терминальный сигнал (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BEL&lt;/code&gt;). iOS-терминалы, отслеживающие этот сигнал, сразу превращают его в push-уведомление — без каких-либо облачных серверов посередине. В &lt;a href=&quot;https://getmoshi.app/&quot;&gt;Moshi&lt;/a&gt; — Mosh-клиенте для iOS — ccmux также умеет связывать &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;moshi-hook&lt;/code&gt; с хуками Claude Code, чтобы отправлять уведомления по категориям (например, требуется подтверждение или задача завершена) и открывать нужную сессию по одному нажатию.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/ccmux/moshi.webp&quot; alt=&quot;ccmux в терминальном приложении Moshi на iPhone&quot; width=&quot;610&quot; height=&quot;1323&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:520px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ccmux, запущенный в Moshi на iPhone.
+&lt;/p&gt;
+
+&lt;p&gt;И всё же работать с терминальным интерфейсом на маленьком экране бывает тесновато, особенно когда хочется просто быстро взглянуть на список сессий или набрать длинный промпт. Поэтому мы сделали ещё и нативное приложение для iOS, которое общается с &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; напрямую через Tailscale. Телефон привязывается командой &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux pair&lt;/code&gt; на Mac и сканированием QR-кода прямо из терминала. После этого приложение получает живые обновления статусов сессий по SSE и подключается к интерактивным панелям tmux через WebSocket PTY-мост с рендерингом на SwiftTerm.&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+&amp;lt;img src=&quot;/assets/img/ccmux/ios-dashboard.webp&quot; alt=&quot;Приложение ccmux для iOS со списком сессий ИИ-агентов&quot; width=&quot;1206&quot; height=&quot;2622&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;display:inline-block;margin:0 6px;max-height:460px;width:auto&quot; //&amp;gt;
+&amp;lt;img src=&quot;/assets/img/ccmux/ios-terminal.webp&quot; alt=&quot;Интерактивный tmux-терминал в приложении ccmux для iOS&quot; width=&quot;1206&quot; height=&quot;2622&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;display:inline-block;margin:0 6px;max-height:460px;width:auto&quot; //&amp;gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Нативное приложение для iOS: дашборд сессий слева, живой терминал справа.
+&lt;/p&gt;
+
+&lt;p&gt;На iOS мы быстро столкнулись с одной особенностью: для управления терминалом и для написания промптов нужны прямо противоположные клавиатуры. Терминалу требуются «сырые» нажатия клавиш, стрелки и быстрый Backspace без вмешивающейся автокоррекции, а вот набирать целый абзац инструкций для агента без автокоррекции и выделения текста — настоящее мучение. Поэтому мы добавили прямо в экран терминала переключатель между режимом Raw (каждое нажатие уходит напрямую в PTY) и режимом Chat (обычное поле ввода в стиле iMessage для составления промптов).&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;400&quot; height=&quot;870&quot; poster=&quot;/assets/video/ccmux/ios-mode-toggle-poster.webp&quot; style=&quot;max-height:460px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/ios-mode-toggle.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Переключение между режимами ввода Raw и Chat в iOS-приложении ccmux
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Переключение между прямым терминальным вводом (Raw) и режимом чата (Chat) для набора промптов.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;заключительные-заметки&quot;&gt;Заключительные заметки&lt;/h2&gt;
+
+&lt;p&gt;Я пользовался ccmux каждый день на протяжении нескольких месяцев, и ещё несколько человек тоже перешли на него. За эти же месяцы появилось множество других инструментов для управления ИИ-агентами, в том числе проекты с инвестициями и полноценными командами на фулл-тайм. Как пет-проекту из трёх человек, нам не имело особого смысла пытаться конкурировать с ними как коммерческий продукт, поэтому мы решили не развивать его в этом направлении. Тем не менее я время от времени ковыряюсь в репозитории и захотел написать этот пост, чтобы зафиксировать, что у нас получилось.&lt;/p&gt;
+
+&lt;p&gt;Всё по-прежнему доступно на &lt;a href=&quot;https://ccmux.ai/&quot;&gt;ccmux.ai&lt;/a&gt;, а исходный код открыт на &lt;a href=&quot;https://github.com/skzv/ccmux&quot;&gt;GitHub&lt;/a&gt; под лицензией FSL-1.1-MIT. Если захотите попробовать ccmux на macOS или Linux, установить его и запустить мастер настройки можно так:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-fsSL&lt;/span&gt; https://raw.githubusercontent.com/skzv/ccmux/main/scripts/install.sh | sh
+ccmux setup
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;В &lt;a href=&quot;https://ccmux.ai/docs/&quot;&gt;документации по настройке&lt;/a&gt; описано, как объединить несколько машин через Tailscale и подключить мобильный доступ.&lt;/p&gt;
+</description>
+          <pubDate>Fri, 05 Jun 2026 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ru/ccmux-tmux-manager-for-ai-coding-agents</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/ccmux-tmux-manager-for-ai-coding-agents</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>3D-реконструкция по публичным фотографиям с помощью машинного обучения</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Можно ли воссоздать мир в 3D по обычным публичным фотографиям?
+&lt;/p&gt;
+
+&lt;h2 id=&quot;картографируем-мир&quot;&gt;Картографируем мир&lt;/h2&gt;
+
+&lt;p&gt;В интернете огромное количество публичных фотографий из самых разных источников: Reddit, YouTube, пользовательские снимки в Google Maps и так далее.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/google-maps-photos.webp&quot; alt=&quot;Пример фотографий из Google Maps&quot; width=&quot;1600&quot; height=&quot;1232&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; style=&quot;max-height:400px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичные фотографии, доступные в Google Maps
+&lt;/p&gt;
+
+&lt;p&gt;Мне стало интересно: можно ли создать 3D-карту мира из всех этих данных? При съёмке камера теряет всю информацию о третьем измерении — но с помощью современных моделей машинного обучения мы можем её вернуть и превратить вот такую фотографию:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Исходное фото Safeway 0&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение Safeway 0.
+&lt;/p&gt;
+
+&lt;p&gt;В вот такую 3D-модель:&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Ещё один пример — знаменитый аэропорт Сингапура:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0.jpeg&quot; alt=&quot;Исходное фото аэропорта Сингапура&quot; width=&quot;960&quot; height=&quot;1280&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:600px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение аэропорта Сингапура.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1012&quot; height=&quot;1008&quot; poster=&quot;/assets/video/3d-reconstruction/sg-airport-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/sg-airport-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;И даже снимок леса:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0.jpg&quot; alt=&quot;Исходное фото леса&quot; width=&quot;1500&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение леса.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1358&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/forest-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/forest-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Чтобы получить эти результаты, я использовал ML-модель оценки глубины и немного линейной алгебры.&lt;/p&gt;
+
+&lt;h2 id=&quot;проекция-камеры&quot;&gt;Проекция камеры&lt;/h2&gt;
+
+&lt;p&gt;Камеру можно рассматривать как устройство, выполняющее проекцию из 3D в 2D, как показано на схеме ниже. При этом теряется информация о третьем измерении — глубине.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/camera-projection.png&quot; alt=&quot;Визуализация проекции камеры&quot; width=&quot;850&quot; height=&quot;356&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Проекция камеры из 3D в 2D. Источник: [1]
+&lt;/p&gt;
+
+&lt;p&gt;Наша задача — восстановить это третье измерение, а затем обратить проекцию.&lt;/p&gt;
+
+&lt;h2 id=&quot;внутренние-параметры-камеры&quot;&gt;Внутренние параметры камеры&lt;/h2&gt;
+
+&lt;p&gt;Одного лишь знания глубины каждого пикселя недостаточно, чтобы восстановить изображение в 3D. Дело в том, что свойства самой камеры — прежде всего её фокусное расстояние — определяют, как трёхмерные точки отображаются в двумерные пиксели, поэтому для обратного преобразования эти параметры тоже нужны. Посмотрите на демонстрацию ниже, где разные фокусные расстояния дают совершенно разные снимки:&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;600&quot; height=&quot;600&quot; poster=&quot;/assets/video/3d-reconstruction/face-focal-length-poster.webp&quot; style=&quot;max-height:400px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/3d-reconstruction/face-focal-length.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Влияние фокусного расстояния на портрет
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Демонстрация влияния фокусного расстояния на изображение. Источник: [2]
+&lt;/p&gt;
+
+&lt;p&gt;Из этого логично следует: если мы хотим реконструировать лицо в 3D по любому из этих снимков, нам необходимо знать характеристики камеры.&lt;/p&gt;
+
+&lt;p&gt;Пользуясь свойствами подобных треугольников, показанными ниже, легко увидеть, что связь между точками на изображении и точками в 3D оказывается очень простой:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+x = f \frac{X}{Z} \space\space\space\space\space y = f \frac{Y}{Z} \tag{1} \label{eq:camera perspective projection}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/camera-perspective-focal.png&quot; alt=&quot;Перспективная проекция камеры&quot; width=&quot;1073&quot; height=&quot;834&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Перспективная проекция камеры
+&lt;/p&gt;
+
+&lt;p&gt;Обратив это преобразование, чтобы перенести пиксели изображения обратно в 3D, получаем:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+X = \frac{x \cdot Z}{f} \space\space\space\space\space Y = \frac{y \cdot Z}{f} \space\space\space\space\space Z = Z \tag{2} \label{eq:inverse camera perspective projection}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Итак, два недостающих элемента — это глубина каждого пикселя \(Z\) и фокусное расстояние камеры \(f\). Ни того, ни другого в публичных фотографиях обычно нет: EXIF-метаданные, которые могли бы содержать сведения о камере, как правило, удаляются при загрузке.&lt;/p&gt;
+
+&lt;p&gt;Замечу, что можно описать и полное преобразование между мировой 3D-системой координат и 2D-плоскостью с учётом положения и ориентации камеры (см. ниже). Но в рамках этой статьи мы работаем просто в локальной системе координат самой камеры.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/complete-camera-model.jpg&quot; alt=&quot;Полная модель камеры&quot; width=&quot;1280&quot; height=&quot;720&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Полная модель камеры. Источник: [3]
+&lt;/p&gt;
+
+&lt;h2 id=&quot;карты-глубины&quot;&gt;Карты глубины&lt;/h2&gt;
+
+&lt;p&gt;Этот проект стал возможен благодаря недавно вышедшей модели Apple &lt;a href=&quot;https://github.com/apple/ml-depth-pro&quot;&gt;DepthPro&lt;/a&gt;. Хотя модели оценки глубины существовали уже давно, у этой модели обнаружились два важных отличия:
+    1. Она выдаёт глубину в абсолютном метрическом масштабе — это значит, что 3D-реконструкции сохраняют реальные пропорции, даже когда строятся по одному-единственному кадру.
+    2. Она сама оценивает фокусное расстояние камеры.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/depth-pro-teaser.webp&quot; alt=&quot;Тизер Depth Pro&quot; width=&quot;1242&quot; height=&quot;535&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Тизер Depth Pro. Источник: [4]
+&lt;/p&gt;
+
+&lt;p&gt;Я прогнал эту модель через подборку публичных фотографий, получив карты глубины и оценки фокусного расстояния. Например, для вот этого снимка:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Исходное фото Safeway 1&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение Safeway 1.
+&lt;/p&gt;
+
+&lt;p&gt;Предсказанные карта глубины и фокусное расстояние выглядят так:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1-depth-black.png&quot; alt=&quot;Карта глубины Safeway 1&quot; width=&quot;507&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Карта глубины Safeway 1 и фокусное расстояние, предсказанные моделью DepthPro.
+&lt;/p&gt;
+
+&lt;p&gt;Затем я применил формулы \((2)\), чтобы перенести каждый пиксель обратно в 3D, собрал облако точек и визуализировал его с помощью Open3D:&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;3d-реконструкция&quot;&gt;3D-реконструкция&lt;/h2&gt;
+
+&lt;p&gt;Ниже собраны все мои примеры. Особое внимание обратите на панораму Нью-Йорка. Мне было любопытно проверить, как модель справится с по-настоящему огромной сценой вроде небоскрёбов Манхэттена. Как и следовало ожидать, DepthPro не смогла построить хорошую карту глубины: её обучающий датасет почти наверняка был ориентирован на более компактные сцены.&lt;/p&gt;
+
+&lt;h3 id=&quot;coex-mall&quot;&gt;COEX Mall&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/coex-0.jpg&quot; alt=&quot;Исходное фото COEX Mall&quot; width=&quot;924&quot; height=&quot;483&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение COEX Mall.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/coex-0-depth-black.png&quot; alt=&quot;Карта глубины COEX Mall&quot; width=&quot;506&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Карта глубины COEX Mall и фокусное расстояние, предсказанные моделью DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1398&quot; height=&quot;848&quot; poster=&quot;/assets/video/3d-reconstruction/coex-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/coex-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;лес&quot;&gt;Лес&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0.jpg&quot; alt=&quot;Исходное фото леса&quot; width=&quot;1500&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение леса.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0-depth-black.png&quot; alt=&quot;Карта глубины леса&quot; width=&quot;506&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Карта глубины леса и фокусное расстояние, предсказанные моделью DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1358&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/forest-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/forest-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;панорама-нью-йорка&quot;&gt;Панорама Нью-Йорка&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/nyc-0.webp&quot; alt=&quot;Исходное фото панорамы Нью-Йорка&quot; width=&quot;1000&quot; height=&quot;560&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение панорамы Нью-Йорка.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/nyc-depth-black.png&quot; alt=&quot;Карта глубины Нью-Йорка&quot; width=&quot;498&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Карта глубины панорамы Нью-Йорка и фокусное расстояние, предсказанные моделью DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1382&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/nyc-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/nyc-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;safeway-1&quot;&gt;Safeway 1&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-0.webp&quot; alt=&quot;Исходное фото Safeway 0&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение Safeway 0.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-0-depth-black.png&quot; alt=&quot;Карта глубины Safeway 0&quot; width=&quot;506&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Карта глубины Safeway 0 и фокусное расстояние, предсказанные моделью DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1066&quot; height=&quot;776&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-0-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-0-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;safeway-2&quot;&gt;Safeway 2&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Исходное фото Safeway 1&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение Safeway 1.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1-depth-black.png&quot; alt=&quot;Карта глубины Safeway 1&quot; width=&quot;507&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Карта глубины Safeway 1 и фокусное расстояние, предсказанные моделью DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;аэропорт-сингапура&quot;&gt;Аэропорт Сингапура&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0.jpeg&quot; alt=&quot;Исходное фото аэропорта Сингапура&quot; width=&quot;960&quot; height=&quot;1280&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:600px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Публичное исходное изображение аэропорта Сингапура.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0-depth-black.png&quot; alt=&quot;Карта глубины аэропорта Сингапура&quot; width=&quot;387&quot; height=&quot;432&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Карта глубины аэропорта Сингапура и фокусное расстояние, предсказанные моделью DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1012&quot; height=&quot;1008&quot; poster=&quot;/assets/video/3d-reconstruction/sg-airport-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/sg-airport-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;примечания&quot;&gt;Примечания&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Проекция камеры из 3D в 2D. Источник: &lt;a href=&quot;https://www.researchgate.net/figure/The-perspective-projection-of-a-camera-model_fig2_324584663&quot;&gt;ResearchGate&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Демонстрация влияния фокусного расстояния на изображение. Источник: &lt;a href=&quot;https://www.diyphotography.net/gif-explains-changing-focal-length-impacts-portrait&quot;&gt;DIY Photography&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Полная модель камеры. Источник: &lt;a href=&quot;https://robotacademy.net.au/lesson/summary-of-image-geometry/&quot;&gt;Robot Academy&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Тизер Depth Pro. Источник: &lt;a href=&quot;https://github.com/apple/ml-depth-pro&quot;&gt;Apple&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+          <pubDate>Thu, 21 Aug 2025 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ru/3d-reconstruction-from-public-photos</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/3d-reconstruction-from-public-photos</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Как предсказать, как откроется рынок завтра</title>
+          <description>&lt;p&gt;&lt;em&gt;Предсказывая будущее&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Как-то на выходных вышли плохие экономические новости, и мне стало интересно, как они повлияют на открытие рынка в понедельник. Я начал разбираться в этом вопросе и узнал, что пока фондовый рынок закрыт, торговля фьючерсами на базовые индексы продолжается — а значит, по фьючерсному рынку можно понять, как трейдеры уже реагируют на новости и закладывают их в цены, словно заглядывая в хрустальный шар 🔮.&lt;/p&gt;
+
+&lt;p&gt;Поскольку фьючерсные цены и текущие цены взаимосвязаны, мы можем вычислить, какую справедливую текущую стоимость каждого индекса закладывает фьючерсный рынок, дисконтировав будущую цену назад во времени. Это даёт нам расчётную (подразумеваемую) цену открытия каждого индекса ещё до начала торгов — так что уже в воскресенье вечером можно увидеть, откроется ли рынок на следующий день &lt;span style=&quot;color: #66ff66;&quot;&gt;выше&lt;/span&gt; или &lt;span style=&quot;color: #ff6666;&quot;&gt;ниже&lt;/span&gt;.&lt;/p&gt;
+
+&lt;p&gt;Ниже я разберу все составляющие этого расчёта, а итогом станет дашборд, который я сделал, чтобы заранее подглядывать за завтрашним открытием рынка на &lt;a href=&quot;https://impliedopen.com&quot;&gt;impliedopen.com&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/save-game.webp&quot; alt=&quot;Превью дашборда, который я сделал для предварительной оценки открытия рынка на следующий день.&quot; width=&quot;1168&quot; height=&quot;1312&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Превью дашборда, который я сделал для предварительной оценки движения рынка на открытии следующего дня.
+&lt;/p&gt;
+
+&lt;h2 id=&quot;фьючерсы&quot;&gt;Фьючерсы&lt;/h2&gt;
+
+&lt;p&gt;Фьючерсы (фьючерсные контракты) — это инструменты, позволяющие трейдерам делать ставки на &lt;em&gt;будущую&lt;/em&gt; цену базового актива на дату истечения (экспирации) контракта. Обратите внимание на цену и дату экспирации фьючерса на SP500 ниже. Сейчас он торгуется выше самого индекса SP500, но что это говорит нам о текущей стоимости SP500?&lt;/p&gt;
+
+&lt;p&gt;Чтобы связать цену фьючерса с текущей справедливой стоимостью, которую закладывает фьючерсный рынок, нужно учесть время, оставшееся до даты экспирации фьючерса.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/futures-price.webp&quot; alt=&quot;Фьючерсный контракт на SP500&quot; width=&quot;943&quot; height=&quot;826&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Фьючерсный контракт на SP500
+&lt;/p&gt;
+
+&lt;p&gt;Для этого используется модель стоимости владения (cost of carry), которая учитывает безрисковую процентную ставку, дивидендную доходность и время до экспирации. Модель предполагает, что цена индекса должна расти со скоростью текущей безрисковой ставки (по сути, допущение об отсутствии арбитража) за вычетом снижения цены из-за выплаты дивидендов.&lt;/p&gt;
+
+&lt;p&gt;Эту зависимость можно записать так:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+    F = S \times e^{(r - q) \times t} \tag{0}  \label{eq:coc}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;где \(F\) — цена фьючерса, \(S\) — текущая цена базового актива, \(r\) — безрисковая процентная ставка, \(q\) — дивидендная доходность, а \(t\) — время до экспирации.&lt;/p&gt;
+
+&lt;h2 id=&quot;возвращаемся-назад-во-времени&quot;&gt;Возвращаемся назад во времени&lt;/h2&gt;
+
+&lt;p&gt;Чтобы вычислить текущую справедливую стоимость индекса по цене фьючерса, нужно продисконтировать цену фьючерса назад во времени, просто обратив приведённую выше формулу:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+    S = F \times e^{-(r - q) \times t} \tag{1}  \label{eq:discount}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;До открытия торгов эта справедливая стоимость и есть наша лучшая оценка цены открытия индекса.&lt;/p&gt;
+
+&lt;h2 id=&quot;безрисковая-ставка&quot;&gt;Безрисковая ставка&lt;/h2&gt;
+
+&lt;p&gt;Существуют ли вообще безрисковые инвестиции? Казначейские векселя США (Treasury bills, T-bills) — краткосрочный долг, выпускаемый Казначейством США, — считаются (почти) безрисковыми, потому что:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;у правительства США крайне низкий риск дефолта: оно печатает собственную валюту и имеет безупречную историю погашения долгов;&lt;/li&gt;
+  &lt;li&gt;короткий срок погашения снижает чувствительность к колебаниям процентных ставок и долгосрочной неопределённости;&lt;/li&gt;
+  &lt;li&gt;рынок отличается высочайшей ликвидностью;&lt;/li&gt;
+  &lt;li&gt;отсутствует кредитный риск: правительство США не обанкротится, как это может случиться с корпоративными или муниципальными облигациями.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;В качестве безрисковой ставки для расчётов я беру доходность 3-месячных казначейских векселей (3-month T-bill).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/3m-bond-yield-1.png&quot; alt=&quot;Доходность 3-месячных казначейских векселей США&quot; width=&quot;993&quot; height=&quot;633&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Доходность 3-месячных казначейских векселей США
+&lt;/p&gt;
+
+&lt;p&gt;Мы исходим из того, что базовые активы должны расти как минимум на величину безрисковой ставки, иначе у инвесторов не было бы смысла вкладываться в эти инструменты.&lt;/p&gt;
+
+&lt;h2 id=&quot;дивидендная-доходность&quot;&gt;Дивидендная доходность&lt;/h2&gt;
+
+&lt;p&gt;Хотя мы и предполагаем, что базовые инструменты растут минимум по безрисковой ставке, нужно учитывать, что при выплате дивидендов цена базовых индексов снижается на сопоставимую величину. Для этого я использую последнюю известную дивидендную доходность каждого индекса — хотя более точная модель, вероятно, прогнозировала бы ожидаемую будущую дивидендную доходность.&lt;/p&gt;
+
+&lt;p&gt;Ниже приведена актуальная дивидендная доходность SP500, которую я использую в расчётах.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/sp500-dividend-yield.png&quot; alt=&quot;Актуальная дивидендная доходность SP500&quot; width=&quot;873&quot; height=&quot;641&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Актуальная дивидендная доходность SP500
+&lt;/p&gt;
+
+&lt;h2 id=&quot;собираем-всё-воедино&quot;&gt;Собираем всё воедино&lt;/h2&gt;
+
+&lt;p&gt;Я собираю последнюю цену индекса, текущую цену торгующегося фьючерса, наилучшую доступную оценку дивидендной доходности, безрисковую ставку и время до экспирации, после чего вычисляю текущую справедливую стоимость каждого крупного индекса. Все эти части объединены на сайте &lt;a href=&quot;https://impliedopen.com&quot;&gt;impliedopen.com&lt;/a&gt;, который встроен прямо ниже:&lt;/p&gt;
+
+&lt;iframe src=&quot;https://impliedopen.com&quot; title=&quot;Дашборд Implied Open для оценки открытия рынка&quot; width=&quot;100%&quot; height=&quot;1200px&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;Этот дашборд наиболее полезен, когда фьючерсный рынок открыт, а основная торговая сессия закрыта — тогда по фьючерсам видно, что трейдеры уже закладывают в цены до официального открытия. Когда же основной рынок открыт, он сам показывает «истинную» текущую цену каждого индекса.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/market-status.png&quot; alt=&quot;Индикатор статуса рынка&quot; width=&quot;751&quot; height=&quot;159&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Индикатор статуса рынка
+&lt;/p&gt;
+
+&lt;h2 id=&quot;заключительные-заметки&quot;&gt;Заключительные заметки&lt;/h2&gt;
+
+&lt;p&gt;Я собрал этот дашборд довольно быстро и в итоге просто скрейплю значительную часть данных, кэшируя их раз в минуту в собственном API :) Прошу прощения, если что-то сломается или перестанет открываться — когда-нибудь я заменю всё это на нормальные API, либо дашборд сам утратит актуальность по мере перехода рынков на круглосуточную торговлю 24/7. В любом случае мне хотелось зафиксировать эту историю в блоге.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/it-is-what-it-is.png&quot; alt=&quot;Как есть.&quot; width=&quot;690&quot; height=&quot;365&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Как есть.
+&lt;/p&gt;
+
+&lt;p&gt;Если вы заметите ошибки в расчётах или захотите поделиться предложениями и отзывами — обязательно напишите мне!&lt;/p&gt;
+</description>
+          <pubDate>Sun, 23 Mar 2025 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ru/predicting-how-the-market-will-open-tomorrow</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/predicting-how-the-market-will-open-tomorrow</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Telegram-бот для импорта стикерпаков из Sticker.ly</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Импортируйте анимированные стикерпаки из Sticker.ly в Telegram без лишних хлопот
+&lt;/p&gt;
+
+&lt;style&gt;
+video {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+}
+&lt;/style&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://sticker.ly&quot;&gt;Sticker.ly&lt;/a&gt; — популярное приложение для создания и управления стикерпаками на Android и iPhone, набравшее более 100 миллионов загрузок только в &lt;a href=&quot;https://play.google.com/store/apps/details?id=com.snowcorp.stickerly.android&amp;amp;hl=en_US&amp;amp;gl=US&quot;&gt;Google Play&lt;/a&gt;. Оно поддерживает импорт стикерпаков в iMessage, WhatsApp и Telegram. Однако импорт &lt;em&gt;анимированных&lt;/em&gt; стикерпаков доступен только для WhatsApp.&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; preload=&quot;metadata&quot; width=&quot;498&quot; height=&quot;1034&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-animated-import-cropped-poster.webp&quot; style=&quot;max-height:600px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-animated-import-cropped.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Как давний пользователь и энтузиаст Telegram, я часто уговариваю друзей перейти на эту платформу, чтобы общаться со мной. Многих из них расстраивает отсутствие доступа к богатой библиотеке стикеров, к которой они привыкли в других мессенджерах вроде WhatsApp. Я пообещал это исправить — и наконец сделал. Встречайте: &lt;a href=&quot;https://t.me/StickerlyImportBot&quot;&gt;Sticker.ly Sticker Pack Import Bot&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;470&quot; height=&quot;496&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-bot-screen-poster.webp&quot; style=&quot;max-height:400px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-bot-screen.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Чтобы воспользоваться ботом, просто отправьте ему ссылку на набор Sticker.ly, например &lt;a href=&quot;https://sticker.ly/s/HBBCR8&quot;&gt;https://sticker.ly/s/HBBCR8&lt;/a&gt;. Бот сконвертирует стикеры в анимированный формат, совместимый с Telegram, и пришлёт ссылку, по которой вы сможете добавить готовый стикерпак к себе.&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;446&quot; height=&quot;524&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-import-poster.webp&quot; style=&quot;max-height:500px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-import.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Ваш браузер не поддерживает тег video.
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Хотя бот поддерживает и статичные стикерпаки, для них я не советую его использовать: Sticker.ly и Telegram умеют импортировать статичные наборы напрямую «из коробки».&lt;/p&gt;
+
+&lt;p&gt;Обратите внимание, что бот сейчас находится в бета-версии, поэтому иногда возможны сбои. Если при создании стикерпака возникла ошибка, просто попробуйте ещё раз и при необходимости следуйте инструкциям бота, чтобы удалить частично созданный набор.&lt;/p&gt;
+</description>
+          <pubDate>Wed, 05 Apr 2023 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ru/telegram-stickerly-import-bot</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/telegram-stickerly-import-bot</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Оптимизация чёрного ящика и подбор гиперпараметров с помощью Google Vizier</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Автоматическая и интеллектуальная оптимизация любой системы
+&lt;/p&gt;
+
+&lt;style&gt;
+img {
+  max-height: 350px;
+}
+&lt;/style&gt;
+
+&lt;p&gt;Когда вы создаёте модель машинного обучения — или любую другую алгоритмическую систему — вам приходится принимать решения об её архитектуре. Например, в задачах машинного обучения нужно выбрать количество нейронов в слое нейросети или скорость градиентного спуска. Если вы делаете &lt;a href=&quot;https://en.wikipedia.org/wiki/Particle_filter&quot;&gt;фильтр частиц&lt;/a&gt; для отслеживания состояния робота, нужно подобрать форму функции правдоподобия. Или, скажем, вы ищете размер буфера и число потоков, при которых система потребляет минимум вычислительных ресурсов. Как найти оптимальную конфигурацию?&lt;/p&gt;
+
+&lt;p&gt;Можно подбирать параметры вручную: пробовать разное число нейронов, менять скорость градиентного спуска. Но это медленно, утомительно и чревато ошибками. К счастью, существуют сервисы, которые умеют оптимизировать вашу систему за вас — умно и эффективно.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;знакомьтесь-vizier&quot;&gt;Знакомьтесь: Vizier&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/google/vizier&quot;&gt;Vizier&lt;/a&gt; — это сервис оптимизации, созданный в Google для оптимизации чёрного ящика и подбора гиперпараметров. Его можно применять к любой системе, если вы способны передавать ей входные параметры (которые предлагает Vizier) и получать на выходе метрики, которые Vizier должен оптимизировать (максимизировать или минимизировать). Сама система при этом рассматривается как чёрный ящик.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/black-box-optimization.png&quot; alt=&quot;Оптимизация чёрного ящика&quot; width=&quot;629&quot; height=&quot;319&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Оптимизация чёрного ящика не требует понимания внутреннего устройства системы — достаточно уметь передавать входы и получать выходы. Источник: Per Instance Algorithm Configuration for Continuous Black Box Optimization — научная иллюстрация на ResearchGate. Доступно по адресу: https://www.researchgate.net/figure/black-box-Optimization_fig1_322035981 [дата обращения: 23 февраля 2023]
+&lt;/p&gt;
+
+&lt;p&gt;В отличие от методов оптимизации, опирающихся на внутреннее устройство функции, таких как &lt;a href=&quot;/ru/gradient-descent&quot;&gt;градиентный спуск&lt;/a&gt;, которым нужно знать зависимость между параметрами системы и оптимизируемой метрикой, алгоритм чёрного ящика вроде Vizier вообще не требует знаний о самой системе. При этом он эффективно исследует пространство параметров и находит значения, оптимизирующие работу системы. Это также делает его более устойчивым к сложным, разрывным и невыпуклым целевым функциям.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;параметры-и-гиперпараметры&quot;&gt;Параметры и гиперпараметры&lt;/h2&gt;
+
+&lt;p&gt;Небольшое отступление: само разделение пришло из машинного обучения, где «параметрами» называют внутренние значения модели, используемые при инференсе и подбираемые в ходе обучения на датасете, а «гиперпараметры» описывают архитектуру модели или саму процедуру обучения. Хотя сервис оптимизации чёрного ящика вроде Vizier способен оптимизировать любую систему, для непосредственного обучения весов нейросети он будет неэффективен. Зато для подбора архитектуры модели он подходит отлично.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;пример&quot;&gt;Пример&lt;/h2&gt;
+
+&lt;p&gt;Я приведу пример, не связанный с машинным обучением, но хорошо демонстрирующий мощь и простоту алгоритма оптимизации чёрного ящика вроде Vizier. Представим, что у нас есть зашумлённый сигнал, как на графике ниже:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/some-noisy-signal.png&quot; alt=&quot;Зашумлённый сигнал&quot; width=&quot;368&quot; height=&quot;246&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Некоторый зашумлённый сигнал.
+&lt;/p&gt;
+
+&lt;p&gt;Попробуем подобрать аналитическую функцию, описывающую этот сигнал. Мы не знаем заранее, что лучше подойдёт — &lt;a href=&quot;https://en.wikipedia.org/wiki/Normal_distribution&quot;&gt;нормальное (гауссово) распределение&lt;/a&gt; или &lt;a href=&quot;https://en.wikipedia.org/wiki/Laplace_distribution&quot;&gt;распределение Лапласа&lt;/a&gt;, и у каждой из этих функций есть собственные параметры (такие как среднее и дисперсия), которые тоже нужно оценить.&lt;/p&gt;
+
+&lt;p&gt;Как только мы зададим для Vizier метрику оптимизации, он сам найдёт для нас оптимальную функцию.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;постановка-задачи&quot;&gt;Постановка задачи&lt;/h2&gt;
+
+&lt;p&gt;Первый параметр, по которому мы хотим вести поиск, — это тип модели: гауссова или Лапласа:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+    'parameter_id': 'model',
+    'categorical_value_spec' : {
+        'values': [
+            'gaussian',
+            'laplace',
+        ]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Но у каждой модели есть свой набор параметров, определяющих её форму. Назовём их «дочерними параметрами» каждой модели.&lt;/p&gt;
+
+&lt;p&gt;Для распределения Гаусса это среднее &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt; (\(\mu\)) и стандартное отклонение &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sigma&lt;/code&gt; (\(\sigma\)).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/normal-distribution.png&quot; alt=&quot;Распределение Гаусса с параметрами mu и sigma.&quot; width=&quot;720&quot; height=&quot;460&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Распределение Гаусса с параметрами mu и sigma. Источник: https://commons.wikimedia.org/wiki/File:Normal_Distribution_PDF.svg
+&lt;/p&gt;
+
+&lt;p&gt;Для распределения Лапласа — обозначения зависят от литературы — обычно используют параметр сдвига (среднее) &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt; (\(\mu\)) и параметр масштаба &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&lt;/code&gt; (\(b\)).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/laplace-distribution.png&quot; alt=&quot;Распределение Лапласа с параметрами mu и b.&quot; width=&quot;800&quot; height=&quot;600&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Распределение Лапласа с параметрами mu и b. Источник: https://commons.wikimedia.org/wiki/File:Laplace_pdf_mod.svg
+&lt;/p&gt;
+
+&lt;p&gt;Чтобы не путать его со средним распределения Гаусса, назовём параметр сдвига распределения Лапласа &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; вместо &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Когда мы подгоняем гауссову модель, нам не нужно, чтобы Vizier пытался оценивать параметры распределения Лапласа, и наоборот. К счастью, мы можем указать параметры каждого распределения как дочерние, или условные, параметры родительского параметра &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;model&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'conditional_parameter_specs': [
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;mu&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 10.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['gaussian']
+    }
+},
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;sigma&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 1e-1,
+        &quot;max_value&quot;: 5.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['gaussian']
+    }
+},
+    {
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;a&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 10.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['laplace']
+    }
+},
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;b&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 1e-1,
+        &quot;max_value&quot;: 5.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['laplace']
+    }
+}]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Наконец, нужно задать метрику, которую будет оптимизировать Vizier. Я хочу подобрать функцию как можно ближе к сигналу и буду оценивать качество подгонки по сумме квадратов остатков между аналитической функцией и данными. Чем меньше это число, тем лучше совпадение. Всё, что нужно сообщить Vizier, — что эту метрику следует минимизировать:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;metric_ssr = {
+    'metric_id': 'sum_of_squared_residuals',
+    'goal': 'MINIMIZE',
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Собираем всё вместе — и получаем описание задачи:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;study = {
+    'display_name': 'vizier_experiment',
+    'study_spec' :
+    {
+        'parameters': [param_model],
+        'metrics': [metric_ssr]
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Обратите внимание, что Vizier ничего не знает о смысле самих параметров. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gaussian&lt;/code&gt; и &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Laplace&lt;/code&gt; для него — просто значения категориального параметра, и никакого дополнительного значения они для него не имеют. Смысл им придаёт мой собственный код, который их использует, но для Vizier этот код находится внутри чёрного ящика. Я опускаю его ради краткости, но вы можете посмотреть весь код по ссылке в конце статьи.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;поиск&quot;&gt;Поиск&lt;/h2&gt;
+
+&lt;p&gt;На каждом испытании (trial) Vizier предлагает набор параметров для проверки. Мы сами оцениваем, насколько хорошо эти параметры работают, вычисляем метрику (сумму квадратов остатков) и возвращаем результат обратно в Vizier. На основе этого результата Vizier формирует следующий набор параметров.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/vizier-trials.png&quot; alt=&quot;Vizier предлагает параметры для испытаний&quot; width=&quot;1280&quot; height=&quot;281&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Vizier предлагает параметры для испытаний.
+&lt;/p&gt;
+
+&lt;p&gt;Заметьте, что Vizier предлагает параметры Гаусса только тогда, когда выбрана модель &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gaussian&lt;/code&gt;, и аналогично для модели &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;laplace&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Как именно Vizier ищет оптимальные параметры? Он умеет выполнять поиск по сетке или случайный поиск, но настоящая магия кроется в комбинации более продвинутых алгоритмов: бандитов на гауссовских процессах, поиска по линейным комбинациям и их вариаций.&lt;/p&gt;
+
+&lt;p&gt;В GCP можно смотреть вот такие наглядные графики прогресса Vizier:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/study-progress-table.webp&quot; alt=&quot;Таблица исследования с динамикой метрики и параметрами каждого испытания&quot; width=&quot;1600&quot; height=&quot;1071&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Таблица исследования, показывающая изменение оптимизируемой метрики и параметры каждого испытания.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/parallel-chart.webp&quot; alt=&quot;График параллельных координат с проверенными наборами параметров и значением метрики&quot; width=&quot;1600&quot; height=&quot;726&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+График параллельных координат, показывающий проверенные наборы параметров и итоговое значение метрики.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;оптимальное-приближение&quot;&gt;Оптимальное приближение&lt;/h2&gt;
+
+&lt;p&gt;Мы видим, что распределение Лапласа с небольшим перевесом побеждает нормальное распределение:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/optimal-parallel-chart.webp&quot; alt=&quot;Увеличенный график параллельных координат с лучшими испытаниями&quot; width=&quot;1600&quot; height=&quot;550&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Увеличенный график параллельных координат для лучших испытаний, минимизирующих сумму квадратов остатков. Распределение Лапласа даёт более точное приближение, чем распределение Гаусса.
+&lt;/p&gt;
+
+&lt;p&gt;Запросим у Vizier параметры лучшего испытания и построим график:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/noisy-signal-fit.png&quot; alt=&quot;Оптимальное приближение зашумлённого сигнала&quot; width=&quot;543&quot; height=&quot;289&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Оптимальные параметры, подобранные к зашумлённому сигналу.
+&lt;/p&gt;
+
+&lt;p&gt;Почти идеальное попадание! Найденные Vizier параметры очень близки к тем, которыми я сгенерировал исходный сигнал до добавления шума: распределение Лапласа с \(a=5\) и \(b=2\).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/original-laplace-signal.png&quot; alt=&quot;Исходный сигнал Лапласа&quot; width=&quot;862&quot; height=&quot;728&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Исходный сигнал распределения Лапласа.
+&lt;/p&gt;
+
+&lt;p&gt;Для сравнения: у распределения Гаусса была бы более округлая вершина и более тонкие хвосты.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/gaussian-signal.png&quot; alt=&quot;Гауссов сигнал&quot; width=&quot;878&quot; height=&quot;726&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Распределение Гаусса для сравнения.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;как-это-воспроизвести&quot;&gt;Как это воспроизвести?&lt;/h2&gt;
+
+&lt;p&gt;Ноутбук Colab, который я использовал при подготовке этой статьи, можно найти &lt;a href=&quot;https://github.com/skzv/vizier-blog-post/blob/main/vizier_blog_post.ipynb&quot;&gt;здесь&lt;/a&gt;. Я пользовался API Vertex AI Vizier в GCP, потому что он строит удобные графики вроде тех, что приведены в этом посте, но имейте в виду, что это может обойтись дорого ($1 за испытание). Кроме того, Vizier доступен в виде open-source проекта &lt;a href=&quot;https://github.com/google/vizier&quot;&gt;здесь&lt;/a&gt;.&lt;/p&gt;
+</description>
+          <pubDate>Wed, 22 Feb 2023 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/ru/blackbox-optimization-with-vizier</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/blackbox-optimization-with-vizier</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Оценка стоимости опционов методом Монте-Карло</title>
+          <description>&lt;p&gt;&lt;em&gt;Опционное казино&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Предсказание движения цен на акции — заманчивая задача, сулящая богатство. К сожалению, стабильно и надёжно угадывать будущие цены акций принято считать невозможным. Однако мы можем использовать математические модели, чтобы делать полезные оценки, управлять рисками и зарабатывать &lt;em&gt;вероятностно&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;геометрическое-броуновское-движение&quot;&gt;Геометрическое броуновское движение&lt;/h2&gt;
+
+&lt;p&gt;Одна из таких широко используемых моделей — геометрическое броуновское движение (&lt;a href=&quot;https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.04%3A_Geometric_Brownian_Motion&quot;&gt;1&lt;/a&gt;, &lt;a href=&quot;http://www.columbia.edu/~ks20/FE-Notes/4700-07-Notes-GBM.pdf&quot;&gt;2&lt;/a&gt;): именно на неё опирается знаменитая &lt;a href=&quot;https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model&quot;&gt;формула оценки опционов Блэка — Шоулза&lt;/a&gt;. Она имеет вид&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ S(t) = S(0)\exp{((\mu-\frac{\sigma^2}{2})t + \sigma B(t))} \tag{0}  \label{eq:gbm}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;где \(B(t)\) — стандартное броуновское движение. Если принять \(S(0)\) за начальную цену акции, \(\mu\) — за среднюю &lt;a href=&quot;https://en.wikipedia.org/wiki/Rate_of_return#Logarithmic_or_continuously_compounded_return&quot;&gt;непрерывно начисляемую доходность&lt;/a&gt;, а \(\sigma\) — за &lt;a href=&quot;https://en.wikipedia.org/wiki/Volatility_(finance)&quot;&gt;волатильность&lt;/a&gt; акции, то мы сможем генерировать весьма реалистичные траектории цены.&lt;/p&gt;
+
+&lt;div id=&quot;plot-0&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;\(\mu\)&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;mean-slider&quot; type=&quot;range&quot; min=&quot;-2.5&quot; max=&quot;1&quot; value=&quot;0&quot; step=&quot;0.01&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;mean-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;\(\sigma\)&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;sigma-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; value=&quot;0&quot; step=&quot;0.01&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;sigma-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate0()&quot;&gt;Перегенерировать&lt;/button&gt;&lt;/p&gt;
+
+&lt;div style=&quot;display:none&quot; id=&quot;mean-0&quot;&gt;0&lt;/div&gt;
+&lt;div style=&quot;display:none&quot; id=&quot;sigma-0&quot;&gt;0&lt;/div&gt;
+&lt;div style=&quot;display:none&quot; id=&quot;option-mean-0&quot;&gt;0&lt;/div&gt;
+
+&lt;p&gt;Что же это означает и почему эта модель хорошо подходит для описания цен на ценные бумаги?&lt;/p&gt;
+
+&lt;h3 id=&quot;логарифмические-доходности&quot;&gt;Логарифмические доходности&lt;/h3&gt;
+
+&lt;p&gt;В количественных финансах принято работать с непрерывно начисляемыми (логарифмическими) доходностями, а не с простыми. Это значит, что вместо простой доходности между торговыми периодами \(1 + R_t = \frac{S(t)}{S(t-1)}\) мы рассматриваем логарифмическую доходность \(r_t = \ln{(1 + R_t)} = \ln{\frac{S(t)}{S(t-1))}}\). У неё есть очень удобное свойство: цену акции можно восстановить, просто сложив логарифмические доходности:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ S(t) = S(0)\exp{(r_1 + r_2 + ... + r_{t-1})} \tag{1}  \label{eq:rr}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Это также удобно тем, что в финансах распространено допущение: логарифмические доходности акции независимы и нормально распределены со средним \(\mu\) и дисперсией \(\sigma^2\). Заметим, что для малых доходностей простые доходности \(R_t\) близки к логарифмическим \(r_t\), поскольку \(r_t = \ln{(1 + R_t)} \approx R_t\), поэтому разница между ними невелика и обе можно приближённо считать нормально распределёнными. Далее, если логарифмические доходности распределены нормально, то сама цена акции распределена &lt;em&gt;логнормально&lt;/em&gt;. Эмпирически это в определённой степени подтверждается, хотя в реальной жизни у распределений доходностей обычно более «толстые хвосты» — то есть редкие экстремальные события случаются чаще, чем предсказывает нормальное распределение. Ниже показаны месячные доходности акций IBM, иллюстрирующие это явление.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/monte-carlo-stocks/IBM-returns.webp&quot; alt=&quot;Месячные доходности акций IBM&quot; width=&quot;1282&quot; height=&quot;1008&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Месячные простые и логарифмические доходности акций IBM с подогнанными нормальными распределениями. На краях распределения наблюдается больше значений, чем предсказывает нормальный закон. Это явление называют «толстыми хвостами» или «избыточным эксцессом». Изображение взято из книги «Analysis of Financial Time Series, 3rd Ed.» (Ruey S. Tsay).
+&lt;/p&gt;
+
+&lt;p&gt;Эта модель хороша ещё и тем, что допускает только положительные цены активов. Цены ценных бумаг, как правило, действительно остаются положительными (хотя в исключительных случаях они могут уходить и в минус — вспомните &lt;a href=&quot;https://assets.weforum.org/editor/kE8TpkO7bzo3dLFWEh9UDvgqRuZPOmURhnh0FfwOVYc.png&quot;&gt;нефтяной обвал 2020 года&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;Итак, нам нужен процесс, который генерирует последовательность нормально распределённых доходностей \(r_t\) — и здесь броуновское движение оказывается естественным выбором.&lt;/p&gt;
+
+&lt;h2 id=&quot;броуновское-движение&quot;&gt;Броуновское движение&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.01%3A_Standard_Brownian_Motion&quot;&gt;Броуновское движение&lt;/a&gt; описывает движение частицы в жидкости или газе. Такая частица «случайно» сталкивается с окружающими молекулами и хаотично перемещается, оставляя шумную, непредсказуемую траекторию. По сути, его можно рассматривать как предельный случай случайного блуждания, когда и интервал времени между шагами, и длина шага стремятся к нулю (с важной оговоркой: если шаг по времени равен \(t\), длина шага должна быть пропорциональна \(\sqrt{t}\) — тогда дисперсия процесса растёт строго пропорционально времени). Представьте, что вы подбрасываете монетку, решая, шагнуть вперёд или назад, а затем устремляете время между шагами к нулю. Вы получите траекторию примерно такого вида:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/monte-carlo-stocks/wiener-process-zoom.png&quot; alt=&quot;Одномерное броуновское движение&quot; width=&quot;800&quot; height=&quot;600&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Одномерное (арифметическое) броуновское движение. Геометрическое броуновское движение — это экспонента от данного процесса. &lt;a target=&quot;_blank&quot; href=&quot;http://creativecommons.org/licenses/by-sa/3.0/&quot; title=&quot;Creative Commons Attribution-Share Alike 3.0&quot;&gt;CC BY-SA 3.0&lt;/a&gt;, &lt;a target=&quot;_blank&quot; href=&quot;https://commons.wikimedia.org/w/index.php?curid=1426987&quot;&gt;Источник&lt;/a&gt;
+&lt;/p&gt;
+
+&lt;p&gt;У броуновского движения есть замечательное свойство: его приращения нормально распределены — ровно то, что нам нужно. Мы можем симулировать броуновский процесс с дискретными шагами, семплируя шаги из нормального распределения (хотя если вас интересует только конечное значение временного ряда, можно брать любое распределение с единичной дисперсией — в силу центральной предельной теоремы сумма случайных величин на длинном горизонте всё равно приблизится к гауссовому распределению).&lt;/p&gt;
+
+&lt;p&gt;Таким образом, броуновское движение даёт нам последовательность нормально распределённых логарифмических доходностей \(r_t\), как требуется в формуле \(\eqref{eq:rr}\):&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ r(t) = (\mu-\frac{\sigma^2}{2})t + \sigma B(t) \tag{2}  \label{eq:bm}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Взяв экспоненту от этого процесса, мы получаем уравнение для моделирования динамики цены акций.&lt;/p&gt;
+
+&lt;p&gt;Особый интерес здесь представляет скорость дрейфа \(\mu - \frac{\sigma^2}{2}\), которая, как следует из названия, заставляет процесс линейно смещаться со временем. С \(\mu\) всё понятно — это средняя непрерывно начисляемая доходность акции, и в отсутствие шума (волатильности) цена акции просто росла бы (или падала) именно с этой скоростью. Но откуда берётся слагаемое \(\frac{\sigma^2}{2}\)? Дело в том, что математическое ожидание логнормально распределённой величины равно \(\exp(\mu + \sigma^2/2)\). Поскольку цена акции распределена &lt;em&gt;логнормально&lt;/em&gt; (тогда как доходности распределены &lt;em&gt;нормально&lt;/em&gt;), а нам нужно, чтобы математическое ожидание цены при непрерывном начислении составляло именно \(S(0)\exp(\mu t)\), приходится ввести поправочный член \(- \frac{\sigma^2}{2}\).&lt;/p&gt;
+
+&lt;p&gt;В пользу выбора броуновского движения есть и философский аргумент. В финансах часто предполагают, что рынки эффективны, а значит, арбитражных возможностей существовать не должно. Следовательно, рынок должен быть непредсказуемым — ведь если кто-то научится его предсказывать, возникнет арбитраж, который мгновенно выкупят. Поэтому случайный шум (чем, по сути, и является броуновское движение) — хороший фундамент для моделирования рынков.&lt;/p&gt;
+
+&lt;h2 id=&quot;оценка-опционов&quot;&gt;Оценка опционов&lt;/h2&gt;
+
+&lt;p&gt;Моделирование методом Монте-Карло — это статистический подход, вдохновлённый казино Монако. Подобно игрокам, доверяющим свою судьбу вероятности, мы отдаём статистический анализ на волю случая. Проведя достаточное число испытаний, можно делать выводы со статистической значимостью.&lt;/p&gt;
+
+&lt;p&gt;Предположим, мы хотим оценить колл-опцион на эту акцию с ценой исполнения (страйком) $105. Какова ожидаемая стоимость опциона на момент экспирации, если цена акции подчиняется геометрическому броуновскому движению? Мы можем оценить её, сгенерировав множество ценовых траекторий, каждая из которых будет отдельным испытанием. Конечная цена акции в каждом испытании связана с внутренней стоимостью опциона формулой \(V = \max(0, S - K)\), где \(S\) — цена акции, а \(K\) — цена страйка. Средняя конечная выплата даёт нам оценку стоимости опциона на дату экспирации, а стандартное отклонение конечных значений показывает, насколько мы уверены в том, что опцион истечёт близко к этой оценке.&lt;/p&gt;
+
+&lt;div id=&quot;plot-1&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate1()&quot;&gt;Перегенерировать&lt;/button&gt;&lt;/p&gt;
+&lt;div id=&quot;mean-1&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;sigma-1&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;option-mean-1&quot;&gt;0&lt;/div&gt;
+
+&lt;p&gt;Мы можем увеличить число испытаний, чтобы повысить статистическую точность оценки. Повторный запуск симуляции (по нажатию кнопки «Перегенерировать») на большом количестве траекторий (ниже) даёт куда меньший разброс между экспериментами, чем на небольшом числе траекторий (выше).&lt;/p&gt;
+
+&lt;div id=&quot;plot-2&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate2()&quot;&gt;Перегенерировать&lt;/button&gt;&lt;/p&gt;
+&lt;div id=&quot;mean-2&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;sigma-2&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;option-mean-2&quot;&gt;0&lt;/div&gt;
+
+&lt;h2 id=&quot;более-сложные-сценарии&quot;&gt;Более сложные сценарии&lt;/h2&gt;
+
+&lt;p&gt;Симуляция конечных значений методом Монте-Карло — довольно простая задача, да и не слишком нужная на практике, поскольку её можно решить аналитически. Настоящая сила метода Монте-Карло раскрывается в сценариях, которые крайне трудно или вообще невозможно решить аналитически. Например, при анализе американского опциона, который можно исполнить в любой момент до экспирации, нам может понадобиться оценить вероятность того, что цена акции превысит страйк в какой-либо момент за время жизни опциона. Для этого достаточно подсчитать, какая доля траекторий пересекает границу цены страйка — что элементарно делается с помощью симуляции Монте-Карло.&lt;/p&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdn.plot.ly/plotly-2.4.2.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js&quot; integrity=&quot;sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; src=&quot;/assets/js/monte-carlo-options.js&quot;&gt;&lt;/script&gt;
+
+</description>
+          <pubDate>Thu, 16 Dec 2021 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/ru/monte-carlo-options-pricing</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/monte-carlo-options-pricing</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Интерактивная демонстрация градиентного спуска</title>
+          <description>&lt;p&gt;&lt;em&gt;Что это за особенный алгоритм?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Градиентный спуск — это алгоритм оптимизации, предназначенный для поиска (локального) минимума функции.&lt;/p&gt;
+
+&lt;h2 id=&quot;зачем-это-нужно&quot;&gt;Зачем это нужно?&lt;/h2&gt;
+
+&lt;p&gt;Предположим, у вас есть некоторая функция \(f(x,y)\). Она может описывать ваши затраты, а \(x\) и \(y\) — параметры, от которых эти затраты зависят. Естественно, вы захотите найти такие значения \(x\) и \(y\), при которых затраты минимальны. Это и есть задача поиска минимума \(f(x,y)\). Например, мы можем захотеть найти минимум функции, график которой изображён ниже:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+f(x,y)=3(1 - x)^2 e^{- x^2 - (y + 1)^2} - 10(\frac{x}{5} - x^3 - y^5) e^{-x^2 - y^2} - \frac{1}{3} e^{-(x+1)^2 - y^2} \tag{0}  \label{eq:cost_func}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;div id=&quot;plot-0&quot;&gt;&lt;/div&gt;
+
+&lt;p&gt;Именно здесь на помощь приходит градиентный спуск.&lt;/p&gt;
+
+&lt;h2 id=&quot;почему-именно-градиентный-спуск&quot;&gt;Почему именно градиентный спуск?&lt;/h2&gt;
+
+&lt;p&gt;Из базового курса математического анализа вы, возможно, помните способ поиска минимума функции: нужно найти первую производную, приравнять её к нулю и решить получившееся уравнение:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+f'(x,y)=0 \tag{1}  \label{eq:first_deriv}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Это даст нам положения экстремумов (максимумов и минимумов) функции. Знак второй производной \(f''(x,y)\) покажет, являются ли эти точки локальными максимумами или минимумами. Однако решить уравнение с первой производной \(\eqref{eq:first_deriv}\) бывает совсем не просто, и часто требуются численные методы. А по мере роста размерности функции потерь — например, \(f(x,y,z,w,q,u,v,...)\) — задача и вовсе становится неподъёмной. Градиентный спуск предлагает эффективную процедуру поиска минимумов, остроумно использующую первую производную.&lt;/p&gt;
+
+&lt;h2 id=&quot;алгоритм-градиентного-спуска&quot;&gt;Алгоритм градиентного спуска&lt;/h2&gt;
+
+&lt;p&gt;Идея градиентного спуска очень интуитивна, и я готов поспорить, что в аналогичной физической ситуации вы пришли бы к тому же алгоритму. Представьте, что вы оказались в густом тумане: видно лишь на пару метров вперёд, но ногами вы чувствуете уклон земли под собой. Ваша цель — как можно быстрее спуститься на дно долины. Вы явно не станете тратить время, идя по ровному участку — и тем более не пойдёте в гору. Чтобы спуститься быстрее, вы оцените уклон в текущей точке и пойдёте в ту сторону, где склон круче всего уходит вниз. Градиент — это, по сути, синоним уклона, поэтому вы выполняете именно градиентный спуск. И наоборот, если бы вы искали вершину холма, вы шли бы в направлении самого крутого подъёма. Это называется градиентным &lt;em&gt;подъёмом&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;градиент&quot;&gt;Градиент&lt;/h2&gt;
+
+&lt;p&gt;Градиент — это, по сути, другое слово для обозначения уклона (наклона). Большинству знаком уклон в одномерном случае. В 1D можно двигаться только вперёд или назад, поэтому наклон задаётся однозначно. Но в пространстве большей размерности — представьте, что вы идёте в поход по горам — крутизна склона зависит от того, в какую сторону вы пойдёте. Как определить уклон в такой точке?&lt;/p&gt;
+
+&lt;p&gt;В векторном анализе используется оператор градиента \(\nabla\) — вектор уклонов (то есть первых частных производных) вдоль каждой координаты.&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\nabla f(x,y)= \begin{bmatrix}
+           \frac{\partial f}{dx} (x,y) \\
+           \frac{\partial f}{dy} (x,y)
+         \end{bmatrix} \tag{2}  \label{eq:gradient}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;На двумерной поверхности, заданной функцией \(f(x,y)\), это наклон вдоль оси \(x\) и наклон вдоль оси \(y\). Уклон в любом произвольном направлении (что важно, ведь мы не обязаны двигаться строго вдоль оси \(x\) или оси \(y\)) находится суммированием соответствующих \(x\)- и \(y\)-составляющих уклона в этом направлении. Иными словами, скалярное произведение вектора направления и градиента даёт уклон в этом направлении.&lt;/p&gt;
+
+&lt;p&gt;Ещё одно замечательное свойство градиента состоит в том, что он указывает направление самого крутого подъёма. Это легко увидеть математически: раз уклон в любом направлении равен скалярному произведению этого направления на градиент, скалярное произведение максимально тогда, когда направление совпадает с самим градиентом!&lt;/p&gt;
+
+&lt;p&gt;Ниже я построил график отрицательного градиента функции \(f(x,y)\) в Mathematica. Он показывает направление наискорейшего спуска в каждой точке поверхности \(f\).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/gradient-descent/gradient.png&quot; alt=&quot;Градиент функции f&quot; width=&quot;360&quot; height=&quot;361&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Градиент функции f, изображённый в виде векторного поля.
+&lt;/p&gt;
+
+&lt;h2 id=&quot;двигаемся-по-самому-крутому-склону-вниз&quot;&gt;Двигаемся по самому крутому склону вниз&lt;/h2&gt;
+
+&lt;p&gt;Ранее мы договорились, что, спускаясь в долину вслепую, вы будете двигаться в направлении самого крутого спуска, чтобы как можно быстрее добраться до дна. Математически вы идёте вниз по долине вдоль антиградиента в каждой точке, поскольку именно он указывает направление наискорейшего убывания. Глядя на изображение выше, легко убедиться, что следование по стрелкам приведёт нас к минимуму (но будьте внимательны — у каждого минимума есть собственная область притяжения! Подробнее об этом чуть ниже).&lt;/p&gt;
+
+&lt;p&gt;Таким образом, мы можем сформулировать простую процедуру. Выглядеть она может примерно так:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Оцените уклон в текущей точке и определите направление наискорейшего спуска.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Сделайте 5 шагов в этом направлении.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Если вы всё ещё спускаетесь, вернитесь к шагу 1. Иначе — вы на дне!&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Возможно, вы спросите, откуда взялись именно 5 шагов. На самом деле это число совершенно произвольно. Но мы можем сделать его параметром нашей процедуры. Назовём его скоростью спуска и обозначим символом \(\alpha\). Чем больше скорость спуска, тем реже нам придётся проверять уклон вокруг. С вычислительной точки зрения это эффективнее — но, как вы скоро увидите, у этого есть подводные камни.&lt;/p&gt;
+
+&lt;p&gt;Можно сделать и ещё одно улучшение. Когда склон вокруг крутой, мы, вероятно, ещё далеко от дна долины. А когда поверхность становится более пологой, можно предположить, что мы уже приближаемся к минимуму. Поэтому логично делать шаги, пропорциональные величине градиента. Обозначим градиент символом \(\bar{g}\) и обновим нашу процедуру градиентного спуска:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Оцените уклон в текущей точке и определите направление наискорейшего спуска.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Сделайте \(\alpha \times \|\bar{g}\|\) шагов в этом направлении.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Если вы всё ещё спускаетесь, вернитесь к шагу 1. Иначе — вы на дне!&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Далее, как понять, что мы всё ещё спускаемся? Один из способов — на каждой итерации проверять, насколько сильно мы опустились. Если высота почти перестала меняться, скорее всего, мы уже практически на дне.&lt;/p&gt;
+
+&lt;p&gt;Математически наша процедура записывается так:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\bar{p}_{n+1} = \bar{p}_n - \alpha \nabla f(x,y) \tag{3}  \label{eq:grad_descent}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;где \(p_n\) — наше положение на \(n\)-й итерации спуска. Попробуйте поэкспериментировать на интерактивной демонстрации ниже. Изменение \(\alpha\) регулирует скорость спуска, а изменение \(X\) и \(Y\) меняет начальную точку на поверхности. Что вы замечаете?&lt;/p&gt;
+
+&lt;div id=&quot;plot-1&quot;&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;X&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;x-slider&quot; type=&quot;range&quot; min=&quot;-3&quot; max=&quot;3&quot; value=&quot;0&quot; step=&quot;0.05&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;x-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;Y&lt;/span&gt;
+    &lt;input class=&quot;slider&quot; id=&quot;y-slider&quot; type=&quot;range&quot; min=&quot;-3&quot; max=&quot;3&quot; value=&quot;0&quot; step=&quot;0.05&quot; /&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;y-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;α&lt;/span&gt;
+    &lt;input class=&quot;slider&quot; id=&quot;alpha-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;0.2&quot; value=&quot;0&quot; step=&quot;0.001&quot; /&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;alpha-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;наблюдения&quot;&gt;Наблюдения&lt;/h2&gt;
+
+&lt;p&gt;Вы наверняка заметили, что градиентный спуск чувствителен к начальному положению. Он притягивает точку к локальному минимуму, который вовсе не обязательно совпадает с глобальным минимумом. Область значений аргументов, из которой градиентный спуск сходится к конкретному минимуму, называется областью притяжения этого минимума.&lt;/p&gt;
+
+&lt;p&gt;Также заметно, что увеличение скорости спуска \(\alpha\) сокращает количество итераций, необходимых для достижения минимума. Но если сделать \(\alpha\) слишком большим, алгоритм начинает «перелетать» через минимум и может вообще разойтись.&lt;/p&gt;
+
+&lt;h2 id=&quot;машинное-обучение&quot;&gt;Машинное обучение&lt;/h2&gt;
+
+&lt;p&gt;Скорее всего, вы слышали о градиентном спуске в контексте машинного обучения. В этой области функция затрат (функция потерь) отражает ошибку модели. Например, это может быть ошибка классификации изображений, а входными параметрами функции потерь выступают веса модели, которые мы настраиваем. Таким образом, градиентный спуск позволяет найти оптимальную конфигурацию весов, минимизирующую ошибку классификации нейронной сети! В машинном обучении у скорости спуска \(\alpha\) есть особое название — &lt;em&gt;скорость обучения&lt;/em&gt; (&lt;em&gt;learning rate&lt;/em&gt;). Возможно, именно этим наш мозг занимался всё это время.&lt;/p&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdn.plot.ly/plotly-2.4.2.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js&quot; integrity=&quot;sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; src=&quot;/assets/js/gradient-descent.js&quot;&gt;&lt;/script&gt;
+
+</description>
+          <pubDate>Sun, 14 Nov 2021 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/ru/gradient-descent</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/gradient-descent</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Конфигуратор Lucid Motors — это видеоигра, стримящаяся прямо в браузер</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Всё становится на свои места, когда понимаешь, что игровые движки — лучшие симуляторы из существующих.
+&lt;/p&gt;
+
+&lt;h2 id=&quot;изящное-решение&quot;&gt;Изящное решение&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.barrons.com/articles/lucid-churchill-merger-ipo-ev-51627308359&quot;&gt;В понедельник Lucid Motors вышла на биржу&lt;/a&gt;, и хотя покупать Lucid в ближайшее время я не собираюсь, из любопытства я зашёл посмотреть на &lt;a href=&quot;https://www.lucidmotors.com/air/configure/&quot;&gt;их конфигуратор автомобиля&lt;/a&gt;. Это настоящее произведение искусства. Он позволяет рассматривать машину и взаимодействовать с ней практически с любого ракурса — и снаружи, и внутри:&lt;/p&gt;
+
+&lt;div style=&quot;width:100%;height:100%;position:relative;padding-bottom:52.344%;&quot;&gt;&lt;iframe src=&quot;https://streamable.com/e/cudr66&quot; title=&quot;Embedded video&quot; loading=&quot;lazy&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; allowfullscreen=&quot;&quot; style=&quot;width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p class=&quot;caption video-caption&quot;&gt;Конфигуратор Lucid для их флагманской модели — Lucid Air Dream.&lt;/p&gt;
+
+&lt;p&gt;Можно примерять разные цвета и отделку, открывать и закрывать двери и даже убирать экран центральной консоли. Мост Золотые Ворота на фоне отражается в зеркальных лужах. Конфигуратор воспроизводит мельчайшие детали автомобиля, вплоть до подсветки под дверными ручками, которая загорается при взаимодействии с ними. У меня сложилось настолько живое представление о машине, что кажется, смотреть на неё вживую уже и не обязательно.&lt;/p&gt;
+
+&lt;p&gt;Так как же Lucid удалось реализовать нечто подобное? Разве можно ожидать, что браузер обычного пользователя отрендерит такую сцену в реальном времени со всеми отражениями? Скорее всего, нет. Секрет в том, что сцена рендерится с помощью Unity — игрового движка, запущенного в облаке, который перекладывает тяжёлую вычислительную нагрузку на сервер Amazon, — а затем передаётся обратно в ваш браузер по WebRTC, протоколу потоковой передачи видео.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;3d-модель&quot;&gt;3D-модель&lt;/h2&gt;
+
+&lt;p&gt;Сначала я наивно предположил, что модель рендерится прямо в моём браузере с помощью современной &lt;a href=&quot;https://en.wikipedia.org/wiki/WebGL&quot;&gt;библиотеки WebGL&lt;/a&gt; (API для аппаратно-ускоренного рендеринга 2D- и 3D-графики в браузере). А раз модель рендерится локально, она должна где-то лежать у меня в оперативной памяти, а значит, её можно вытащить и открыть в 3D-редакторе. В частности, мне хотелось проверить, можно ли убрать солнцезащитные козырьки, которые прерывают почти сплошную стеклянную крышу — у Tesla Model X это получилось сделать бесшовно, и я не понимал, почему Lucid не пошла тем же путём.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/lucid-air-sun-visors.webp&quot; alt=&quot;Солнцезащитные козырьки Lucid Air, прерывающие стеклянную крышу&quot; width=&quot;1600&quot; height=&quot;994&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Солнцезащитные козырьки Lucid Air, прерывающие стеклянную крышу.
+&lt;/p&gt;
+
+&lt;p&gt;Так что я полез в код. Проведя какое-то время в инструментах разработчика, пролистывая тысячи строк минифицированного JavaScript, записывая и изучая сетевые запросы между ноутбуком и серверами Lucid, я осознал, что ответ всё это время буквально печатался прямо в консоли:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/zlbolt-webrtc.png&quot; alt=&quot;Конфигуратор — это видеопоток&quot; width=&quot;691&quot; height=&quot;156&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Конфигуратор — это WebRTC-поток.
+&lt;/p&gt;
+
+&lt;p&gt;Никакая локальная 3D-модель не рендерится. То, что я вижу, — это видео.&lt;/p&gt;
+
+&lt;p&gt;Что же происходит на самом деле? Сначала конфигуратор загружается в 2D-режиме — это прерывистая панорама из отдельных кадров, создающая иллюзию вращения в 3D. Именно так устроено большинство интерактивных 3D-витрин в интернете. Ниже можно увидеть, как это выглядит:&lt;/p&gt;
+
+&lt;div style=&quot;width:100%;height:100%;position:relative;padding-bottom:52.344%;&quot;&gt;&lt;iframe src=&quot;https://streamable.com/e/ptjitc&quot; title=&quot;Embedded video&quot; loading=&quot;lazy&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; allowfullscreen=&quot;&quot; style=&quot;width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p class=&quot;caption video-caption&quot;&gt;Прерывистый 3D-вид, составленный из серии 2D-изображений.&lt;/p&gt;
+
+&lt;p&gt;Затем клиент измеряет мою пропускную способность и задержку соединения, и если канал достаточно быстрый для потокового видео в реальном времени, сессия переключается в полноценный 3D-режим:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/latency-test.png&quot; alt=&quot;Тест задержки&quot; width=&quot;755&quot; height=&quot;25&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;
+&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/bandwidth-test.png&quot; alt=&quot;Тест пропускной способности&quot; width=&quot;706&quot; height=&quot;21&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Если позволяет пропускная способность, сессия переключается в 3D.
+&lt;/p&gt;
+
+&lt;p&gt;При этом устанавливается WebRTC-соединение. &lt;a href=&quot;https://en.wikipedia.org/wiki/WebRTC&quot;&gt;WebRTC&lt;/a&gt; — это протокол пиринговой потоковой передачи данных. Сцена рендерится на удалённом сервере и стримится по WebRTC прямо в мой браузер.&lt;/p&gt;
+
+&lt;p&gt;Изучение содержимого запроса &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_token&lt;/code&gt; раскрывает ещё несколько интересных подробностей их механики.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/get-token-request.png&quot; alt=&quot;Содержимое запроса get_token&quot; width=&quot;829&quot; height=&quot;402&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Содержимое запроса get_token.
+&lt;/p&gt;
+
+&lt;p&gt;Первый выделенный блок показывает, что для проверки скорости соединения клиент частично скачивает &lt;a href=&quot;https://libzl.zlthunder.net/bandwidth-test-img.png&quot;&gt;тестовое изображение весом 25 МБ&lt;/a&gt; и замеряет, сколько времени это занимает. Вот эта картинка, если вам любопытно (не волнуйтесь, я сжал её в 10 раз).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/bandwidth-test-image.webp&quot; alt=&quot;Тестовое изображение для проверки скорости канала&quot; width=&quot;895&quot; height=&quot;1263&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+К автомобилям это отношения не имеет, но скорость канала проверяет отлично.
+&lt;/p&gt;
+
+&lt;p&gt;Кстати, &lt;a href=&quot;https://www.gimp.org/tutorials/Floating_Logo/Plasma.jpg&quot;&gt;эта картинка очень похожа на эффект плагина Plasma из GIMP&lt;/a&gt;. Она грузится довольно медленно: поскольку изображение напоминает шум, оно практически не поддаётся сжатию.&lt;/p&gt;
+
+&lt;p&gt;Если открыть &lt;a href=&quot;chrome://webrtc-internals/&quot;&gt;chrome://webrtc-internals/&lt;/a&gt;, можно увидеть подробности WebRTC-соединения, по которому 3D-сцена стримится в браузер.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/lucid-webrtc.png&quot; alt=&quot;Информация о WebRTC&quot; width=&quot;851&quot; height=&quot;399&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Инструменты отладки Chrome показывают подробную информацию о WebRTC-соединении.
+&lt;/p&gt;
+
+&lt;p&gt;К этому моменту вы могли заметить, что ни один из этих URL не принадлежит домену Lucid — все они находятся под &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;zlthunder&lt;/code&gt;. Кто же это такие?&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;zerolight&quot;&gt;ZeroLight&lt;/h2&gt;
+
+&lt;p&gt;Поиск в сети по &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;zlthunder&lt;/code&gt; приводит к компании &lt;a href=&quot;https://zerolight.com/&quot;&gt;ZeroLight&lt;/a&gt;. На сайте указано, что они специализируются на облачной 3D-визуализации для автомобильной индустрии. Теперь всё складывается!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/zero-light.webp&quot; alt=&quot;ZeroLight&quot; width=&quot;1600&quot; height=&quot;640&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Специалисты по облачной 3D-визуализации.
+&lt;/p&gt;
+
+&lt;p&gt;Вскоре после этого я наткнулся на &lt;a href=&quot;https://unity3d.com/showcase/case-stories/zerolight&quot;&gt;статью в блоге Unity&lt;/a&gt; (знаменитого игрового движка), где рассказывается, как ZeroLight использовала движок для создания реалистичного виртуального шоурума с оптимизированной физикой, отражениями и всем остальным.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/unity-zero-light.webp&quot; alt=&quot;Unity и ZeroLight&quot; width=&quot;1203&quot; height=&quot;658&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Видеоигры проделали огромный путь.
+&lt;/p&gt;
+
+&lt;p&gt;Теперь вся картина сложилась воедино. Когда я открываю сайт, сначала загружается 2D-конфигуратор. Если интернет-соединение справляется, меня подключают к экземпляру Unity — 3D-движка для видеоигр — запущенному на сервере AWS. Сервер принимает движения моей мыши, вращая и приближая камеру, рендерит картинку в облаке и стримит её обратно мне в браузер.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;звучит-дороговато&quot;&gt;Звучит дороговато&lt;/h2&gt;
+
+&lt;p&gt;Представьте, что на сайт зашла 1000 пользователей одновременно: вам нужна 1000 экземпляров игрового движка с аппаратным ускорением, которые принимают ввод и стримят обратно огромные объёмы видео в реальном времени — точно так же, как работают облачные игровые сервисы вроде Stadia и GeForce Now. Но, похоже, в компании это прекрасно понимают: ради экономии вас отключают после 60 секунд бездействия:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/inactivity-downgrade.png&quot; alt=&quot;Понижение качества при бездействии&quot; width=&quot;524&quot; height=&quot;60&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Переключение обратно при бездействии наверняка экономит кучу денег.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;да-и-что-такое-игровой-движок&quot;&gt;Да и что такое игровой движок?&lt;/h2&gt;
+
+&lt;p&gt;На первый взгляд такое применение игрового движка может показаться неожиданным, но по сути игровой движок — это просто хорошо оптимизированный симулятор. Зрелые движки вроде Unity вобрали в себя десятилетия исследований в области моделирования света и других физических явлений. Поэтому если вам нужно смоделировать реальность — пусть даже это просто автосалон, — игровой движок оказывается идеальным готовым инструментом, применимым в самых разных сферах.&lt;/p&gt;
+
+&lt;p&gt;Оглядываясь назад, я, наверное, мог бы просто погуглить, как работает конфигуратор Lucid, и быстро наткнуться на ту самую статью Unity. Но реверс-инжиниринг позволил заглянуть гораздо глубже — в задачи, решения и внутреннее устройство их продукта, а сам я почувствовал себя настоящим детективом. Больше всего меня позабавила невероятная технологическая сложность современного мира: сверхреалистичный физический симулятор крутится на удалённом сервере в дата-центре Amazon, получает команды от моего компьютера и со скоростью света стримит обратно видеопоток — и всё это ради того, чтобы я мог покрутить конфигуратор автомобиля. А ведь чтобы долететь до Луны, нам хватило калькулятора!&lt;/p&gt;
+</description>
+          <pubDate>Wed, 28 Jul 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ru/lucid-configurator-is-a-streaming-video-game</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/lucid-configurator-is-a-streaming-video-game</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Возвращая цвет и жизнь чёрно-белым фотографиям</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Машинное обучение позволяет легко раскрашивать чёрно-белые фотографии — но какой ценой?
+&lt;/p&gt;
+
+&lt;h2 id=&quot;другая-вселенная&quot;&gt;Другая вселенная&lt;/h2&gt;
+
+&lt;p&gt;Хотя цветная фотография технически существует уже более ста лет (&lt;a href=&quot;https://www.loc.gov/pictures/related/?fi=name&amp;amp;q=Prokudin-Gorski%20%2C%20Serge%20%20Mikha%20lovich%2C%201863-1944&quot;&gt;Сергей Прокудин-Горский и Пётр Веденисов, пионеры цветной фотографии, путешествовали по Российской империи и запечатлели её в полном цвете&lt;/a&gt;), большая часть XX века осталась задокументированной в чёрно-белом виде. Даже ближе к концу столетия далеко не везде была роскошь цветной плёнки: мой отец проявлял собственные чёрно-белые снимки вплоть до 1980–90-х годов в Советской Украине, а в то время как американцы снимали войну во Вьетнаме на цветную плёнку, взгляд со стороны Северного Вьетнама почти полностью остался чёрно-белым.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/boy-sim-river.jpeg&quot; alt=&quot;Мальчик у реки Сим&quot; width=&quot;900&quot; height=&quot;648&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Мальчик у реки Сим — одна из самых ранних цветных фотографий Российской империи. Такой результат достигался съёмкой одной и той же сцены через разные цветовые фильтры. Предоставлено Библиотекой Конгресса США.
+&lt;/p&gt;
+
+&lt;p&gt;Кто-то скажет, что в чёрно-белых кадрах есть своя особая магия, и это, возможно, правда. Но лично меня чёрно-белая хроника отчуждает от происходящего. Она ощущается бесконечно далёкой во времени. Мы все ассоциируем чёрно-белое изображение с прошлым — недаром в кино чёрно-белые сцены стали привычным приёмом для показа воспоминаний. И для человека, воспринимающего реальность в полном цвете, чёрно-белые кадры сложно прочувствовать по-настоящему. Мне трудно поставить себя на место людей в кадре, потому что в моём сознании они существуют в какой-то другой, чёрно-белой вселенной. Но стоит раскрасить те же снимки — и внезапно всё становится живее, достовернее, осязаемее. Сразу становится ясно, что на этих кадрах — та же самая Земля и такие же люди, как мы с вами.&lt;/p&gt;
+
+&lt;p&gt;Поэтому когда мой отец недавно начал оцифровывать наш семейный фотоархив — ведь бумажные фотографии со временем выцветают или могут навсегда пропасть вместе с историями, воспоминаниями и наследием, которые они хранят — у меня возникло желание ещё и раскрасить их. Мне хотелось прочувствовать эти снимки глубже и дать родным возможность вспомнить близких, которых уже нет рядом, а также моменты собственной молодости.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;колоризация-фотографий-с-помощью-ии&quot;&gt;Колоризация фотографий с помощью ИИ&lt;/h2&gt;
+
+&lt;p&gt;Восстановление цвета можно делать вручную, но это долгий и кропотливый труд. Модели машинного обучения предлагают быстрый и недорогой способ раскрасить снимки, хотя у них есть свои ограничения, о которых мы поговорим позже. Я не стал обучать собственную модель: другие исследователи уже вложили тысячи часов в разработку и обучение моделей именно для этой задачи, и я нашёл готовое решение, которое отлично справляется.&lt;/p&gt;
+
+&lt;p&gt;Я воспользовался &lt;a href=&quot;https://deepai.org/machine-learning-model/colorizer&quot;&gt;Image Colorization API от DeepAI&lt;/a&gt;. Похоже, что в продакшене у DeepAI работает вариант модели DeOldify, код которой доступен в &lt;a href=&quot;https://github.com/jantic/DeOldify&quot;&gt;этом репозитории на GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Насколько я знаю, API DeepAI не позволяет настраивать параметры модели, но вы можете делать это, если запустите её локально из указанного выше репозитория или в &lt;a href=&quot;https://colab.research.google.com/github/jantic/DeOldify/blob/master/ImageColorizerColabStable.ipynb&quot;&gt;Google Colab&lt;/a&gt;. &lt;a href=&quot;https://www.myheritage.com/incolor&quot;&gt;MyHeritage&lt;/a&gt; также предоставляет этот API как сервис с возможностью подкручивать параметры.&lt;/p&gt;
+
+&lt;p&gt;Я написал небольшой скрипт для пакетной колоризации целых папок. Он проходит по всем фотографиям в директории, отправляет их в Image Colorization API от DeepAI и сохраняет результат в отдельную папку (пропуская изображения, которые уже были раскрашены). Если вам это пригодится, просто задайте свой API-ключ DeepAI в переменной окружения и запустите &lt;a href=&quot;https://github.com/skzv/colorize-photos&quot;&gt;этот скрипт&lt;/a&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;DL_API_KEY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;lt;your-deep-ai-key&amp;gt;
+python3 main.py /path/to/images
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;мои-семейные-фотографии&quot;&gt;Мои семейные фотографии&lt;/h2&gt;
+
+&lt;p&gt;Вот несколько примеров работы модели на наших семейных снимках.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/mama-and-vova.webp&quot; alt=&quot;Мама с Вовой&quot; width=&quot;1600&quot; height=&quot;1232&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Моя мама держит на руках моего брата, начало 90-х, Херсон, Украина. Из архива семьи Кузнецовых.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/mama-and-vova-colorized.webp&quot; alt=&quot;Мама с Вовой в цвете&quot; width=&quot;800&quot; height=&quot;616&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Теперь в цвете.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/my-grandmother-allarkadina.jpg&quot; alt=&quot;Бабушка Алларкадина&quot; width=&quot;523&quot; height=&quot;801&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Моя бабушка, Алларкадина, предположительно в 50-е годы, по дороге в университет. Она окончила несколько институтов по специальности «электротехника» и сделала успешную карьеру морского инженера-электрика.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/my-grandmother-alla-colourised.webp&quot; alt=&quot;Бабушка Алларкадина в цвете&quot; width=&quot;522&quot; height=&quot;800&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+В цвете.
+&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Выглядит так красиво и живо.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Одних этих слов моего отца, когда он увидел обновлённые цветные снимки, уже хватило, чтобы вся затея стоила того.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;фотографии-времён-войны-во-вьетнаме&quot;&gt;Фотографии времён войны во Вьетнаме&lt;/h2&gt;
+
+&lt;p&gt;Через пару недель после того, как я сделал скрипт пакетной колоризации для семейных фото, на вершину Hacker News попал пост под названием &lt;a href=&quot;https://news.ycombinator.com/item?id=27283624&quot;&gt;«Война во Вьетнаме со стороны Северного Вьетнама»&lt;/a&gt;. Это показалось отличной возможностью применить скрипт и показать историческую хронику под новым углом. Так же, как фильм &lt;a href=&quot;https://www.imdb.com/title/tt7905466/&quot;&gt;«Они никогда не станут старше»&lt;/a&gt; сделал ужасы Первой мировой войны живыми и осязаемыми, я хотел сделать более живыми людей и сцены со стороны Северного Вьетнама.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-agent-orange.jpeg&quot; alt=&quot;Джунгли после применения «Агента Оранж»&quot; width=&quot;1600&quot; height=&quot;1179&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Джунгли, уничтоженные дефолиантом «Агент Оранж».
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-agent-orange-colourised.webp&quot; alt=&quot;Джунгли после применения «Агента Оранж» в цвете&quot; width=&quot;800&quot; height=&quot;590&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+В цвете.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-downed-aircraft.jpeg&quot; alt=&quot;Местные жители осматривают сбитый американский самолёт&quot; width=&quot;1600&quot; height=&quot;1111&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Местные жители осматривают сбитый американский самолёт, которым управлял лейтенант Stephen Owen Musselman. Пилот не выжил — война это ад.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-downed-aircraft-colourised.webp&quot; alt=&quot;Местные жители осматривают сбитый американский самолёт в цвете&quot; width=&quot;800&quot; height=&quot;556&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+В цвете.
+&lt;/p&gt;
+
+&lt;p&gt;Все оригинальные чёрно-белые фотографии можно посмотреть &lt;a href=&quot;https://rarehistoricalphotos.com/vietnam-war-images-from-vietnamese-photographers/&quot;&gt;здесь&lt;/a&gt;, а раскрашенные версии — &lt;a href=&quot;https://imgur.com/a/aJbpMjf&quot;&gt;здесь&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;реакция-на-hacker-news&quot;&gt;Реакция на Hacker News&lt;/h2&gt;
+
+&lt;p&gt;Мою работу встретили и с похвалой,&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/praise.webp&quot; alt=&quot;Похвала&quot; width=&quot;624&quot; height=&quot;934&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;и с осуждением,&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/contempt.png&quot; alt=&quot;Осуждение&quot; width=&quot;546&quot; height=&quot;286&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+Жаль, что комментарий пометили как [flagged], потому что в нём была интересная мысль. В нём было написано что-то вроде «Пожалуйста, не делайте этого».
+&lt;/p&gt;
+
+&lt;p&gt;но главное — она вызвала множество очень интересных обсуждений.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/discussion.webp&quot; alt=&quot;Обсуждение&quot; width=&quot;654&quot; height=&quot;946&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Полную ветку обсуждения, начавшуюся с этих раскрашенных фотографий, можно прочитать &lt;a href=&quot;https://news.ycombinator.com/item?id=27284795&quot;&gt;здесь&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;ограничения&quot;&gt;Ограничения&lt;/h2&gt;
+
+&lt;p&gt;В этом обсуждении мне особенно запомнились два момента. Во-первых, оно напомнило об ограничениях ИИ.&lt;/p&gt;
+
+&lt;p&gt;Например, если прогнать через модель старую фотографию строящегося моста Золотые Ворота, она раскрасит мост в белый цвет. Справедливости ради, это не совсем ошибка — на раннем этапе строительства мост действительно был белым, но к моменту съёмки его уже покрыли красной грунтовкой (согласно источнику в &lt;a href=&quot;https://github.com/jantic/DeOldify&quot;&gt;репозитории DeOldify&lt;/a&gt;). Таким образом, хотя в обучающих данных наверняка были снимки строящегося моста Золотые Ворота и модель узнала его, она не смогла определить дату снимка и понять, что на тот момент мост уже был покрыт красной грунтовкой.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/golden-gate.webp&quot; alt=&quot;Белый мост Золотые Ворота?&quot; width=&quot;1200&quot; height=&quot;472&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+Белый мост Золотые Ворота? Он действительно был белым — но не в момент, когда был сделан этот снимок.
+&lt;/p&gt;
+
+&lt;p&gt;Некоторые сцены просто неоднозначны. Например, по признакам на следующем фото модель не может отличить поле от асфальта и ошибочно красит асфальт в зелёный цвет, тогда как человек-колорист наверняка разобрался бы правильно.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/a-celebration-colourised.webp&quot; alt=&quot;Празднование&quot; width=&quot;800&quot; height=&quot;522&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+Модель не понимает, что под ногами асфальт, а не трава.
+&lt;/p&gt;
+
+&lt;p&gt;Ещё одно любопытное наблюдение: одежде часто не хватает характерных оттенков, текстур, признаков или контекста, чтобы её можно было точно раскрасить. Модель склонна красить одежду в фиолетовый — если только у неё нет ярко выраженных особенностей или подсказок контекста. Вероятно, когда модель не уверена в цвете одежды, фиолетовый оказывается консервативной ставкой где-то посередине неоднозначного цветового пространства, которая минимизирует функцию потерь при обучении.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-divers-colourised.webp&quot; alt=&quot;Вьетнамские водолазы — все в фиолетовом?&quot; width=&quot;796&quot; height=&quot;800&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+Не думаю, что в прошлом люди носили фиолетовую одежду так часто, как считает эта модель.
+&lt;/p&gt;
+
+&lt;p&gt;И правда, мой отец попросил поправить цвет нескольких предметов на семейных снимках. К сожалению, я не стал углубляться в эту задачу, да и мне не сразу было понятно, как именно это сделать. Но, как заметил один из комментаторов, даже когда цвета неточны, они всё равно оживляют фотографии.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;этические-соображения&quot;&gt;Этические соображения&lt;/h2&gt;
+
+&lt;p&gt;Теперь, когда часть ограничений понятна, самое время задуматься об этических последствиях колоризации с помощью ИИ. Это был второй аспект дискуссии, который сильно зацепил меня. Когда я брался за проект, об этике я вообще не думал, но обратная связь заставила меня поразмышлять — и я за это благодарен.&lt;/p&gt;
+
+&lt;p&gt;Главный этический вопрос — это правда. Как и в спорах вокруг дипфейков, которые путают нас в том, что реально, искусственное раскрашивание способно искажать наше восприятие истории. ИИ принимает решения о цветах прошлого, которые вовсе не обязаны быть точными. Например, если мы сохраним и распространим белую версию моста Золотые Ворота, созданную алгоритмом, зрители увидят исторически недостоверный образ моста. Конечно, чёрно-белый снимок тоже не передаёт реальных цветов. Но проблема, вероятно, в том, что глядя на чёрно-белую фотографию, человек понимает: прошлое не было таким, — а глядя на цветную, легко поверить, что именно так всё и выглядело на самом деле.&lt;/p&gt;
+
+&lt;p&gt;Некоторые заходят настолько далеко, что называют такую ретушь переписыванием истории — и порой это действительно выглядит именно так. Взять хотя бы этот недавний случай:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Камбоджа призвала американскую медиагруппу Vice удалить статью с недавно раскрашенными фотографиями жертв красных кхмеров, заявив, что снимки оскорбляют память погибших, поскольку на некоторых из них жертвам добавили улыбки.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p class=&quot;caption&quot; style=&quot;margin-top:-25px;&quot;&gt;&lt;a href=&quot;https://www.aljazeera.com/news/2021/4/11/cambodia-condemns-vice-for-altered-khmer-rouge-images&quot;&gt;Источник&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;И это абсолютно справедливая претензия. Похоже, модель переобучилась — вероятно, в её обучающей выборке преобладали улыбающиеся лица. В итоге она изменила лица жертв так, чтобы они больше походили на обучающие данные, дорисовав улыбки. Это показательный пример того, к чему приводит неаккуратное применение ИИ.&lt;/p&gt;
+
+&lt;p&gt;Компания &lt;a href=&quot;https://www.myheritage.com/incolor&quot;&gt;MyHeritage&lt;/a&gt;, предлагающая сервис восстановления цвета на базе той же модели DeOldify, которой пользовался я, пытается найти компромисс, ставя водяной знак на все обработанные изображения. Мне кажется, их аргумент весьма убедителен:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Мы отличаем колоризованные фотографии от изначально снятых в цвете с помощью специального тиснёного значка палитры в левом нижнем углу раскрашенных снимков. Несмотря на высокую реалистичность, цвета на таких фотографиях смоделированы автоматическими алгоритмами и могут не совпадать с настоящими цветами оригинала. Значок палитры появляется на всех колоризованных снимках, чтобы пользователи могли отличать их от фотографий с подлинными цветами. Мы надеемся, что эту ответственную практику перенимут и другие, кто использует технологии колоризации фото. На фотографиях, прошедших восстановление цвета, такого значка нет, поскольку эти цвета подлинные.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;В моём случае родные знали, что я раскрасил наши фотографии искусственно, и сами видели, что цвета не во всём точны. Но даже с неточными цветами эти фотографии — а вместе с ними люди и моменты прошлого — снова ожили. Так же, как в старших классах, когда я был волонтёром в доме престарелых и через Google Street View смог перенести пожилого жильца к дому его детства в Дрездене, где он не был 50 лет, сейчас с помощью ИИ я смог перенести нашу семью в добрые времена многолетней давности. Технологии — это инструмент, и я благодарен, что живу в эпоху, когда возможно такое волшебство.&lt;/p&gt;
+</description>
+          <pubDate>Sat, 12 Jun 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ru/bringing-colour-and-life-to-black-and-white-photos</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/bringing-colour-and-life-to-black-and-white-photos</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Арбитраж как задача поиска кратчайшего пути</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Объяснение арбитража и разбор эффективного алгоритма для поиска безрисковых мгновенных арбитражных возможностей.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Кто не любит зарабатывать деньги?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;А что, если задачу заработка денег можно свести к задаче поиска кратчайшего пути? По крайней мере одним конкретным способом это действительно возможно — используя арбитражные возможности.&lt;/p&gt;
+
+&lt;h2 id=&quot;что-такое-арбитраж&quot;&gt;Что такое арбитраж?&lt;/h2&gt;
+
+&lt;p&gt;&lt;em&gt;Арбитраж&lt;/em&gt; — это покупка или продажа активов на разных рынках (или в разных формах) ради извлечения прибыли из разницы цен. А людей, которые этим занимаются, называют &lt;em&gt;арбитражёрами&lt;/em&gt; — звучит весьма солидно.&lt;/p&gt;
+
+&lt;p&gt;Начнём с простого примера. Представим, что Пол, Питер и Боб живут в деревне, где обмениваются морковью, картофелем и салатом. Боб меняет картофель на морковь, Питер — салат на картофель, а Пол — салат на морковь.&lt;/p&gt;
+
+&lt;p&gt;При этом Боб отдаёт 2 картофелины за 1 морковь, Питер отдаёт 1 кочан салата за 2 картофелины, а Пол отдаёт 2 моркови за 1 кочан салата. Если рассматривать каждого жителя как отдельный рынок для соответствующей пары товаров, как будут выглядеть обменные курсы?&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Рынок&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Обменный курс&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Боб (картофель за морковь)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2 картофелины / морковь&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Питер (салат за картофель)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;1 салат / 2 картофелины = 0,5 салата / картофелину&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Пол (морковь за салат)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2 моркови / салат&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Обменные курсы товаров в нашей деревне.
+&lt;/p&gt;
+
+&lt;p&gt;Чувствуете, где здесь возможность?&lt;/p&gt;
+
+&lt;p&gt;Будучи предприимчивым человеком, вы можете ей воспользоваться. Имея на руках 5 морковок, вы подходите к Бобу и меняете их на 10 картофелин по курсу, на который он согласен.&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+5 \text{ carrots} \times 2 \space \frac{\text{potatoes}}{\text{carrots}} = 10 \text{ potatoes} \tag{1} \label{eq:arb_example}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Затем вы идёте с картофелем к Питеру, зная, что он обменяет его на 5 кочанов салата. После этого вы подходите с 5 кочанами салата к Полу, и он отдаёт вам 10 морковок.&lt;/p&gt;
+
+&lt;p&gt;Всего за несколько удачных сделок вы удвоили свой запас моркови. Вы превратили 5 морковок в 10, воспользовавшись арбитражной возможностью.&lt;/p&gt;
+
+&lt;p&gt;Со временем в деревне могут появиться более сложные рынки, где торгуют уже не только Боб, Питер и Пол. Вместо этого в деревне возникнут рынки моркови/салата, салата/картофеля и картофеля/моркови, где текущие курсы будут постоянно меняться в зависимости от того, по каким ценам люди готовы совершать сделки.&lt;/p&gt;
+
+&lt;p&gt;Но принцип арбитража останется прежним. И пользоваться этой возможностью можно до тех пор, пока у торговцев, предлагающих обмен по таким курсам, не закончатся морковь, салат и картофель. Арбитражная возможность эксплуатируется до тех пор, пока рынок не придёт в равновесие.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;арбитраж-в-современном-мире&quot;&gt;Арбитраж в современном мире&lt;/h2&gt;
+
+&lt;p&gt;Когда речь заходит о современных рынках, вы вряд ли представляете себе торговлю морковью, картофелем и салатом. Если вас интересует валютный рынок (форекс), вы скорее подумаете о долларах, фунтах и иенах. В этом случае мы имеем дело с рынками доллар/фунт, фунт/иена и иена/доллар, на каждом из которых действует множество участников. Далее мы будем использовать именно эти валюты в качестве примера, но помните, что те же принципы применимы к любым торгуемым активам.&lt;/p&gt;
+
+&lt;p&gt;Предположим, что в некоторый момент времени обменные курсы таковы:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Рынок&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Обменный курс&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;фунт (£) / доллар ($)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0,8 фунта / доллар&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;иена (¥) / фунт (£)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;100 иен / фунт&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;доллар ($) / иена (¥)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0,013 доллара / иену&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Пример обменных курсов на валютном рынке.
+&lt;/p&gt;
+
+&lt;p&gt;Если история с Бобом, Питером и Полом, торгующими морковью, салатом и картофелем, вас чему-то научила, вы сразу заметите здесь возможность.&lt;/p&gt;
+
+&lt;p&gt;Обменяв $1 на фунты, вы получите £0,8. Обменяв их на иены, вы получите ¥80. Затем вы идёте на рынок иена/доллар и меняете иены обратно на доллары… и у вас уже $1,04!&lt;/p&gt;
+
+&lt;p&gt;Однако действовать нужно быстро, пока другой арбитражёр не опередил вас. Такие возможности существуют лишь временно — пока не исчерпается ликвидность и курсы не выровняются.&lt;/p&gt;
+
+&lt;p&gt;Внимательный читатель заметит, что в этом примере мы не учли комиссии биржи. Разумеется, на практике их необходимо принимать во внимание, чтобы понять, действительно ли арбитражная возможность принесёт прибыль.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;действовать-быстро&quot;&gt;Действовать быстро&lt;/h2&gt;
+
+&lt;p&gt;Надеюсь, теперь интуитивно понятно, почему скорость играет решающую роль. Обменные курсы меняются стремительно, а объём актива, доступный по конкретному курсу, ограничен.&lt;/p&gt;
+
+&lt;p&gt;В наших примерах всё было довольно просто, но на практике арбитражные цепочки могут состоять из множества сделок и становиться невероятно запутанными. У нас было 3 сделки, а что если понадобится 10? И как быстро можно найти выгодную цепочку в сети из 20 валют, где для каждой пары существует свой рынок?&lt;/p&gt;
+
+&lt;p&gt;Очевидный ответ — использовать компьютер. Но нам нужен эффективный алгоритм, иначе кто-то другой успеет забрать прибыль раньше нас.&lt;/p&gt;
+
+&lt;p&gt;Чтобы этого добиться, можно опереться на несколько изящных идей из математики и информатики.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;рынки-как-граф&quot;&gt;Рынки как граф&lt;/h2&gt;
+
+&lt;p&gt;Графы — важнейшая структура данных, нашедшая применение в огромном числе областей. С помощью графов можно моделировать самые разные природные и социальные системы, и оказывается, что финансовые рынки — одна из них.&lt;/p&gt;
+
+&lt;p&gt;В нашем случае давайте представим каждую валюту в виде вершины (узла). Переход от одной вершины к другой соответствует обмену одной валюты на другую.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-white.png&quot; alt=&quot;Упрощённый граф валют&quot; width=&quot;448&quot; height=&quot;283&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Упрощённый граф — на самом деле в каждом направлении должно быть своё отдельное ребро.
+&lt;/p&gt;
+
+&lt;p&gt;Таким образом, движение по ребру между вершинами должно изменять сумму валюты в соответствии с обменным курсом.&lt;/p&gt;
+
+&lt;p&gt;Это значит, что переход из вершины доллара в вершину фунта соответствует умножению на 0,8 фунта/доллар. Давайте назначим обменный курс весом каждого ребра.&lt;/p&gt;
+
+&lt;p&gt;Обратите внимание, что обменные курсы в противоположных направлениях будут &lt;em&gt;приблизительно&lt;/em&gt; обратными друг другу. То есть если курс перевода долларов в фунты равен 0,8 фунта/доллар, то курс в обратном направлении составит 1 / (0,8 фунта/доллар) = 1,25 доллара/фунт. Для нас это означает, что покупку и продажу на каждом рынке нужно обязательно моделировать как два отдельных направленных ребра с разными весами.&lt;/p&gt;
+
+&lt;p&gt;Причина, по которой курсы в обоих направлениях лишь &lt;em&gt;приблизительно&lt;/em&gt; обратны друг другу, заключается в небольшой разнице между ценой покупки и ценой продажи валюты — так называемом спреде (buy-sell spread). Например, если в данный момент вы можете купить фунты по 0,8 фунта/доллар (текущая цена, по которой вам готовы продать), но продать фунты за доллары можете по курсу 0,82 фунта/доллар (или 1,22 доллара/фунт — цена, по которой у вас готовы купить), модель графа будет выглядеть так (остальные курсы опущены для простоты):&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-w-exchange-rates-white.png&quot; alt=&quot;Граф валют с обменными курсами&quot; width=&quot;451&quot; height=&quot;378&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Последовательность сделок моделируется перемещением по рёбрам этого графа, а итоговый результат сделок вычисляется путём &lt;strong&gt;&lt;em&gt;перемножения&lt;/em&gt;&lt;/strong&gt; весов рёбер по пути следования.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;как-увидеть-возможность&quot;&gt;Как увидеть возможность&lt;/h2&gt;
+
+&lt;p&gt;Теперь, когда у нас есть рабочая модель, что именно мы ищем в графе, чтобы обнаружить арбитражную возможность?&lt;/p&gt;
+
+&lt;p&gt;Чтобы определить, прибыльна ли серия сделок, нам нужна единая мера прибыльности. Другими словами, если мы начинаем серию сделок в долларах, то и закончить её должны в долларах. Сравнив конечную сумму долларов с начальной, мы сразу поймём, оказалась ли цепочка прибыльной.&lt;/p&gt;
+
+&lt;p&gt;В терминах графа это означает, что наш маршрут должен заканчиваться в той же вершине, из которой он начался. В нашем примере мы стартовали в вершине доллара и вернулись в вершину доллара. В теории графов такой маршрут называется циклом. Значит, мы ищем цикл — но какой именно цикл будет прибыльным?&lt;/p&gt;
+
+&lt;p&gt;Заметим, что при перемножении весов вдоль рёбер мы преобразуем единицы измерения итогового обменного курса.&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+a \space \frac{\cancel{£}}{$} \times b \space \frac{¥}{\cancel{£}} = ab \space \frac{¥}{$}  \tag{2} \label{eq:units_of_exchange_rate}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Однако когда мы возвращаемся в исходную вершину, величина становится безразмерной. Из обменного курса она превращается в коэффициент доходности! Обход цикла в графе и вычисление произведения обменных курсов вдоль него соответствует расчёту коэффициента возврата, который мы получим после завершения всей цепочки сделок.&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+a \space \frac{\cancel{£}}{\cancel{$}} \times b \space \frac{\cancel{¥}}{\cancel{£}} \times c \space \frac{\cancel{$}}{\cancel{¥}} = abc \space \text{[dimensionless]}  \tag{3} \label{eq:unitless_exchange}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Если рынок идеально эффективен, наш коэффициент доходности \(abc\) будет равен 1, поскольку курсы уже выровнялись. Если же произведение весов больше 1 — скажем, 1,02, — значит, найденная арбитражная возможность принесёт нам 2% прибыли.&lt;/p&gt;
+
+&lt;p&gt;Обобщая на произвольное число сделок, арбитражная возможность описывается следующим неравенством:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\prod_i^n{e_i} = e_ie_2...e_n &amp;gt; 1  \tag{4} \label{eq:arbitrage_return}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;где \(e_i\) — обменный курс \(i\)-й сделки из \(n\) сделок.&lt;/p&gt;
+
+&lt;p&gt;Таким образом, нам нужен алгоритм, который найдёт в графе рынков цикл, где произведение весов рёбер больше 1. Можно попытаться изобрести такой алгоритм с нуля, но в информатике — как и в жизни в целом — полезно сводить новые задачи к тем, которые мы уже умеем решать.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;алгоритм-беллмана--форда&quot;&gt;Алгоритм Беллмана — Форда&lt;/h2&gt;
+
+&lt;p&gt;Поиск кратчайшего пути — классическая и фундаментальная задача информатики с множеством применений. Самый очевидный пример (если провести аналогию между графом и картой) — поиск кратчайшего маршрута на карте. Но при должной изобретательности к задаче поиска кратчайшего пути можно свести и множество других задач. Сейчас я покажу вам, что поиск арбитражных возможностей — одна из них.&lt;/p&gt;
+
+&lt;p&gt;Сначала уточним, что такое задача поиска кратчайшего пути. Даны две вершины графа \(s\) и \(t\); кратчайшим путём называется путь, минимизирующий &lt;em&gt;сумму&lt;/em&gt; весов рёбер. Иными словами, мы идём от \(s\) к \(t\), складывая веса рёбер на пути, и путь с минимальной суммой — это кратчайший путь, то есть путь с наименьшей стоимостью.&lt;/p&gt;
+
+&lt;p&gt;Далее полезно понимать, что задачи о кратчайшем пути бывают разных классов. В самом очевидном случае — например, для маршрута на карте — веса рёбер всегда положительны. Без машины времени проезд по дороге никак не уменьшит ваше время в пути. В графе с исключительно положительными весами знаменитый алгоритм Дейкстры находит кратчайшие пути до всех вершин графа.&lt;/p&gt;
+
+&lt;p&gt;Однако ничто не мешает графу иметь отрицательные веса рёбер. В таком случае переход по ребру с отрицательным весом уменьшает общую стоимость пути. Но если в графе есть &lt;em&gt;цикл&lt;/em&gt; с отрицательным суммарным весом, то по этому &lt;em&gt;циклу&lt;/em&gt; можно ходить бесконечно, каждый раз уменьшая общую стоимость пути, и длина кратчайшего пути устремится к \(-\infty\). Поэтому алгоритму поиска кратчайшего пути крайне важно уметь обнаруживать циклы отрицательного веса — иначе он навсегда застрянет, накручивая круги по такому циклу.&lt;/p&gt;
+
+&lt;p&gt;Алгоритм Беллмана — Форда — это именно такой алгоритм. Будучи более общим вариантом алгоритма Дейкстры, он умеет работать с отрицательными весами. Для этого он выявляет &lt;em&gt;циклы отрицательного веса&lt;/em&gt; — циклы в графе, вдоль которых &lt;em&gt;сумма&lt;/em&gt; весов даёт отрицательное число.&lt;/p&gt;
+
+&lt;p&gt;Но как алгоритм, находящий циклы с &lt;strong&gt;&lt;em&gt;суммой&lt;/em&gt;&lt;/strong&gt; весов меньше 0, поможет нам, если нам нужно найти цикл с &lt;strong&gt;&lt;em&gt;произведением&lt;/em&gt;&lt;/strong&gt; весов больше 1?&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;логарифм-спешит-на-помощь&quot;&gt;Логарифм спешит на помощь&lt;/h2&gt;
+
+&lt;p&gt;Следующая ключевая идея состоит в том, что произведение можно превратить в сумму с помощью логарифма благодаря известному тождеству:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\log{ab} = \log{a} + \log{b}  \tag{5} \label{eq:log_product_identity}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Тем самым мы можем свести задачу поиска цикла с &lt;em&gt;произведением&lt;/em&gt; больше 1 к задаче поиска цикла с &lt;em&gt;суммой&lt;/em&gt; больше 0! Для этого достаточно взять логарифм каждого обменного курса и использовать его в качестве веса ребра.&lt;/p&gt;
+
+&lt;p&gt;Проверим это, прологарифмировав обе части нашего неравенства. Взятие логарифма от левой части превращает вычисление произведения в вычисление суммы:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\log{\prod_i^n{e_i}} = \log{e_ie_2...e_n} = \log{e_1} + ... + \log{e_n} = \sum_i^n{\log{e_i}} \tag{6} 
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Логарифм от правой части просто превращает 1 в 0:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{\log{e_i}} &amp;gt; \log{1} \rightarrow \sum_i^n{\log{e_i}} &amp;gt; 0 \tag{7}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Мы уже почти у цели. Последний шаг, чтобы свести задачу к той, которую решает известный алгоритм, — умножить вес каждого ребра на −1. Это превращает поиск цикла положительного веса в поиск цикла отрицательного веса:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{-\log{e_i}} &amp;lt; 0 \tag{8}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;А это алгоритм Беллмана — Форда как раз и умеет делать! Построив такой граф и запустив на нём алгоритм Беллмана — Форда, мы быстро и эффективно найдём арбитражные возможности, ведь мы свели задачу арбитража к задаче поиска кратчайшего пути — &lt;em&gt;бесконечно короткого пути&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/neg-log-currency-graph-white.png&quot; alt=&quot;Граф валют с отрицательными логарифмами курсов&quot; width=&quot;448&quot; height=&quot;283&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Нам нужно найти цикл отрицательного веса, где веса равны отрицательному логарифму обменных курсов.
+&lt;/p&gt;
+
+&lt;p&gt;Оглядываясь назад, становится очевидно, что между циклом отрицательного веса (который уменьшает стоимость пути при каждом обходе) и арбитражной возможностью (которая приносит прибыль при каждом обходе) должна существовать прямая связь. Ключевой шаг — преобразовать задачу поиска произведения больше 1 в поиск суммы меньше 0, применив −log к весам рёбер.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;проверим-на-примере&quot;&gt;Проверим на примере&lt;/h2&gt;
+
+&lt;p&gt;Давайте прогоним этот алгоритм на наших обменных курсах и посмотрим, обнаружит ли он арбитражную возможность. Применив −log к обменным курсам, получим:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Рынок&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;−log(Обменный курс)&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;фунт (£) / доллар ($)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0,223&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;иена (¥) / фунт (£)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;−4,605&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;доллар ($) / иена (¥)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;4,343&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Суммируя по сделкам, видим, что неравенство выполняется — &lt;em&gt;мы нашли цикл отрицательного веса&lt;/em&gt;!&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{-\log{e_i}} = 0.223 - 4.605 + 4.343 = -0.039 \label{eq:neg_log_exchange_rate_example} \tag{9}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Мы можем обратить логарифмирование, чтобы восстановить произведение и вычислить доходность:&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\prod_i^n{e_i} &amp;amp;= \exp{\sum_i^n{-\log{e_i}}} \\
+\prod_i^n{e_i} &amp;amp;= \exp(0.039) = 1.04 \tag{10}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Это в точности те самые 4% прибыли, которые мы получили ранее.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;в-реальном-мире&quot;&gt;В реальном мире&lt;/h2&gt;
+
+&lt;p&gt;Поскольку арбитражная возможность соответствует циклу отрицательного веса, может показаться, что по такому циклу можно ходить вечно и заработать бесконечное количество денег. Конечно, на деле всё не так.&lt;/p&gt;
+
+&lt;p&gt;Ликвидность — то есть объём, доступный для сделок до того, как цена заметно изменится, — для любой арбитражной возможности ограничена и мгновенно выкупается алгоритмическими трейдерами, которые в гонке друг с другом выжимают максимум из современных вычислительных технологий и законов физики.&lt;/p&gt;
+
+&lt;p&gt;Тем не менее надеюсь, что это упражнение по применению теории графов и известного алгоритма поиска кратчайшего пути к финансовой задаче — и к заработку денег — показалось вам таким же увлекательным, как и мне.&lt;/p&gt;
+</description>
+          <pubDate>Sun, 25 Apr 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ru/arbitrage-as-a-shortest-path-problem</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ru/arbitrage-as-a-shortest-path-problem</guid>
+        </item>
+      
+    
+  </channel>
+</rss>
+

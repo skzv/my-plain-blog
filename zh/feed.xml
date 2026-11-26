@@ -1,0 +1,1995 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sasha Kuznetsov 的博客</title>
+    <description>Sasha Kuznetsov 在机器学习、计算机视觉、量化金融与软件工程领域的实验记录与技术解析，包含交互式演示与个人项目。</description>
+    <link>https://blog.skz.dev/zh/</link>
+    <atom:link href="https://blog.skz.dev/zh/feed.xml" rel="self" type="application/rss+xml" />
+    <language>zh-CN</language>
+    
+      
+        <item>
+          <title>intuitivepapers.ai：交互式 AI 论文解读</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    我们能否把晦涩密集的机器学习论文，全自动转化为经过核验的交互式解读文章？
+&lt;/p&gt;
+
+&lt;p&gt;读机器学习论文常常慢得让人抓狂。一篇论文通常会把篇幅集中在自己的新点子上，默认你脑子里已经装好了前面五六个前置概念；结果我往往有一半时间都在顺着参考文献链条一路倒推老论文，折腾半天才终于看懂眼前这篇在说什么。&lt;/p&gt;
+
+&lt;p&gt;如今最省事的捷径，就是把 PDF 直接扔给大语言模型让它帮忙讲一遍。我经常这么干，用来快速摸清大意确实不错，但大模型在微妙细节上出错的频率高得惊人——公式里一个写反的正负号、某步推导究竟是精确等价还是近似、到底在更新哪个变量，只要错了一处，整个算法的含义就南辕北辙了。而且如果你本来就对这篇论文不熟，面对一段听起来头头是道的解释，几乎根本察觉不到里面藏着错漏。&lt;/p&gt;
+
+&lt;p&gt;我真正想要的解读，是能把直觉和数学公式揉在一起讲透，而且配上能亲手把玩的交互式图表。几年前我做那个&lt;a href=&quot;/zh/gradient-descent&quot;&gt;交互式梯度下降演示&lt;/a&gt;时，就深切体会过交互式演示的威力——亲手拖一拖滑块，亲眼看着算法因为步长太大而震荡发散或者稳稳收敛，那种顿悟是盯着静态公式一辈子也换不来的。&lt;/p&gt;
+
+&lt;h2 id=&quot;从-diffusionblocks-起步&quot;&gt;从 DiffusionBlocks 起步&lt;/h2&gt;
+
+&lt;p&gt;一开始，我和 Claude 一起为 Sakana AI 的 DiffusionBlocks 论文做了第一篇&lt;a href=&quot;https://intuitivepapers.ai/diffusionblocks/&quot;&gt;交互式解读&lt;/a&gt;。前前后后来回打磨了大约一周才达到满意的水准，其中大量时间都花在了把每一个公式逐一对照原始文献（例如 EDM 论文）和作者官方的 GitHub 代码仓库进行核验上。&lt;/p&gt;
+
+&lt;p&gt;就在核验过程中，我们竟然揪出了论文本身印刷的一个真实符号错误：论文定义了 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Δσ = σ_prev - σ_next &amp;gt; 0&lt;/code&gt;，却在公式 (4) 的欧拉更新步里写成了 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(z - D)&lt;/code&gt;，这样一来更新方向反而是在&lt;em&gt;远离&lt;/em&gt;去噪器的预测结果。把他们的公式 (1) 离散化推导出来明明应该是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(D - z)&lt;/code&gt;；果不其然，翻看作者的官方代码（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;model.py&lt;/code&gt;）后证实，实际代码实现用的正是修正后的符号。普通的大模型摘要只会照搬论文里印错的公式，而我多半永远也不会发现这个问题。&lt;/p&gt;
+
+&lt;p&gt;这件事让我动了心思：这整整一周的精雕细琢，究竟有多少环节可以自动化？我能不能搭一条流水线，自动拉取论文原文、对照一手文献和官方代码校验前置数学知识、编写交互式图表，并在发布前自我审查初稿？&lt;/p&gt;
+
+&lt;p&gt;最终诞生的项目就是 &lt;a href=&quot;https://intuitivepapers.ai/&quot;&gt;intuitivepapers.ai&lt;/a&gt;。上线之初它收录了二十篇论文解读——涵盖 Attention、BERT、GAN、VAE、CLIP、PPO、Mamba 和 Adam 等经典与前沿工作——此后随着流水线按定时任务持续运转，站内的解读文章已经突破了 150 篇。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/home.webp&quot; alt=&quot;intuitivepapers.ai 首页展示交互式机器学习论文解读&quot; width=&quot;1280&quot; height=&quot;820&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+intuitivepapers.ai 网站首页。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/library.webp&quot; alt=&quot;首批二十篇 AI 论文解读的文库页面与图表预览&quot; width=&quot;1280&quot; height=&quot;2621&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+最初的二十篇论文解读库。每张卡片都会实时渲染对应文章里的一幅交互图表预览。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;一篇论文解读长什么样&quot;&gt;一篇论文解读长什么样&lt;/h2&gt;
+
+&lt;p&gt;每一页解读都从最基础的前置知识出发，严格按照依赖顺序层层递进，直到引出论文的核心思想。在桌面端，我把左侧边栏叫做「概念塔（Concept Tower）」，它会清晰勾勒出整条知识依赖链，让你一眼看清各个概念如何层层堆叠；文中穿插的简短代码块则把抽象的数学记号直接对应回真实运行的代码。&lt;/p&gt;
+
+&lt;p&gt;我最喜欢的部分当属交互式图表。举个例子，PPO 算法使用裁剪目标函数（Clipped Objective）来防止策略更新单步迈得太大。在下面这张图里，你可以拖动概率比（Probability Ratio）并翻转优势函数（Advantage）的正负号，亲眼观察目标函数究竟在什么位置变平、梯度归零。动手玩十秒钟，比干瞪着那个 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;min&lt;/code&gt; 表达式发呆更快让你彻底悟透裁剪逻辑。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/ppo-figure.png&quot; alt=&quot;展示概率比与优势函数的交互式 PPO 裁剪目标函数图表&quot; width=&quot;1280&quot; height=&quot;820&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+通过拖动概率比并切换优势函数符号，直观探索 PPO 的裁剪目标函数。
+&lt;/p&gt;
+
+&lt;p&gt;整套界面也会自动适配手机屏幕——毕竟我自己就经常在手机上读论文：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/mobile-ppo.png&quot; alt=&quot;手机端带内联交互图表的 PPO 论文解读页面&quot; width=&quot;400&quot; height=&quot;840&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:520px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+手机上的 PPO 解读页面，同样的交互图表完整内嵌其中。
+&lt;/p&gt;
+
+&lt;p&gt;另一个例子是 CLIP，它同时训练图像编码器和文本编码器，将匹配的图文对拉近。下面这个交互式相似度矩阵会计算一个批次里每张图像与每条文本描述的得分——高亮的对角线代表正样本对，训练时会被不断拉近；对角线之外的全是不匹配的负样本，会被推远。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/clip-grid.png&quot; alt=&quot;对比图像与匹配及不匹配文本描述的 CLIP 相似度矩阵&quot; width=&quot;664&quot; height=&quot;593&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+CLIP 的图文相似度矩阵。彼此匹配的图文对排布在对角线上。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;自动化流水线如何运作&quot;&gt;自动化流水线如何运作&lt;/h2&gt;
+
+&lt;p&gt;如果只靠一句「帮我解释这篇论文」的提示词，得到的恰恰是我最想避开的那种浮于表面的摘要。为了获得更可靠的输出，我把生成过程拆成了一条多阶段流水线，在初稿和上线部署之间设下了层层自动质检关卡。&lt;/p&gt;
+
+&lt;p&gt;首先，为了避免模型凭记忆胡乱改写公式，流水线会直接拉取论文的 arXiv HTML 渲染版本（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arxiv.org/html/&amp;lt;id&amp;gt;&lt;/code&gt;），并用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pandoc&lt;/code&gt; 将其中的 MathML 转换为 LaTeX，确保论文里的所有公式与数值都被一字不差地提取出来。&lt;/p&gt;
+
+&lt;p&gt;接着，流水线会对照一手文献核验所有前置概念——逐一核对定义、正负号和记号约定；一旦论文正文在某个细节上表述含糊，它就会去翻看作者的官方代码仓库，并在页面底部的溯源面板（Provenance Panel）里精确标出对应的文件名和行号。所有经过核实的材料会汇总成一份「已核验参考卡片」，后续撰稿阶段严格基于这张参考卡片展开，而不是直接对着原始论文凭空发挥。&lt;/p&gt;
+
+&lt;p&gt;拿到参考卡片后，流水线会直接在原生 HTML5 Canvas 上手写定制的交互式图表（不依赖第三方图表库），再按知识依赖顺序撰写全文，将每个公式配上具体的数值演算示例和简短伪代码。&lt;/p&gt;
+
+&lt;p&gt;在任何页面上线之前，初稿都必须通过「确定性检查 + 模型评审员」的组合考验：&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;一轮零成本的确定性检查会扫描行文中常见的「AI 味」措辞，校验 KaTeX 语法，验证移动端窄屏版公式与桌面端公式在数学上严格等价且不会撑爆手机屏幕，还会把每幅交互图在桌面端和移动端的所有滑块、按钮状态遍历一遍，捕捉重叠或被裁切的文字标签。&lt;/li&gt;
+  &lt;li&gt;随后，多位独立评审模型分别从对照原文的准确性、表达清晰度、行文口吻、图表质量以及实际渲染截图等维度进行审稿。&lt;/li&gt;
+  &lt;li&gt;确认为真实问题的意见会交给修复环节处理，重新构建站点，之后只重跑之前未通过的检查项，最多迭代几轮。如果到最后依然存在未通过的检查，流水线会遵循「故障关闭（fail closed）」原则，转而提交一个草稿 PR，绝不自动发布。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;整条流水线通过 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;launchd&lt;/code&gt; 定时任务，每天在我桌子底下的那台 Mac mini 上自动运行。每天清晨，它会从队列中挑出得票最高的一篇论文（融合了精选候选清单与读者提交的论文），如果中途撞上模型的配额限制，会自动等待额度重置并断点续跑，等构建和审稿关卡全部绿灯通过后，再自动部署上线。&lt;/p&gt;
+
+&lt;p&gt;下面就是 Mamba 解读中一幅用 Canvas 绘制的定制示意图，拆解了一个 Mamba 模块的内部构成。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/mamba-block-fig.jpeg&quot; alt=&quot;展示 Mamba 模块内部结构的示意图&quot; width=&quot;1280&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+为 Mamba 论文解读专门在 Canvas 上绘制的 Mamba 模块拆解图。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;写在最后&quot;&gt;写在最后&lt;/h2&gt;
+
+&lt;p&gt;这个项目最初只是因为我想彻底吃透一篇论文，结果演变成了一场「看看自动化核验究竟能走多远」的实验。比对一手文献、翻阅作者源码、遍历图表交互状态，确实能拦截掉大量隐蔽的错误，但这绝不意味着产出就万无一失了。复杂的交互式图表在没有人工肉眼把关的情况下依然最容易翻车，偶尔也会有别扭的解释或边缘情况的 Bug 漏网。&lt;/p&gt;
+
+&lt;p&gt;为了弥补这一点，每个页面底部都放了一个反馈框。读者提交的纠错不仅会用来修正当前页面，还会反哺流水线的规则库，让未来的解读避开同类错误。&lt;/p&gt;
+
+&lt;p&gt;如果你手头正有一篇一直想好好啃下来的机器学习论文，不妨去 &lt;a href=&quot;https://intuitivepapers.ai/&quot;&gt;intuitivepapers.ai&lt;/a&gt; 逛逛。你可以在队列里提交想看的论文或给已有候选点赞；如果在哪篇解读里发现了错误，也请一定通过底部的反馈框告诉我，好让我及时修好它。&lt;/p&gt;
+</description>
+          <pubDate>Fri, 05 Jun 2026 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/zh/intuitivepapers-ai-interactive-paper-explainers</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/intuitivepapers-ai-interactive-paper-explainers</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>ccmux：跨设备管理 AI 编程智能体</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    我和朋友一起打造的一款 tmux 会话管理工具，用来跨设备追踪 AI 编程智能体，还能直接在手机上操作它们。
+&lt;/p&gt;
+
+&lt;p&gt;我平时经常在 Mac mini 和笔记本电脑上同时跑十个左右的 AI 编程智能体。用 tmux 让这些会话在后台持续运行本身并不难，真正让人头疼的是管理它们——你得记清每个任务当初是在哪台机器上启动的，还得不停 SSH 上去查看 Claude 到底是在努力干活，还是早就在一个 yes/no 确认提示上干等了一小时；更别提离开电脑桌后，根本没什么顺手的办法去回复它。&lt;/p&gt;
+
+&lt;p&gt;我真正想要的体验是：在 Mac mini 上启动一个会话，然后直接离开；等智能体需要人工输入时，手机收到推送通知，顺手在手机上回复；过一会儿回到笔记本前，无需敲一长串 ssh 和 tmux 命令，就能无缝接管同一个会话。&lt;/p&gt;
+
+&lt;p&gt;于是，我和 Daniel Mandragona、Mike Choi 一起开发了 &lt;a href=&quot;https://ccmux.ai/&quot;&gt;ccmux&lt;/a&gt;——一款面向 AI 编程智能体的跨设备 tmux 会话管理器。下面我来拆解它的工作原理、各个组件的协作方式，以及我们为移动端打造的使用体验。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/hero-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/hero.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    展示跨项目编程智能体会话的 ccmux 终端界面
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ccmux 快速一览：四个项目中同时运行着五个智能体会话。
+&lt;/p&gt;
+
+&lt;h2 id=&quot;仪表盘&quot;&gt;仪表盘&lt;/h2&gt;
+
+&lt;p&gt;打开 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux&lt;/code&gt; 后，你会看到一张统一列表，汇集了你所有机器上正在运行的全部编程智能体会话，并根据各自状态用不同颜色标出——活跃中（正在生成输出）、空闲，或是等待你的输入。界面右侧是一个 Devices 面板，列出局域网/组网中的其他设备，下方还有一个用量面板，用于追踪 Claude 的 5 小时配额，让你随时看清自己离额度上限还有多远。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/dashboard-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/dashboard.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    显示会话状态、已连接设备与 Claude 用量的 ccmux 仪表盘
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+主仪表盘。会话列表按状态着色，右侧显示已连接的设备与 Claude 配额用量。
+&lt;/p&gt;
+
+&lt;p&gt;想进入某个会话，只需选中它并按下 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Enter&lt;/code&gt;，就会直接附着（attach）到该智能体的 tmux 会话中。处理完毕后，按 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ctrl-b d&lt;/code&gt; 即可脱离会话并回到仪表盘，而智能体则继续留在启动它的那台机器上运行。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/attach-detach-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/attach-detach.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    附着到 tmux 会话并返回 ccmux 仪表盘
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+按 Enter 附着到会话，再按 Ctrl-b d 脱离并返回仪表盘。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;底层工作原理&quot;&gt;底层工作原理&lt;/h2&gt;
+
+&lt;p&gt;我们希望始终把 tmux 本身作为真正的「单一事实来源」（Source of Truth），而不是把会话困在某个自研封装层里。就算你哪天不再使用 ccmux，每一个正在运行的智能体依然是原汁原味的普通 tmux 会话，随时可以手动 attach 上去。&lt;/p&gt;
+
+&lt;p&gt;每台机器上都运行着两个 Go 二进制程序：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux&lt;/code&gt; 是你直接交互的终端界面（TUI），基于 &lt;a href=&quot;https://charm.sh/&quot;&gt;Charm&lt;/a&gt; 的 Bubble Tea 技术栈构建。&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; 是一个轻量级后台守护进程，每隔几秒轮询一次 tmux，判断各个会话当前所处的状态，并通过本地 Unix Socket 以及可选的 HTTP API 对外暴露这些状态。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;状态检测是整套系统里比较棘手的一环。当智能体正在持续流式输出内容时，守护进程会将其标记为活跃；一旦出现等待输入的提示符且终端窗格静默几秒，守护进程就会把会话切换为 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;needs_input&lt;/code&gt; 状态。只要还有活跃会话，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; 还会在 macOS 上持有一个 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;caffeinate&lt;/code&gt; 锁（在 Linux 上则是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd-inhibit&lt;/code&gt;），防止 Mac mini 或笔记本在跑长任务中途进入休眠——对于笔记本还提供了低电量阈值保护，避免忘了插电的机器把电池彻底耗干。&lt;/p&gt;
+
+&lt;p&gt;对于多机自动发现，我们选用了 &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt;。每次刷新时，ccmux 会执行 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tailscale status --json&lt;/code&gt;，探测可达机器的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;7474&lt;/code&gt; 端口（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/v1/health&lt;/code&gt;），并把所有响应的守护进程自动合并进仪表盘。这样一来，你既不用手动维护主机列表，也不必向公网暴露任何端口。由于 Tailscale 的 WireGuard 层已经搞定了传输加密与设备身份认证，守护进程只需在 tailnet IP 上使用明文 HTTP 通信，同时拒绝任何携带浏览器 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Origin&lt;/code&gt; 或 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Sec-Fetch-*&lt;/code&gt; 请求头的访问，防止陌生网页跨站调用本地接口。&lt;/p&gt;
+
+&lt;p&gt;当你对某个远程会话按下 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Enter&lt;/code&gt; 时，ccmux 会通过 SSH 或 Mosh 直接在目标主机上执行真正的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tmux attach&lt;/code&gt;，而不是再套一层终端代理。它默认支持 Claude Code，同时也通过按项目保存智能体偏好并调用各自工具的启动与恢复参数，兼容 Codex、Cursor、Antigravity、Gemini CLI 等多种工具。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;在手机上使用&quot;&gt;在手机上使用&lt;/h2&gt;
+
+&lt;p&gt;能在手机上操控智能体，正是我最初想做这个工具的最大动机。在手机上直接用普通 SSH 有个大麻烦：连接动不动就断——只要你从 Wi-Fi 切到蜂窝网络、锁屏，或者走进信号死角，会话就掉线了。&lt;a href=&quot;https://mosh.org/&quot;&gt;Mosh&lt;/a&gt; 在这方面好得多，它能扛住网络漫游和设备休眠，一旦信号恢复，会话瞬间就能无缝续上。&lt;/p&gt;
+
+&lt;p&gt;当 ccmux 检测到窄屏终端（宽度不足 120 列）时，会自动把仪表盘折叠成单列可滚动布局，让同一套终端界面在手机屏幕上也能清晰操作：&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;430&quot; height=&quot;900&quot; poster=&quot;/assets/video/ccmux/phone-poster.webp&quot; style=&quot;max-height:420px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/phone.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    窄屏移动端终端中的 ccmux 仪表盘
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+在 Mosh 连接下，TUI 自动折叠为适配手机宽度的布局。
+&lt;/p&gt;
+
+&lt;p&gt;通知功能的实现意外地简洁。每当有会话切换到 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;needs_input&lt;/code&gt; 状态时，守护进程就会触发标准的终端响铃字符（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BEL&lt;/code&gt;）。支持监听响铃信号的 iOS 终端应用会直接把它转成一条手机推送通知，中间完全不需要任何云端中转服务器。在 iOS 端的 Mosh 客户端 &lt;a href=&quot;https://getmoshi.app/&quot;&gt;Moshi&lt;/a&gt; 中，ccmux 还可以将 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;moshi-hook&lt;/code&gt; 与 Claude Code 的 hooks 联动起来，发送带分类标签的通知（例如「需要审批」还是「任务完成」），点一下通知就能直达对应会话。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/ccmux/moshi.webp&quot; alt=&quot;运行在 iPhone 的 Moshi 终端应用中的 ccmux&quot; width=&quot;610&quot; height=&quot;1323&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:520px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+在 iPhone 的 Moshi 应用里运行 ccmux。
+&lt;/p&gt;
+
+&lt;p&gt;不过话说回来，在手机小屏上操作终端界面还是略显局促，尤其是你只想快速扫一眼所有会话的状态，或者想输入一段较长的提示词时。因此，我们还专门开发了一款原生 iOS 应用，直接通过 Tailscale 与 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; 通信。只需在 Mac 上运行 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux pair&lt;/code&gt;，用手机扫一下终端里的二维码即可完成配对。之后，App 会通过 SSE 实时接收会话状态流，并借助基于 WebSocket 的 PTY 桥接与 SwiftTerm 渲染器，直接附着到可交互的 tmux 窗格中。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+&amp;lt;img src=&quot;/assets/img/ccmux/ios-dashboard.webp&quot; alt=&quot;列出编程智能体会话的 ccmux iOS 应用&quot; width=&quot;1206&quot; height=&quot;2622&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;display:inline-block;margin:0 6px;max-height:460px;width:auto&quot; //&amp;gt;
+&amp;lt;img src=&quot;/assets/img/ccmux/ios-terminal.webp&quot; alt=&quot;ccmux iOS 应用中的交互式 tmux 终端&quot; width=&quot;1206&quot; height=&quot;2622&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;display:inline-block;margin:0 6px;max-height:460px;width:auto&quot; //&amp;gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+原生 iOS 应用：左侧为会话仪表盘，右侧为实时终端。
+&lt;/p&gt;
+
+&lt;p&gt;在开发 iOS 版时，我们很快碰到了一个棘手的体验矛盾：操作终端与撰写提示词对键盘的需求截然相反。控制终端需要原始按键、方向键和干脆利落的退格键，千万不能让自动纠错来捣乱；而给智能体写一整段需求说明时，没有自动纠错和自由选词简直痛不欲生。于是我们在终端视图里直接做了一个模式切换开关，可以在 Raw 模式（每次按键直通 PTY）和 Chat 模式（类似 iMessage 的常规输入框，方便组织提示词）之间一键切换。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;400&quot; height=&quot;870&quot; poster=&quot;/assets/video/ccmux/ios-mode-toggle-poster.webp&quot; style=&quot;max-height:460px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/ios-mode-toggle.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    在 ccmux iOS 应用的 Raw 和 Chat 输入模式之间切换
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+在用于操控终端的 Raw 模式与用于撰写提示词的 Chat 模式之间自由切换。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;写在最后&quot;&gt;写在最后&lt;/h2&gt;
+
+&lt;p&gt;我把 ccmux 当作主力工具日用了好几个月，期间也有一小批其他用户开始用它。但就在这几个月里，市面上涌现了大量同类 AI 编程智能体管理工具，其中不乏拿到融资、配备全职团队的项目。作为一个三人业余项目，硬着头皮按商业产品的节奏去追赶其实没什么意义，所以我们决定不再往那个方向推进。不过我偶尔还是会回仓库里折腾两下，也想写下这篇文章，把我们当时做出来的东西好好记录下来。&lt;/p&gt;
+
+&lt;p&gt;项目主页目前仍在 &lt;a href=&quot;https://ccmux.ai/&quot;&gt;ccmux.ai&lt;/a&gt; 上线运行，源代码则以 FSL-1.1-MIT 协议开源在 &lt;a href=&quot;https://github.com/skzv/ccmux&quot;&gt;GitHub&lt;/a&gt;。如果你想在 macOS 或 Linux 上试试看，可以用下面的命令一键安装并启动配置向导：&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-fsSL&lt;/span&gt; https://raw.githubusercontent.com/skzv/ccmux/main/scripts/install.sh | sh
+ccmux setup
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://ccmux.ai/docs/&quot;&gt;配置文档&lt;/a&gt;详细介绍了如何通过 Tailscale 连接多台机器以及配置手机端访问。&lt;/p&gt;
+</description>
+          <pubDate>Fri, 05 Jun 2026 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/zh/ccmux-tmux-manager-for-ai-coding-agents</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/ccmux-tmux-manager-for-ai-coding-agents</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>利用机器学习从公开照片进行三维重建</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    我们能否仅凭互联网上的公开照片，把整个世界重建为三维模型？
+&lt;/p&gt;
+
+&lt;h2 id=&quot;测绘整个世界&quot;&gt;测绘整个世界&lt;/h2&gt;
+
+&lt;p&gt;互联网上汇聚了海量的公开照片，来自 Reddit、YouTube、Google Maps 用户上传等形形色色的渠道。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/google-maps-photos.webp&quot; alt=&quot;Google Maps 公开照片示例&quot; width=&quot;1600&quot; height=&quot;1232&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; style=&quot;max-height:400px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Google Maps 上随处可见的公开照片
+&lt;/p&gt;
+
+&lt;p&gt;我心里冒出一个念头：有没有可能用这些数据构建出一张覆盖全球的三维地图？相机在按下快门的那一刻丢弃了所有的三维空间信息——但借助前沿的机器学习技术，我们可以把丢失的维度找回来，将下面这样一张普通照片：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Safeway 输入照片 0&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的 Safeway 超市输入照片 0。
+&lt;/p&gt;
+
+&lt;p&gt;还原成下面这样的三维模型：&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;再看另一个例子，闻名遐迩的新加坡樟宜机场：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0.jpeg&quot; alt=&quot;新加坡机场输入照片&quot; width=&quot;960&quot; height=&quot;1280&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:600px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的新加坡机场输入照片。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1012&quot; height=&quot;1008&quot; poster=&quot;/assets/video/3d-reconstruction/sg-airport-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/sg-airport-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;甚至是一张森林照片：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0.jpg&quot; alt=&quot;森林输入照片&quot; width=&quot;1500&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的森林输入照片。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1358&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/forest-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/forest-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;为了实现这个效果，我只用到了一个机器学习深度估计模型，外加一点线性代数。&lt;/p&gt;
+
+&lt;h2 id=&quot;相机投影&quot;&gt;相机投影&lt;/h2&gt;
+
+&lt;p&gt;我们可以把相机看作执行了一次从三维空间到二维平面的投影，如下图所示。这个投影过程抹去了第三个维度的信息：深度（Depth）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/camera-projection.png&quot; alt=&quot;相机投影示意图&quot; width=&quot;850&quot; height=&quot;356&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+从三维到二维的相机投影。来源：[1]
+&lt;/p&gt;
+
+&lt;p&gt;我们的任务，就是先恢复出这第三个维度，再想办法逆转这次投影。&lt;/p&gt;
+
+&lt;h2 id=&quot;相机内参&quot;&gt;相机内参&lt;/h2&gt;
+
+&lt;p&gt;要将图像重建回三维空间，仅仅知道每个像素的深度是不够的。因为相机自身的光学属性——其中最重要的是焦距（Focal Length）——决定了三维空间中的点是如何映射到二维像素上的；要逆转这一映射，我们就必须知道这些相机参数。看看下面这个演示，不同焦距拍出来的画面差异有多大：&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;600&quot; height=&quot;600&quot; poster=&quot;/assets/video/3d-reconstruction/face-focal-length-poster.webp&quot; style=&quot;max-height:400px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/3d-reconstruction/face-focal-length.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    焦距对人脸成像的影响演示
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+焦距变化对成像效果影响的演示。来源：[2]
+&lt;/p&gt;
+
+&lt;p&gt;顺理成章地，如果我们想从上面任意一张照片中把这张人脸重建成三维模型，就必须掌握拍摄时相机的内参。&lt;/p&gt;
+
+&lt;p&gt;利用下图所示的相似三角形性质，图像像素点与三维空间点之间的关系其实非常简洁：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+x = f \frac{X}{Z} \space\space\space\space\space y = f \frac{Y}{Z} \tag{1} \label{eq:camera perspective projection}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/camera-perspective-focal.png&quot; alt=&quot;相机透视投影&quot; width=&quot;1073&quot; height=&quot;834&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+相机透视投影几何关系
+&lt;/p&gt;
+
+&lt;p&gt;将这个变换反过来，把二维图像点映射回三维空间，便得到：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+X = \frac{x \cdot Z}{f} \space\space\space\space\space Y = \frac{y \cdot Z}{f} \space\space\space\space\space Z = Z \tag{2} \label{eq:inverse camera perspective projection}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;也就是说，我们缺失的两块关键拼图分别是每个像素的深度 \(Z\) 以及相机的焦距 \(f\)。而对于互联网上的公开照片，这两项信息都无法直接拿到——原本可能记录着相机参数的 EXIF 元数据，在上传时通常早已被抹除了。&lt;/p&gt;
+
+&lt;p&gt;顺便一提，如果再把相机的空间位姿考虑进来，还可以写出三维世界坐标系与二维图像坐标系之间的完整变换关系，如下图所示。不过在本文中，我们只需考虑相机自身的局部坐标系即可。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/complete-camera-model.jpg&quot; alt=&quot;完整相机模型&quot; width=&quot;1280&quot; height=&quot;720&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+完整相机成像模型。来源：[3]
+&lt;/p&gt;
+
+&lt;h2 id=&quot;深度图估计&quot;&gt;深度图估计&lt;/h2&gt;
+
+&lt;p&gt;Apple 近期开源的 &lt;a href=&quot;https://github.com/apple/ml-depth-pro&quot;&gt;DepthPro 模型&lt;/a&gt;让这个项目成为了可能。虽然深度估计模型早就存在，但我发现 DepthPro 有两个非常突出的特点：
+    1. 它输出的是绝对的公制尺度深度（Metric Depth），这意味着哪怕只有单张普通照片，重建出来的三维场景也拥有真实准确的物理比例；
+    2. 它还能顺带帮我估算出相机的焦距。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/depth-pro-teaser.webp&quot; alt=&quot;Depth Pro 效果展示&quot; width=&quot;1242&quot; height=&quot;535&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Depth Pro 效果展示。来源：[4]
+&lt;/p&gt;
+
+&lt;p&gt;我用这个模型跑了一批公开照片，估算出各自的深度图与焦距。举个例子，对于下面这张照片：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Safeway 输入照片 1&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的 Safeway 超市输入照片 1。
+&lt;/p&gt;
+
+&lt;p&gt;模型预测出的深度图与焦距如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1-depth-black.png&quot; alt=&quot;Safeway 深度图 1&quot; width=&quot;507&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro 模型预测出的 Safeway 深度图 1 与焦距。
+&lt;/p&gt;
+
+&lt;p&gt;接着，我套用公式 \((2)\) 将每个像素反投影回三维空间，生成三维点云，并用 Open3D 进行可视化：&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;三维重建效果展示&quot;&gt;三维重建效果展示&lt;/h2&gt;
+
+&lt;p&gt;下面是我跑出来的全部示例。特别值得留意的是纽约天际线那一组——我很好奇模型在纽约天际线这种超大尺度场景上表现如何。果不其然，DepthPro 在这张图上没能生成理想的深度图，它的训练数据集几乎可以肯定主要集中在中小尺度场景上。&lt;/p&gt;
+
+&lt;h3 id=&quot;coex-购物中心&quot;&gt;COEX 购物中心&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/coex-0.jpg&quot; alt=&quot;COEX 购物中心输入照片&quot; width=&quot;924&quot; height=&quot;483&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的 COEX 购物中心输入照片。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/coex-0-depth-black.png&quot; alt=&quot;COEX 购物中心深度图&quot; width=&quot;506&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro 模型预测出的 COEX 购物中心深度图与焦距。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1398&quot; height=&quot;848&quot; poster=&quot;/assets/video/3d-reconstruction/coex-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/coex-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;森林&quot;&gt;森林&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0.jpg&quot; alt=&quot;森林输入照片&quot; width=&quot;1500&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的森林输入照片。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0-depth-black.png&quot; alt=&quot;森林深度图&quot; width=&quot;506&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro 模型预测出的森林深度图与焦距。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1358&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/forest-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/forest-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;纽约天际线&quot;&gt;纽约天际线&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/nyc-0.webp&quot; alt=&quot;纽约天际线输入照片&quot; width=&quot;1000&quot; height=&quot;560&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的纽约天际线输入照片。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/nyc-depth-black.png&quot; alt=&quot;纽约天际线深度图&quot; width=&quot;498&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro 模型预测出的纽约天际线深度图与焦距。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1382&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/nyc-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/nyc-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;safeway-超市-1&quot;&gt;Safeway 超市 1&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-0.webp&quot; alt=&quot;Safeway 输入照片 0&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的 Safeway 超市输入照片 0。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-0-depth-black.png&quot; alt=&quot;Safeway 深度图 0&quot; width=&quot;506&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro 模型预测出的 Safeway 深度图 0 与焦距。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1066&quot; height=&quot;776&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-0-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-0-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;safeway-超市-2&quot;&gt;Safeway 超市 2&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Safeway 输入照片 1&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的 Safeway 超市输入照片 1。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1-depth-black.png&quot; alt=&quot;Safeway 深度图 1&quot; width=&quot;507&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro 模型预测出的 Safeway 深度图 1 与焦距。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;新加坡樟宜机场&quot;&gt;新加坡樟宜机场&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0.jpeg&quot; alt=&quot;新加坡机场输入照片&quot; width=&quot;960&quot; height=&quot;1280&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:600px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公开的新加坡机场输入照片。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0-depth-black.png&quot; alt=&quot;新加坡机场深度图&quot; width=&quot;387&quot; height=&quot;432&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro 模型预测出的新加坡机场深度图与焦距。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1012&quot; height=&quot;1008&quot; poster=&quot;/assets/video/3d-reconstruction/sg-airport-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/sg-airport-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;参考文献与来源&quot;&gt;参考文献与来源&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;从三维到二维的相机投影。来源：&lt;a href=&quot;https://www.researchgate.net/figure/The-perspective-projection-of-a-camera-model_fig2_324584663&quot;&gt;ResearchGate&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;焦距变化对人像成像影响的演示。来源：&lt;a href=&quot;https://www.diyphotography.net/gif-explains-changing-focal-length-impacts-portrait&quot;&gt;DIY Photography&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;完整相机成像模型。来源：&lt;a href=&quot;https://robotacademy.net.au/lesson/summary-of-image-geometry/&quot;&gt;Robot Academy&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Depth Pro 效果展示。来源：&lt;a href=&quot;https://github.com/apple/ml-depth-pro&quot;&gt;Apple&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+          <pubDate>Thu, 21 Aug 2025 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/zh/3d-reconstruction-from-public-photos</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/3d-reconstruction-from-public-photos</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>预测明天股市如何开盘</title>
+          <description>&lt;p&gt;&lt;em&gt;预测未来&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;某个周末传来一则利空的经济消息，我不禁好奇这会对周一股市开盘造成怎样的影响。研究一番之后我了解到：虽然股票市场休市了，但标的指数的期货交易仍在持续进行；我们可以从期货市场观察交易员们如何即时消化并将新信息计入价格——就像一颗水晶球 🔮。&lt;/p&gt;
+
+&lt;p&gt;由于期货价格与现货价格之间存在确定的定价关系，我们可以把期货价格沿时间向后折现，从而反推出期货市场当前为各大指数给出的公允价值。这样在股市正式开盘之前，我们就能得到各指数的隐含开盘价——哪怕在周日晚上，也能提前看出第二天大盘大概率会&lt;span style=&quot;color: #66ff66;&quot;&gt;高开&lt;/span&gt;还是&lt;span style=&quot;color: #ff6666;&quot;&gt;低开&lt;/span&gt;。&lt;/p&gt;
+
+&lt;p&gt;下面我会逐步拆解这一计算的各个环节，并展示最终搭建的仪表盘 &lt;a href=&quot;https://impliedopen.com&quot;&gt;impliedopen.com&lt;/a&gt;，帮你抢先一窥次日开盘动向。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/save-game.webp&quot; alt=&quot;我搭建的仪表盘预览，可提前一窥次日开盘动向。&quot; width=&quot;1168&quot; height=&quot;1312&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+我搭建的仪表盘预览，可提前一窥次日市场开盘动向。
+&lt;/p&gt;
+
+&lt;h2 id=&quot;期货&quot;&gt;期货&lt;/h2&gt;
+
+&lt;p&gt;期货（期货合约）是一种金融工具，允许交易者就标的资产在合约到期日的&lt;em&gt;未来&lt;/em&gt;价格进行博弈。留意下图中标普 500（S&amp;amp;P 500）期货的价格与到期日：它当前的交易价格高于标普 500 现货指数，但这究竟反映了期货市场对标普 500 当前价值的何种定价呢？&lt;/p&gt;
+
+&lt;p&gt;要把期货价格与期货市场所隐含的当前公允价值联系起来，我们必须考虑从现在到期货到期日之间的时间跨度。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/futures-price.webp&quot; alt=&quot;标普 500 期货合约&quot; width=&quot;943&quot; height=&quot;826&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+标普 500 期货合约
+&lt;/p&gt;
+
+&lt;p&gt;为此，我们要用到「持有成本模型（Cost of Carry Model）」，它综合考虑了无风险利率、股息率以及距离到期的时间。该模型假设指数价格应当以当前无风险利率增长（本质上是无套利假设），同时扣除因分红派息而导致的价格回落。&lt;/p&gt;
+
+&lt;p&gt;这种关系可以写成：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+    F = S \times e^{(r - q) \times t} \tag{0}  \label{eq:coc}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;其中，\(F\) 是期货价格，\(S\) 是当前现货指数价格，\(r\) 是无风险利率，\(q\) 是股息率，\(t\) 是剩余到期时间。&lt;/p&gt;
+
+&lt;h2 id=&quot;沿时间回溯折现&quot;&gt;沿时间回溯折现&lt;/h2&gt;
+
+&lt;p&gt;要想从期货价格反推出现货指数当前的公允价值，只需将上述公式求逆，把期货价格往回折现：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+    S = F \times e^{-(r - q) \times t} \tag{1}  \label{eq:discount}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;在股市开盘之前，这个公允价值就是我们对指数开盘价的最佳估计。&lt;/p&gt;
+
+&lt;h2 id=&quot;无风险利率&quot;&gt;无风险利率&lt;/h2&gt;
+
+&lt;p&gt;世界上真的存在「无风险」投资吗？美国国库券（Treasury Bills，由美国财政部发行的短期国债）通常被认为（几乎）没有风险，原因如下：&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;美国政府违约概率极低：它可以自行印钞，且历史上一直保持良好的偿债记录&lt;/li&gt;
+  &lt;li&gt;期限很短，降低了暴露在利率波动与长期不确定性中的风险&lt;/li&gt;
+  &lt;li&gt;市场流动性极高&lt;/li&gt;
+  &lt;li&gt;不存在像公司债或市政债那样的破产信用风险，因为美国政府不会破产&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;在我的计算中，我选用 3 个月期美国国库券收益率作为无风险利率。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/3m-bond-yield-1.png&quot; alt=&quot;3 个月期美国国债收益率&quot; width=&quot;993&quot; height=&quot;633&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+3 个月期美国国债收益率
+&lt;/p&gt;
+
+&lt;p&gt;我们假设标的资产至少会以无风险利率增长，因为否则投资者根本不会把钱投入这些资产。&lt;/p&gt;
+
+&lt;h2 id=&quot;股息率&quot;&gt;股息率&lt;/h2&gt;
+
+&lt;p&gt;尽管我们假设标的资产至少会按无风险利率增值，但也必须计入另一项因素：当成分股派发股息时，标的指数会相应除息回落。为此，我使用了各指数最近一次公布的股息率——不过更精确的模型可能会尝试预测未来的预期股息率。&lt;/p&gt;
+
+&lt;p&gt;下图是我用于计算的最新标普 500 股息率。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/sp500-dividend-yield.png&quot; alt=&quot;最新标普 500 股息率&quot; width=&quot;873&quot; height=&quot;641&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+最新标普 500 股息率
+&lt;/p&gt;
+
+&lt;h2 id=&quot;整合成型&quot;&gt;整合成型&lt;/h2&gt;
+
+&lt;p&gt;我汇总了各主要指数的最新收盘价、当前交易中的期货价格，以及我对股息率、无风险利率和剩余到期时间的最佳估计，实时算出每个主要指数的当前隐含公允价值。我把这一切整合成了网站 &lt;a href=&quot;https://impliedopen.com&quot;&gt;impliedopen.com&lt;/a&gt;，直接嵌入在下方：&lt;/p&gt;
+
+&lt;iframe src=&quot;https://impliedopen.com&quot; title=&quot;Implied Open 市场开盘预测仪表盘&quot; width=&quot;100%&quot; height=&quot;1200px&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;这个仪表盘在「期货市场开盘、常规股市休市」的时段最有用——能帮我们借助期货市场看清交易员在正式开盘前已经计入的价格预期。当常规股市开盘交易时，现货市场本身就会直接给出每个指数的「真实」当前报价。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/market-status.png&quot; alt=&quot;市场状态视图&quot; width=&quot;751&quot; height=&quot;159&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+市场状态视图
+&lt;/p&gt;
+
+&lt;h2 id=&quot;写在最后&quot;&gt;写在最后&lt;/h2&gt;
+
+&lt;p&gt;这个仪表盘是我相当仓促地攒出来的，很多数据其实就是靠爬虫抓取，再在我自己的 API 上每分钟缓存一次 :) 如果哪天出了故障或者挂了，还请多多包涵——以后有空我会把数据源换成正规 API，或者等到金融市场全面走向 7×24 小时交易，这个仪表盘也就自然功成身退了。不管怎样，我都想写下这篇博客留个纪念。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/it-is-what-it-is.png&quot; alt=&quot;顺其自然吧。&quot; width=&quot;690&quot; height=&quot;365&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+顺其自然吧。
+&lt;/p&gt;
+
+&lt;p&gt;如果你在我的计算过程里发现了错误，或者有任何建议与反馈，欢迎随时联系我告诉我！&lt;/p&gt;
+</description>
+          <pubDate>Sun, 23 Mar 2025 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/zh/predicting-how-the-market-will-open-tomorrow</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/predicting-how-the-market-will-open-tomorrow</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>用于导入 Sticker.ly 贴纸包的 Telegram 机器人</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    轻松将 Sticker.ly 动态贴纸包导入 Telegram
+&lt;/p&gt;
+
+&lt;style&gt;
+video {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+}
+&lt;/style&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://sticker.ly&quot;&gt;Sticker.ly&lt;/a&gt; 是一款面向 Android 和 iPhone 设备的热门贴纸包制作与管理应用，仅在 &lt;a href=&quot;https://play.google.com/store/apps/details?id=com.snowcorp.stickerly.android&amp;amp;hl=en_US&amp;amp;gl=US&quot;&gt;Google Play 商店&lt;/a&gt;的下载量就超过了 1 亿次。它支持将贴纸包导入 iMessage、WhatsApp 和 Telegram，不过，导入动态贴纸包的功能却只支持 WhatsApp。&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; preload=&quot;metadata&quot; width=&quot;498&quot; height=&quot;1034&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-animated-import-cropped-poster.webp&quot; style=&quot;max-height:600px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-animated-import-cropped.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;作为 Telegram 的忠实用户和「布道者」，我经常安利朋友来 Telegram 和我聊天。但不少人吐槽 Telegram 缺少像 WhatsApp 那样丰富的贴纸生态。我答应过他们要解决这个问题，现在终于做出来了。隆重推出：&lt;a href=&quot;https://t.me/StickerlyImportBot&quot;&gt;Sticker.ly 贴纸包导入机器人（Sticker.ly Sticker Pack Import Bot）&lt;/a&gt;！&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;470&quot; height=&quot;496&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-bot-screen-poster.webp&quot; style=&quot;max-height:400px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-bot-screen.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;使用方法非常简单：只需给机器人发送一个 Sticker.ly 贴纸包链接，例如 &lt;a href=&quot;https://sticker.ly/s/HBBCR8&quot;&gt;https://sticker.ly/s/HBBCR8&lt;/a&gt;。机器人就会把里面的贴纸转换成 Telegram 兼容的动态格式，并返回一个链接，让你一键将整个动态贴纸包添加到自己的贴纸库中。&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;446&quot; height=&quot;524&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-import-poster.webp&quot; style=&quot;max-height:500px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-import.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        您的浏览器不支持 video 标签。
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;虽然这款机器人也支持导入静态贴纸包，但我并不建议用它来处理静态贴纸——因为 Sticker.ly 和 Telegram 本身就已经原生支持静态贴纸包导入了。&lt;/p&gt;
+
+&lt;p&gt;请注意，该机器人目前仍处于测试（Beta）阶段，偶尔可能会出错。如果在创建贴纸包时遇到问题，请重试一次，并在必要时按照机器人内的提示删除尚未创建完整的贴纸包。&lt;/p&gt;
+</description>
+          <pubDate>Wed, 05 Apr 2023 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/zh/telegram-stickerly-import-bot</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/telegram-stickerly-import-bot</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>使用 Google Vizier 进行黑盒优化与超参数调优</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    自动且智能地优化任意类型的系统
+&lt;/p&gt;
+
+&lt;style&gt;
+img {
+  max-height: 350px;
+}
+&lt;/style&gt;
+
+&lt;p&gt;当你构建一个机器学习模型——或者其他类型的算法系统——时，总免不了要对系统架构做出各种抉择。比如，在机器学习应用中，你需要决定神经网络每一层放多少个神经元，或者梯度下降的学习率设多大；如果你在开发一个追踪机器人状态的&lt;a href=&quot;https://en.wikipedia.org/wiki/Particle_filter&quot;&gt;粒子滤波器（Particle Filter）&lt;/a&gt;，可能需要决定似然函数的形状；又或者，你可能在寻找一组能让计算资源占用降到最低的缓冲区大小和线程数。怎样才能找到系统的最优配置呢？&lt;/p&gt;
+
+&lt;p&gt;你当然可以手动去试：调一调神经元数量，换几个梯度下降速率。但这种人工摸索既慢又枯燥，还很容易踩坑。好在，如今已经有一些专门的服务，能以智能且高效的方式帮你自动完成系统优化。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;认识-vizier&quot;&gt;认识 Vizier&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/google/vizier&quot;&gt;Vizier&lt;/a&gt; 是 Google 打造的一款面向黑盒优化与超参数调优的服务。它可以用来优化几乎任何系统，只要满足两个条件：你能把 Vizier 建议的输入传给系统，再从系统拿到输出指标（也就是 Vizier 试图最大化或最小化的目标）。系统内部本身完全被当作一个「黑盒」。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/black-box-optimization.png&quot; alt=&quot;黑盒优化示意图&quot; width=&quot;629&quot; height=&quot;319&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+只要能输入参数并获取输出指标，黑盒优化无需对系统内部有任何了解。来源：Per Instance Algorithm Configuration for Continuous Black Box Optimization - Scientific Figure on ResearchGate，访问于 2023 年 2 月 23 日：https://www.researchgate.net/figure/black-box-Optimization_fig1_322035981
+&lt;/p&gt;
+
+&lt;p&gt;与&lt;a href=&quot;/zh/gradient-descent&quot;&gt;梯度下降&lt;/a&gt;这类非黑盒优化方法不同——后者需要明确知道系统参数与待优化指标之间的数学关系——像 Vizier 这样的黑盒优化系统不需要对系统内部有任何先验洞察，却依然能够高效地搜索参数空间，帮你找到令系统表现最优的参数组合。这也让它在面对复杂、不连续甚至非凸的指标函数时更加稳健。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;参数-vs-超参数&quot;&gt;参数 vs 超参数&lt;/h2&gt;
+
+&lt;p&gt;插一句题外话：这一区分源自机器学习领域。所谓「参数（Parameters）」，通常指模型内部用于在数据集上训练得到、并在推理时发挥作用的数值（如权重）；而「超参数（Hyperparameters）」则用来描述模型的架构或训练流程本身。虽然像 Vizier 这样的黑盒优化服务可以用于任何系统，但拿它来直接训练机器学习模型的内部权重并不高效；相比之下，用它来优化模型架构和超参数则再合适不过。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;一个实战例子&quot;&gt;一个实战例子&lt;/h2&gt;
+
+&lt;p&gt;接下来我举一个跟机器学习无关的小例子，但它依然足以展示像 Vizier 这样的黑盒优化算法有多么强大且简洁。假设我们拿到了下面这样一条带有噪声的信号：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/some-noisy-signal.png&quot; alt=&quot;带噪声的信号&quot; width=&quot;368&quot; height=&quot;246&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+一条带有噪声的信号。
+&lt;/p&gt;
+
+&lt;p&gt;我们想找一个解析函数来拟合这条信号。但我们拿不准应该用&lt;a href=&quot;https://en.wikipedia.org/wiki/Normal_distribution&quot;&gt;高斯分布（Gaussian）&lt;/a&gt;还是&lt;a href=&quot;https://en.wikipedia.org/wiki/Laplace_distribution&quot;&gt;拉普拉斯分布（Laplace）&lt;/a&gt;来拟合，而且这两种分布各自又都有需要估计的参数——例如均值和方差。&lt;/p&gt;
+
+&lt;p&gt;只要我们能给 Vizier 提供一个需要优化的评估指标，它就能帮我们自动找出最优的函数形式与参数。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;构建优化问题&quot;&gt;构建优化问题&lt;/h2&gt;
+&lt;p&gt;我们要搜索的第一个参数是模型类型：高斯分布（Gaussian）或拉普拉斯分布（Laplace）：&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+    'parameter_id': 'model',
+    'categorical_value_spec' : {
+        'values': [
+            'gaussian',
+            'laplace',
+        ]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;不过每个模型都有各自决定曲线形状的一组参数，我们把它们称作各模型的「子参数」。&lt;/p&gt;
+
+&lt;p&gt;对于高斯分布，子参数是均值 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt;（\(\mu\)）和标准差 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sigma&lt;/code&gt;（\(\sigma\)）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/normal-distribution.png&quot; alt=&quot;带有参数 mu 和 sigma 的高斯分布&quot; width=&quot;720&quot; height=&quot;460&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+带有参数 mu 和 sigma 的高斯分布。图片来源：https://commons.wikimedia.org/wiki/File:Normal_Distribution_PDF.svg
+&lt;/p&gt;
+
+&lt;p&gt;对于拉普拉斯分布——不同文献的记号略有差异——通常包含位置参数（或均值）&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt;（\(\mu\)）以及尺度因子 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&lt;/code&gt;（\(b\)）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/laplace-distribution.png&quot; alt=&quot;带有参数 mu 和 b 的拉普拉斯分布&quot; width=&quot;800&quot; height=&quot;600&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+带有参数 mu 和 b 的拉普拉斯分布。图片来源：https://commons.wikimedia.org/wiki/File:Laplace_pdf_mod.svg
+&lt;/p&gt;
+
+&lt;p&gt;为了避免与高斯分布的均值重名，我们把拉普拉斯分布的位置参数记作 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; 而不是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;在尝试拟合高斯分布时，我们并不希望 Vizier 去瞎猜拉普拉斯分布的参数，反之亦然。好在 Vizier 支持把两种分布各自的参数定义为父级 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;model&lt;/code&gt; 参数的子参数（即条件参数）：&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'conditional_parameter_specs': [
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;mu&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 10.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['gaussian']
+    }
+},
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;sigma&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 1e-1,
+        &quot;max_value&quot;: 5.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['gaussian']
+    }
+},
+    {
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;a&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 10.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['laplace']
+    }
+},
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;b&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 1e-1,
+        &quot;max_value&quot;: 5.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['laplace']
+    }
+}]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;最后，我们需要定义 Vizier 要优化的目标指标。我希望找到的函数尽可能贴合这条信号，因此我通过计算解析函数与观测数据之间的残差平方和（Sum of Squared Residuals）来评估拟合优度。这个数值越小，说明拟合得越好。我们只需要告诉 Vizier 要最小化这个指标：&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;metric_ssr = {
+    'metric_id': 'sum_of_squared_residuals',
+    'goal': 'MINIMIZE',
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;把以上部分组合起来，就完整定义了我们的优化研究（Study）：&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;study = {
+    'display_name': 'vizier_experiment',
+    'study_spec' :
+    {
+        'parameters': [param_model],
+        'metrics': [metric_ssr]
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;请注意，Vizier 对这些参数的实际含义一无所知。对它来说，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gaussian&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Laplace&lt;/code&gt; 仅仅是一个分类参数的两个取值，没有任何额外语义。赋予它们真正含义的是接收这些参数的业务代码，而对 Vizier 而言，那段代码就藏在黑盒子里。为节省篇幅，这里省去了评估代码，但你可以在文末链接里找到完整实现，一看便知。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;开始搜索&quot;&gt;开始搜索&lt;/h2&gt;
+
+&lt;p&gt;在每一轮试验（Trial）中，Vizier 会给我们建议一组待测试的参数。我们自行评估这组参数的表现，算出目标指标（残差平方和），再把结果回报给 Vizier。Vizier 则根据反馈来生成下一组待尝试的参数。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/vizier-trials.png&quot; alt=&quot;Vizier 为各次试验建议的参数&quot; width=&quot;1280&quot; height=&quot;281&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Vizier 为每次试验建议的参数。
+&lt;/p&gt;
+
+&lt;p&gt;可以看到，只有当模型类型为高斯分布时，Vizier 才会建议高斯参数；拉普拉斯分布也是如此。&lt;/p&gt;
+
+&lt;p&gt;Vizier 究竟是如何搜索最优参数的？它既支持网格搜索或随机搜索，但真正的魔力在于它融合了多种高级优化算法：高斯过程多臂老虎机（Gaussian Process Bandits）、线性组合搜索及其各种变体。&lt;/p&gt;
+
+&lt;p&gt;借助 GCP，我们还能看到非常酷炫的 Vizier 优化进度图表：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/study-progress-table.webp&quot; alt=&quot;展示指标演进与每次试验参数的研究进度表&quot; width=&quot;1600&quot; height=&quot;1071&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+展示待优化指标演变趋势以及各次试验参数的研究进度表。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/parallel-chart.webp&quot; alt=&quot;展示各组尝试参数与对应指标值的平行坐标图&quot; width=&quot;1600&quot; height=&quot;726&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+展示各组尝试参数及其对应指标值的平行坐标图。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;优化拟合结果&quot;&gt;优化拟合结果&lt;/h2&gt;
+
+&lt;p&gt;从结果可以看出，拉普拉斯分布略微胜过了高斯分布：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/optimal-parallel-chart.webp&quot; alt=&quot;放大后的平行坐标图，显示使残差平方和最小的前排试验：拉普拉斯分布的拟合效果优于高斯分布&quot; width=&quot;1600&quot; height=&quot;550&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+放大后的平行坐标图，聚焦于残差平方和最小的最佳试验。可以看到拉普拉斯分布获得了比高斯分布更好的拟合效果。
+&lt;/p&gt;
+
+&lt;p&gt;向 Vizier 查询最优试验的参数，并将其绘制出来：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/noisy-signal-fit.png&quot; alt=&quot;带噪声信号的优化拟合结果&quot; width=&quot;543&quot; height=&quot;289&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+拟合该噪声信号的最优参数曲线。
+&lt;/p&gt;
+
+&lt;p&gt;几乎严丝合缝！Vizier 找到的参数非常接近我在叠加噪声之前用来生成原始信号的真实参数：位置参数 \(a=5\)、尺度因子 \(b=2\) 的拉普拉斯分布。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/original-laplace-signal.png&quot; alt=&quot;原始拉普拉斯信号&quot; width=&quot;862&quot; height=&quot;728&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+原始的拉普拉斯信号。
+&lt;/p&gt;
+
+&lt;p&gt;作为对比，高斯分布的波峰会更圆润，尾部也会更细。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/gaussian-signal.png&quot; alt=&quot;高斯分布对比信号&quot; width=&quot;878&quot; height=&quot;726&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+用于对比的高斯分布曲线。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;如何复现&quot;&gt;如何复现？&lt;/h2&gt;
+
+&lt;p&gt;我用来撰写这篇文章的 Colab 笔记本可以在&lt;a href=&quot;https://github.com/skzv/vizier-blog-post/blob/main/vizier_blog_post.ipynb&quot;&gt;这里&lt;/a&gt;找到。我用的是 GCP 的 Vertex AI Vizier API，因为它能生成文中那些很酷的可视化图表，但要注意它的费用不便宜（每次试验 1 美元）。Vizier 也有开源版本，可以在&lt;a href=&quot;https://github.com/google/vizier&quot;&gt;这里&lt;/a&gt;免费获取。&lt;/p&gt;
+</description>
+          <pubDate>Wed, 22 Feb 2023 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/zh/blackbox-optimization-with-vizier</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/blackbox-optimization-with-vizier</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>蒙特卡洛期权定价</title>
+          <description>&lt;p&gt;&lt;em&gt;期权赌场&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;预测股票价格走势是一个充满诱惑的挑战，背后仿佛藏着致富的密码。遗憾的是，持续、可靠地预测未来股价普遍被认为是不可能的。不过，我们依然可以借助数学模型做出有价值的概率判断、管理风险，并&lt;em&gt;从概率意义上&lt;/em&gt;获利。&lt;/p&gt;
+
+&lt;h2 id=&quot;几何布朗运动&quot;&gt;几何布朗运动&lt;/h2&gt;
+&lt;p&gt;最常用的模型之一便是几何布朗运动（Geometric Brownian Motion，参考 &lt;a href=&quot;https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.04%3A_Geometric_Brownian_Motion&quot;&gt;1&lt;/a&gt;、&lt;a href=&quot;http://www.columbia.edu/~ks20/FE-Notes/4700-07-Notes-GBM.pdf&quot;&gt;2&lt;/a&gt;）——事实上，大名鼎鼎的 &lt;a href=&quot;https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model&quot;&gt;Black-Scholes 期权定价公式&lt;/a&gt;同样建立在这一模型假设之上。其表达式为：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ S(t) = S(0)\exp{((\mu-\frac{\sigma^2}{2})t + \sigma B(t))} \tag{0}  \label{eq:gbm}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;其中 \(B(t)\) 是标准布朗运动。如果我们令 \(S(0)\) 为初始股价，\(\mu\) 为平均&lt;a href=&quot;https://en.wikipedia.org/wiki/Rate_of_return#Logarithmic_or_continuously_compounded_return&quot;&gt;连续复利收益率&lt;/a&gt;，\(\sigma\) 为股票的&lt;a href=&quot;https://en.wikipedia.org/wiki/Volatility_(finance)&quot;&gt;波动率&lt;/a&gt;，就能生成看起来非常逼真的股价走势路径。&lt;/p&gt;
+
+&lt;div id=&quot;plot-0&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;\(\mu\)&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;mean-slider&quot; type=&quot;range&quot; min=&quot;-2.5&quot; max=&quot;1&quot; value=&quot;0&quot; step=&quot;0.01&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;mean-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;\(\sigma\)&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;sigma-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; value=&quot;0&quot; step=&quot;0.01&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;sigma-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate0()&quot;&gt;重新生成&lt;/button&gt;&lt;/p&gt;
+
+&lt;div style=&quot;display:none&quot; id=&quot;mean-0&quot;&gt;0&lt;/div&gt;
+&lt;div style=&quot;display:none&quot; id=&quot;sigma-0&quot;&gt;0&lt;/div&gt;
+&lt;div style=&quot;display:none&quot; id=&quot;option-mean-0&quot;&gt;0&lt;/div&gt;
+
+&lt;p&gt;那么，这个公式究竟代表什么？为什么它适合用来刻画证券价格？&lt;/p&gt;
+
+&lt;h3 id=&quot;对数收益率&quot;&gt;对数收益率&lt;/h3&gt;
+&lt;p&gt;在量化金融中，人们通常使用连续复利收益率，而不是简单收益率。也就是说，我们并不直接考察相邻交易周期之间的简单收益率 \(1 + R_t = \frac{S(t)}{S(t-1)}\)，而是考察连续复利（对数）收益率 \(r_t = \ln{(1 + R_t)} = \ln{\frac{S(t)}{S(t-1))}}\)。这样做有一个极佳的数学性质：只需把各期对数收益率直接相加，就能还原出股票价格：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ S(t) = S(0)\exp{(r_1 + r_2 + ... + r_{t-1})} \tag{1}  \label{eq:rr}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;这样做还很方便，因为金融学中有一个常见假设：股票的对数收益率彼此独立，且服从均值为 \(\mu\)、方差为 \(\sigma^2\) 的正态分布。注意，当收益率较小时，简单收益率 \(R_t\) 近似等于对数收益率 \(r_t\)，因为 \(r_t = \ln{(1 + R_t)} \approx R_t\)，两者差别不大，因此可以同时近似认为简单收益率和对数收益率都服从正态分布。进一步地，如果对数收益率服从正态分布，那就意味着股票价格服从&lt;em&gt;对数正态分布（Lognormal Distribution）&lt;/em&gt;。经验数据在一定程度上印证了这一点，不过在现实市场中，股价往往呈现出更「肥的尾部」——也就是说，极端罕见事件发生的频率高于正态分布的预测。下图展示了 IBM 股票的月度收益率，清晰地体现了这一现象。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/monte-carlo-stocks/IBM-returns.webp&quot; alt=&quot;IBM 月度收益率&quot; width=&quot;1282&quot; height=&quot;1008&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+IBM 股票的月度简单收益率与对数收益率及其拟合正态分布。我们可以看到，分布在两端的极端收益率比正态分布预测的要多，这被称为「肥尾（fat tails）」或「超额峰度（excess kurtosis）」。图片来源：Ruey S. Tsay 所著《Analysis of Financial Time Series, 3rd Ed.》。
+&lt;/p&gt;
+
+&lt;p&gt;这个模型之所以好用，还因为它只允许证券价格取正值。现实中的证券价格通常也确实只能为正（当然也有极少数例外，价格会跌成负数——参见 &lt;a href=&quot;https://assets.weforum.org/editor/kE8TpkO7bzo3dLFWEh9UDvgqRuZPOmURhnh0FfwOVYc.png&quot;&gt;2020 年原油崩盘&lt;/a&gt;）。&lt;/p&gt;
+
+&lt;p&gt;因此，我们需要一个能生成一系列服从正态分布的收益率 \(r_t\) 的随机过程——布朗运动便成了顺理成章的选择。&lt;/p&gt;
+
+&lt;h2 id=&quot;布朗运动&quot;&gt;布朗运动&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.01%3A_Standard_Brownian_Motion&quot;&gt;布朗运动&lt;/a&gt;原本用来描述悬浮在液体或气体中的微粒运动。微粒在周围流体分子的碰撞下「随机」弹跳，留下的轨迹充满噪声、杂乱无章。本质上，它可以看作随机游走（Random Walk）在步长时间间隔和步长都趋于零时的极限形式（需要满足一个关键条件：如果时间步长为 \(t\)，那么步长必须为 \(\sqrt{t}\)，这样生成的随机过程其方差才能精确地与时间成正比）。想象通过抛硬币决定向前走一步还是向后退一步，再让每一步之间的时间间隔趋近于零，你画出的轨迹就会长这样：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/monte-carlo-stocks/wiener-process-zoom.png&quot; alt=&quot;一维布朗运动&quot; width=&quot;800&quot; height=&quot;600&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+一维（算术）布朗运动。几何布朗运动正是这一过程的指数形式。&lt;a target=&quot;_blank&quot; href=&quot;http://creativecommons.org/licenses/by-sa/3.0/&quot; title=&quot;Creative Commons Attribution-Share Alike 3.0&quot;&gt;CC BY-SA 3.0&lt;/a&gt;，&lt;a target=&quot;_blank&quot; href=&quot;https://commons.wikimedia.org/w/index.php?curid=1426987&quot;&gt;来源&lt;/a&gt;
+&lt;/p&gt;
+
+&lt;p&gt;布朗运动有一个非常棒的性质：它的轨迹增量服从正态分布，这恰恰符合我们的需求。我们可以通过从正态分布中采样，以离散时间步来模拟布朗运动（不过，如果你只关心时间序列的终点值，其实从任意单位方差分布中采样都可以；根据中心极限定理，大量随机变量之和在长期下都会趋近高斯分布）。&lt;/p&gt;
+
+&lt;p&gt;于是，布朗运动便为我们提供了式 \(\eqref{eq:rr}\) 所需的一系列服从正态分布的对数收益率 \(r_t\)：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ r(t) = (\mu-\frac{\sigma^2}{2})t + \sigma B(t) \tag{2}  \label{eq:bm}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;对这个过程取指数，我们就重新得到了刻画股价波动的方程。&lt;/p&gt;
+
+&lt;p&gt;这里特别值得留意的是漂移率（Drift Rate）\(\mu - \frac{\sigma^2}{2}\)，顾名思义，它使过程随时间呈线性漂移。\(\mu\) 很好理解——它是股票的平均连续复利收益率，如果没有随机噪声（即波动率为零），股价就只会按这个复利水平稳步上涨（或下跌）。那多出来的 \(-\frac{\sigma^2}{2}\) 是怎么回事？原来，一个对数正态分布随机变量的数学期望是 \(\exp(\mu + \sigma^2/2)\)。由于股票价格服从&lt;em&gt;对数正态分布&lt;/em&gt;（而收益率服从&lt;em&gt;正态分布&lt;/em&gt;），为了保证连续复利下股票价格的期望值恰好等于 \(S(0)\exp(\mu t)\)，我们必须在漂移项里加上 \(-\frac{\sigma^2}{2}\) 这个修正项。&lt;/p&gt;
+
+&lt;p&gt;选择布朗运动作为该模型的基础，背后其实还有一层哲学上的依据。金融学的一个经典假设是市场有效，因此不应存在无风险套利机会。这意味着市场走势理应是不可预测的——只要有人能预测市场，就会产生套利空间，并迅速被市场力量抹平。因此，本质上是随机噪声的布朗运动，正是对市场建模的理想选择。&lt;/p&gt;
+
+&lt;h2 id=&quot;期权定价&quot;&gt;期权定价&lt;/h2&gt;
+
+&lt;p&gt;蒙特卡洛模拟（Monte-Carlo Simulation）是一种灵感源自摩纳哥赌场的统计技术。就像赌徒把命运交给概率一样，我们把统计分析的结果交给随机抽样。只要运行足够多次试验，就能得出具有统计显著性的结论。&lt;/p&gt;
+
+&lt;p&gt;假设我们要评估这只股票上一份行权价为 $105 的看涨期权（Call Option）。在几何布朗运动的股价模型下，这份期权到期时的期望价值是多少？我们可以通过生成大量股价路径来估算——每条路径就是一次试验。每次试验的期末股价通过关系式 \(V = \max(0, S - K)\) 对应到期权的内在价值，其中 \(S\) 是期末股价，\(K\) 是行权价。所有试验期末期权价值的均值，就给出了到期时期权价值的估计；而期末价值的标准差，则衡量了我们对期权到期价值落在该估计值附近的把握程度。&lt;/p&gt;
+
+&lt;div id=&quot;plot-1&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate1()&quot;&gt;重新生成&lt;/button&gt;&lt;/p&gt;
+&lt;div id=&quot;mean-1&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;sigma-1&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;option-mean-1&quot;&gt;0&lt;/div&gt;
+
+&lt;p&gt;我们可以通过增加试验次数来提高估计值的统计确定性。试着分别在上面（试验次数较少）和下面（试验次数很多）反复点击「重新生成」按钮重新运行模拟：你会发现，在试验次数很多时，每次实验结果之间的波动偏差明显小得多。&lt;/p&gt;
+
+&lt;div id=&quot;plot-2&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate2()&quot;&gt;重新生成&lt;/button&gt;&lt;/p&gt;
+&lt;div id=&quot;mean-2&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;sigma-2&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;option-mean-2&quot;&gt;0&lt;/div&gt;
+
+&lt;h2 id=&quot;更复杂的场景&quot;&gt;更复杂的场景&lt;/h2&gt;
+&lt;p&gt;仅仅模拟到期终点价值的蒙特卡洛模拟还比较简单，实用价值有限，因为这类问题通常可以直接求出解析解。蒙特卡洛模拟真正的威力，在于处理那些很难甚至根本无法用解析法求解的场景。举个例子，如果我们要分析一份可以在存续期内随时行权的美式期权，就可能需要计算在期权有效期的任意时刻股价突破行权价的概率。借助蒙特卡洛模拟，我们只需数一数有多少条模拟路径曾经越过行权价边界即可——实现起来轻而易举。&lt;/p&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdn.plot.ly/plotly-2.4.2.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js&quot; integrity=&quot;sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; src=&quot;/assets/js/monte-carlo-options.js&quot;&gt;&lt;/script&gt;
+
+</description>
+          <pubDate>Thu, 16 Dec 2021 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/zh/monte-carlo-options-pricing</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/monte-carlo-options-pricing</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>交互式梯度下降演示</title>
+          <description>&lt;p&gt;&lt;em&gt;这个神奇的算法到底是什么？&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;梯度下降（Gradient Descent）是一种用于寻找函数（局部）最小值的优化算法。&lt;/p&gt;
+
+&lt;h2 id=&quot;它为什么有用&quot;&gt;它为什么有用？&lt;/h2&gt;
+
+&lt;p&gt;假设你有一个函数 \(f(x,y)\)。这个函数可以代表你的某项代价（成本），而 \(x\) 和 \(y\) 是会影响代价的输入变量。你自然希望找到能让代价最小的 \(x\) 和 \(y\) 的取值。这就是寻找 \(f(x,y)\) 最小值的问题。例如，我们可能想找出下面这个绘制出来的函数的最小值：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+f(x,y)=3(1 - x)^2 e^{- x^2 - (y + 1)^2} - 10(\frac{x}{5} - x^3 - y^5) e^{-x^2 - y^2} - \frac{1}{3} e^{-(x+1)^2 - y^2} \tag{0}  \label{eq:cost_func}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;div id=&quot;plot-0&quot;&gt;&lt;/div&gt;
+
+&lt;p&gt;这时候，梯度下降就派上用场了。&lt;/p&gt;
+
+&lt;h2 id=&quot;为什么要使用梯度下降&quot;&gt;为什么要使用梯度下降？&lt;/h2&gt;
+
+&lt;p&gt;你还记得基础微积分里求函数最小值的方法吗？可以求出一阶导数，令其等于零，然后解这个方程：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+f'(x,y)=0 \tag{1}  \label{eq:first_deriv}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;这样可以找出函数的极值点（极大值和极小值），再根据二阶导数 \(f''(x,y)\) 的正负，就能判断极值点是局部极大值还是局部极小值。然而，求解一阶导数方程 \(\eqref{eq:first_deriv}\) 往往并不容易，常常需要借助数值方法。而且随着代价函数的维度越来越高，比如 \(f(x,y,z,w,q,u,v,...)\)，直接求解很快就会变得难以应付。梯度下降则巧妙地利用一阶导数，提供了一套高效定位最小值的迭代流程。&lt;/p&gt;
+
+&lt;h2 id=&quot;梯度下降算法&quot;&gt;梯度下降算法&lt;/h2&gt;
+
+&lt;p&gt;梯度下降背后的直觉非常自然——我敢打赌，如果你置身于类似的现实处境中，也会不自觉地用上完全一样的策略。想象你身处浓雾之中，只能看清脚前几步，靠双脚感受脚下地面的坡度，而你想尽快走到山谷底部。你肯定不会浪费时间沿着平地闲逛，更不会往高处爬。为了最快下山，你会先感受自己所处位置的坡度，然后朝着下坡最陡的方向迈步。梯度（Gradient）其实就是坡度的同义词，因此你所做的正是梯度下降。反过来，如果你想找山顶，就会在每个位置沿着最陡的上坡方向走——那就是梯度&lt;em&gt;上升（Ascent）&lt;/em&gt;。&lt;/p&gt;
+
+&lt;h2 id=&quot;什么是梯度&quot;&gt;什么是梯度&lt;/h2&gt;
+
+&lt;p&gt;梯度本质上就是坡度（斜率）的另一种说法。大多数人都熟悉一维情况下的斜率。在一维空间里，你只能向前或向后走，所以斜率的定义非常明确。但在更高维的空间里——想象你正在徒步爬山——朝不同方向迈步，坡度是完全不同的。那该怎么定义某一点的坡度呢？&lt;/p&gt;
+
+&lt;p&gt;在向量微积分中，我们使用梯度算子 \(\nabla\)，它是一个由函数沿各个维度的一阶偏导数（斜率）组成的向量：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\nabla f(x,y)= \begin{bmatrix}
+           \frac{\partial f}{dx} (x,y) \\
+           \frac{\partial f}{dy} (x,y)
+         \end{bmatrix} \tag{2}  \label{eq:gradient}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;在由 \(f(x,y)\) 定义的二维曲面上，它就是沿 \(x\) 轴方向的斜率和沿 \(y\) 轴方向的斜率。既然我们并不受限于只能沿 \(x\) 轴或 \(y\) 轴移动，想求任意方向上的坡度，只需把该方向对应的 \(x\) 分量和 \(y\) 分量上的斜率加权相加即可——换句话说，将方向向量与梯度做点积，就能得到沿该方向的坡度。&lt;/p&gt;
+
+&lt;p&gt;梯度还有一个非常妙的性质：它指向的正是坡度最陡的方向。从数学上很容易看出原因——既然任意方向的坡度是方向向量与梯度的点积，而两个向量的点积在方向完全一致（即与梯度自身做点积）时达到最大，那么梯度方向自然就是上升最陡的方向！&lt;/p&gt;
+
+&lt;p&gt;下面我用 Mathematica 绘制了 \(f(x,y)\) 的负梯度场，它标出了曲面上每一点处下降最快的方向。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/gradient-descent/gradient.png&quot; alt=&quot;f 的梯度向量场&quot; width=&quot;360&quot; height=&quot;361&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+绘制为向量场的 f 的梯度。
+&lt;/p&gt;
+
+&lt;h2 id=&quot;沿着最陡的方向往下走&quot;&gt;沿着最陡的方向往下走&lt;/h2&gt;
+
+&lt;p&gt;前面我们已经达成共识：如果在浓雾中摸索下山，想最快到达谷底，就应该始终顺着最陡的下坡方向走。用数学语言来说，就是每一步都沿着当前位置的负梯度方向前进，因为负梯度指向的正是下降最陡的方向。从上面的向量场图可以看出，顺着箭头走最终会把我们带到一个最小值（但要小心——每个最小值都有各自的吸引域！稍后我们会谈到这一点）。&lt;/p&gt;
+
+&lt;p&gt;于是我们可以写出这样一套流程：&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;检查当前位置的坡度，确定下降最陡的方向；&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;朝那个方向走 5 步；&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;如果你还在往下走，回到第 1 步；否则，你已经到谷底了！&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;你可能会好奇，为什么是 5 步？其实这完全是随手定的。我们可以把它设成算法的一个可调参数，称之为「下降率」（步长），记作 \(\alpha\)。下降率越大，我们需要停下来检查坡度的次数就越少。从计算角度看这样效率更高——但正如你马上会看到的，这也暗藏陷阱。&lt;/p&gt;
+
+&lt;p&gt;此外，我们还可以做另一项优化。当脚下的坡度依然很陡时，说明我们大概离谷底还远；而随着坡度逐渐变缓，说明我们已经快到谷底了。因此，让每一步迈出的距离与梯度大小成正比会更加合理。我们用 \(\bar{g}\) 表示梯度，重新改写梯度下降流程：&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;检查当前位置的坡度，确定下降最陡的方向；&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;朝那个方向走 \(\alpha \times \|\bar{g}\|\) 步；&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;如果你还在往下走，回到第 1 步；否则，你已经到谷底了！&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;接下来，怎么判断自己是否「还在往下走」？一种常见方法是检查每次迭代下降了多少高度。如果海拔几乎不再变化，那大概率就已经基本到达谷底了。&lt;/p&gt;
+
+&lt;p&gt;用数学公式来写，整个过程就是：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\bar{p}_{n+1} = \bar{p}_n - \alpha \nabla f(x,y) \tag{3}  \label{eq:grad_descent}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;其中 \(p_n\) 是我们在第 \(n\) 次迭代时所处的位置。快来下面的交互演示里亲手试试吧！调节 \(\alpha\) 会改变下降步长，调节 \(X\) 和 \(Y\) 则会改变曲面上的初始出发点。你观察到了什么？&lt;/p&gt;
+
+&lt;div id=&quot;plot-1&quot;&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;X&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;x-slider&quot; type=&quot;range&quot; min=&quot;-3&quot; max=&quot;3&quot; value=&quot;0&quot; step=&quot;0.05&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;x-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;Y&lt;/span&gt;
+    &lt;input class=&quot;slider&quot; id=&quot;y-slider&quot; type=&quot;range&quot; min=&quot;-3&quot; max=&quot;3&quot; value=&quot;0&quot; step=&quot;0.05&quot; /&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;y-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;α&lt;/span&gt;
+    &lt;input class=&quot;slider&quot; id=&quot;alpha-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;0.2&quot; value=&quot;0&quot; step=&quot;0.001&quot; /&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;alpha-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;观察与发现&quot;&gt;观察与发现&lt;/h2&gt;
+
+&lt;p&gt;你可能已经注意到，梯度下降对初始位置非常敏感。它会把你拉向某个局部最小值，而这未必是全局最小值。在定义域中，所有会使梯度下降最终收敛到同一个最小值的初始点所构成的区域，称为该最小值的&lt;strong&gt;吸引域（Basin of Attraction）&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;你大概也发现了，增大下降率 \(\alpha\) 可以减少到达最小值所需的迭代次数。但一旦把 \(\alpha\) 调得太大，算法就会「迈过头」（Overshoot），甚至彻底发散。&lt;/p&gt;
+
+&lt;h2 id=&quot;与机器学习的关系&quot;&gt;与机器学习的关系&lt;/h2&gt;
+
+&lt;p&gt;你很可能是在机器学习的语境里听说过梯度下降的。在机器学习中，代价函数代表模型的误差——比如图像分类的错误率——而代价函数的输入变量则是我们要不断调整的模型权重。因此，我们可以用梯度下降来找到一组最优权重，使神经网络的分类误差降到最低！在这个领域，下降率 \(\alpha\) 有一个专门的名字：&lt;em&gt;学习率（Learning Rate）&lt;/em&gt;。说不定，我们的大脑一直以来也是这么学习的。&lt;/p&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdn.plot.ly/plotly-2.4.2.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js&quot; integrity=&quot;sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; src=&quot;/assets/js/gradient-descent.js&quot;&gt;&lt;/script&gt;
+
+</description>
+          <pubDate>Sun, 14 Nov 2021 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/zh/gradient-descent</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/gradient-descent</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Lucid Motors 汽车配置器：流式传输到浏览器的云端电子游戏</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    当你意识到电子游戏引擎其实就是市面上最强的物理模拟器时，一切就都说得通了。
+&lt;/p&gt;
+
+&lt;h2 id=&quot;一个巧妙的方案&quot;&gt;一个巧妙的方案&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.barrons.com/articles/lucid-churchill-merger-ipo-ev-51627308359&quot;&gt;Lucid Motors 在周一上市了&lt;/a&gt;。虽然我短期内肯定不会买一辆 Lucid，但出于好奇，我还是点开了&lt;a href=&quot;https://www.lucidmotors.com/air/configure/&quot;&gt;他们的在线选车配置器&lt;/a&gt;。不得不说，它简直是一件艺术品。你可以从几乎任何角度、由外及内地观察并与这辆车互动：&lt;/p&gt;
+
+&lt;div style=&quot;width:100%;height:100%;position:relative;padding-bottom:52.344%;&quot;&gt;&lt;iframe src=&quot;https://streamable.com/e/cudr66&quot; title=&quot;Embedded video&quot; loading=&quot;lazy&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; allowfullscreen=&quot;&quot; style=&quot;width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p class=&quot;caption video-caption&quot;&gt;Lucid 为其旗舰高端车型 Lucid Air Dream 打造的在线配置器。&lt;/p&gt;
+
+&lt;p&gt;你可以切换不同的车漆颜色和内饰风格，开关车门，甚至可以把中控屏收进去。背景里的金门大桥倒映在如镜面般的积水中。配置器保留了车身上的种种细节，连使用车门把手时下方亮起的迎宾灯都还原了出来。我甚至觉得自己对这辆车已经有了足够真实的直观感受，都不用再去线下看实车了。&lt;/p&gt;
+
+&lt;p&gt;那么 Lucid 究竟是怎么做到这一点的？你能指望普通用户的网页浏览器在本地实时渲染出这种带光影反射的画面吗？答案多半是否定的。它之所以能做到如此惊艳，是因为你看到的画面其实是运行在云端的 Unity（一款电子游戏引擎）渲染出来的——繁重的计算任务全部交给亚马逊服务器处理——再通过点对点视频流协议 WebRTC 实时传输回你的浏览器。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;模型在哪&quot;&gt;模型在哪？&lt;/h2&gt;
+
+&lt;p&gt;一开始，我天真地以为这个 3D 模型是通过最新的 &lt;a href=&quot;https://en.wikipedia.org/wiki/WebGL&quot;&gt;WebGL 库&lt;/a&gt;（一种在浏览器中借助硬件加速渲染 2D/3D 图形的 API）在我的浏览器里本地渲染的。既然是在本地渲染，那模型肯定就躺在我的内存里某个地方，说不定我还能把它提取出来，导入 3D 建模软件里折腾一下。具体来说，我想试试能不能把挡在全景玻璃穹顶中间的遮阳板去掉——特斯拉 Model X 实现了近乎无缝的穹顶视觉效果，真不知道 Lucid 为什么没有跟进。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/lucid-air-sun-visors.webp&quot; alt=&quot;Lucid Air 遮阳板打断了玻璃穹顶的连贯感&quot; width=&quot;1600&quot; height=&quot;994&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Lucid Air 的遮阳板打断了玻璃穹顶的连贯感。
+&lt;/p&gt;
+
+&lt;p&gt;于是我一头扎进了代码里。在浏览器开发者工具里折腾了一通，扫了上千行压缩过的 JavaScript，又录制并分析了我的笔记本和 Lucid 服务器之间的网络请求之后，我突然发现，答案从头到尾就明晃晃地打印在控制台里：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/zlbolt-webrtc.png&quot; alt=&quot;配置器其实是一个视频流&quot; width=&quot;691&quot; height=&quot;156&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+这个配置器本质上是一路 WebRTC 视频流。
+&lt;/p&gt;
+
+&lt;p&gt;根本没有什么本地渲染的 3D 模型。我看到的其实是一段视频。&lt;/p&gt;
+
+&lt;p&gt;那背后到底发生了什么？配置器刚打开时，先加载的是一个 2D 视图——也就是用一组并不那么丝滑的全景序列图来营造 3D 交互的错觉。市面上大多数在线 3D 展示都是这么做的。下面就是这个 2D 模式的演示：&lt;/p&gt;
+
+&lt;div style=&quot;width:100%;height:100%;position:relative;padding-bottom:52.344%;&quot;&gt;&lt;iframe src=&quot;https://streamable.com/e/ptjitc&quot; title=&quot;Embedded video&quot; loading=&quot;lazy&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; allowfullscreen=&quot;&quot; style=&quot;width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p class=&quot;caption video-caption&quot;&gt;由一系列 2D 图片拼出的略显卡顿的 3D 视图。&lt;/p&gt;
+
+&lt;p&gt;紧接着，客户端会测试我的网络带宽和延迟；如果网速足够支撑实时视频流，就会自动把当前会话升级为真正的 3D 模式：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/latency-test.png&quot; alt=&quot;延迟测试&quot; width=&quot;755&quot; height=&quot;25&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;
+&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/bandwidth-test.png&quot; alt=&quot;带宽测试&quot; width=&quot;706&quot; height=&quot;21&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+只要带宽足够，会话就会升级为 3D 模式。
+&lt;/p&gt;
+
+&lt;p&gt;这时便会建立一条 WebRTC 连接。&lt;a href=&quot;https://en.wikipedia.org/wiki/WebRTC&quot;&gt;WebRTC&lt;/a&gt; 是一种点对点流媒体协议。3D 场景在远端完成渲染，再经由 WebRTC 串流到我的浏览器里。&lt;/p&gt;
+
+&lt;p&gt;查看 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_token&lt;/code&gt; 请求的返回内容，还能发现更多实现细节：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/get-token-request.png&quot; alt=&quot;get_token 请求的内容&quot; width=&quot;829&quot; height=&quot;402&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+get_token 请求返回的内容。
+&lt;/p&gt;
+
+&lt;p&gt;第一个红框显示，为了测试带宽，客户端会从&lt;a href=&quot;https://libzl.zlthunder.net/bandwidth-test-img.png&quot;&gt;一张 25 MB 的测试图&lt;/a&gt;中下载一部分数据到你的设备上，并计算耗时。如果你好奇这张图长什么样，下面就是（别担心，我把它压缩小了 10 倍）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/bandwidth-test-image.webp&quot; alt=&quot;带宽测试图片&quot; width=&quot;895&quot; height=&quot;1263&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+跟汽车没什么关系，但拿来测带宽再合适不过。
+&lt;/p&gt;
+
+&lt;p&gt;顺便一提，&lt;a href=&quot;https://www.gimp.org/tutorials/Floating_Logo/Plasma.jpg&quot;&gt;这张图看起来像是用 GIMP 的 plasma 插件生成的效果&lt;/a&gt;。它加载得很慢，因为画面接近随机噪点，基本无法被有效压缩。&lt;/p&gt;
+
+&lt;p&gt;打开 &lt;a href=&quot;chrome://webrtc-internals/&quot;&gt;chrome://webrtc-internals/&lt;/a&gt;，可以看到正在把 3D 画面流式传输到我浏览器的这条 WebRTC 连接的更多底层信息。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/lucid-webrtc.png&quot; alt=&quot;WebRTC 内部信息&quot; width=&quot;851&quot; height=&quot;399&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Chrome 的调试工具提供了关于这条 WebRTC 连接的更多详细信息。
+&lt;/p&gt;
+
+&lt;p&gt;看到这里，你可能已经注意到，所有这些链接用的都不是 Lucid 自己的域名，而是在 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;zlthunder&lt;/code&gt; 旗下。他们是谁？&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;zerolight&quot;&gt;ZeroLight&lt;/h2&gt;
+
+&lt;p&gt;上网一搜 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;zlthunder&lt;/code&gt;，就会找到一家名为 &lt;a href=&quot;https://zerolight.com/&quot;&gt;ZeroLight&lt;/a&gt; 的公司。他们的官网介绍自己是专注于汽车领域的云端 3D 可视化服务商。这下全对上号了！&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/zero-light.webp&quot; alt=&quot;ZeroLight 官网&quot; width=&quot;1600&quot; height=&quot;640&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+专注于云端 3D 可视化的服务商。
+&lt;/p&gt;
+
+&lt;p&gt;没过多久，我又找到了&lt;a href=&quot;https://unity3d.com/showcase/case-stories/zerolight&quot;&gt;知名游戏引擎 Unity 发布的一篇官方博客&lt;/a&gt;，专门介绍了 ZeroLight 如何借助 Unity 引擎打造逼真的虚拟展厅，包括精细优化的物理效果、光影反射等等。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/unity-zero-light.webp&quot; alt=&quot;Unity 关于 ZeroLight 的案例文章&quot; width=&quot;1203&quot; height=&quot;658&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+电子游戏技术已经带着我们走了这么远。
+&lt;/p&gt;
+
+&lt;p&gt;现在所有拼图都严丝合缝地拼在一起了。当我访问这个网站时，页面会先加载一个 2D 配置器。如果我的网络条件达标，它就会把我连接到运行在 AWS 服务器上的一个 Unity（3D 游戏引擎）实例。服务器接收我的鼠标操作，实时旋转和缩放视角，在云端渲染出画面，再流式传回给我。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;听起来烧钱得很&quot;&gt;听起来烧钱得很&lt;/h2&gt;
+
+&lt;p&gt;想象一下，如果同时有 1,000 个用户在线浏览这个网站：你就需要 1,000 个带硬件加速的游戏引擎实例，同时接收输入并向外推送海量实时视频流——跟 Stadia、GeForce Now 这些云游戏平台如出一辙。不过他们显然非常清楚这笔账：为了节省成本，只要你闲置 60 秒，系统就会自动断开 3D 连接：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/inactivity-downgrade.png&quot; alt=&quot;闲置降级提示&quot; width=&quot;524&quot; height=&quot;60&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+闲置自动降级肯定省下了不少钱。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;游戏引擎到底是什么&quot;&gt;游戏引擎到底是什么？&lt;/h2&gt;
+
+&lt;p&gt;乍一看，拿电子游戏引擎来做汽车配置器似乎有点出人意料，但游戏引擎本质上就是一个高度优化的物理模拟器。像 Unity 这样成熟的游戏引擎，凝聚了几十年来在光线追踪与其他物理现象模拟上的研究成果。因此，只要你想模拟现实世界——哪怕只是模拟一个汽车展厅——游戏引擎就是一款开箱即用、可拓展至无数领域的绝佳工具。&lt;/p&gt;
+
+&lt;p&gt;事后想想，我本来随便搜一搜、翻到 Unity 那篇案例文章，就能搞明白 Lucid 配置器的原理。但亲手逆向拆解它，让我更近距离地看到了这个产品背后的挑战、解法与运转机制，过程就像当了一回抽丝剥茧的侦探。不过最让我觉得好笑又震撼的，还是如今科技所达到的惊人复杂度：一个超级逼真的物理模拟器，运行在亚马逊数据中心的远程服务器上，以光速接收我电脑发出的指令并传回实时视频流——而这一切，仅仅是为了让我能在线玩玩汽车选配器。想当年，人类登月也不过靠了一台「计算器」而已！&lt;/p&gt;
+</description>
+          <pubDate>Wed, 28 Jul 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/zh/lucid-configurator-is-a-streaming-video-game</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/lucid-configurator-is-a-streaming-video-game</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>用 AI 为黑白老照片赋予色彩与生命力</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    机器学习让我们能轻松为黑白照片上色，但这背后又隐藏着什么风险？
+&lt;/p&gt;
+
+&lt;h2 id=&quot;另一个宇宙&quot;&gt;另一个宇宙&lt;/h2&gt;
+
+&lt;p&gt;尽管彩色照片在技术上已经存在了一个多世纪（&lt;a href=&quot;https://www.loc.gov/pictures/related/?fi=name&amp;amp;q=Prokudin-Gorski%20%2C%20Serge%20%20Mikha%20lovich%2C%201863-1944&quot;&gt;彩色摄影先驱谢尔盖·普罗库金-戈尔斯基与彼得·韦杰尼索夫曾游历沙皇俄国，用全彩影像记录下了那个时代&lt;/a&gt;），但 20 世纪的大多数时光仍是以黑白影像留存下来的。即便到了 20 世纪后期，世界上很多地方也用不起彩色胶卷——直到 1980、90 年代，我父亲在苏联时期的乌克兰依然是自己冲洗黑白照片；而当美国人用全彩胶片记录越南战争时，北越视角的影像却几乎全是黑白照片。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/boy-sim-river.jpeg&quot; alt=&quot;西姆河畔的少年&quot; width=&quot;900&quot; height=&quot;648&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+西姆河畔的少年，一张极其早期的沙俄彩色照片。这张照片是通过使用不同滤色镜对同一场景拍摄多张底片合成的。图片由美国国会图书馆提供。
+&lt;/p&gt;
+
+&lt;p&gt;有人会说，黑白影像有着自己独特的质感，这或许没错。但对我而言，黑白影像总会在我和画面之间划出一道隔阂。它明显带着遥远的时间距离感。我们所有人都会把黑白画面与「过去」联系在一起——影视作品里经常用黑白画面来表现回忆，正是这种心理联想的写照。而作为一个在彩色世界中感知现实的人，我很难真正代入黑白影像里。我很难把自己放进那个场景或片中人物的处境里，因为在潜意识里，它们仿佛存在于另一个黑白宇宙。然而一旦给这些影像上色，一切突然变得更真实、更可信、更触手可及。那一刻你会真切地感受到，画面里记录的就发生在同一片土地上，画中人也是和我们一样的普通人。&lt;/p&gt;
+
+&lt;p&gt;因此，当父亲最近开始把我们家的老照片数字化——毕竟实体照片会随着时间褪色损坏，甚至有永久遗失的风险，连同它们承载的家族历史、记忆与传承一起消失——我也萌生了给它们上色的念头。我想更真切地感受这些画面，也想让家人们能够借此怀念已经离世的亲人，重温他们曾经的青春与往昔。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;用-ai-为照片上色&quot;&gt;用 AI 为照片上色&lt;/h2&gt;
+
+&lt;p&gt;手动给照片修复色彩既费时又费力。机器学习模型提供了一种快速且低成本的替代方案，不过它们也有自身的局限，后文我们会详细讨论。我并没有为此自己训练模型——别人已经投入了数千小时来研发和训练专门做这件事的模型，我直接找到了一个效果非常出色的现成模型。&lt;/p&gt;
+
+&lt;p&gt;我使用的是 &lt;a href=&quot;https://deepai.org/machine-learning-model/colorizer&quot;&gt;DeepAI 提供的图像上色 API（Image Colorization API）&lt;/a&gt;。DeepAI 线上部署的似乎是 DeOldify 模型的某个变体，源码可以在&lt;a href=&quot;https://github.com/jantic/DeOldify&quot;&gt;这个 GitHub 仓库&lt;/a&gt;找到。&lt;/p&gt;
+
+&lt;p&gt;DeepAI 的 API 似乎不允许调整模型参数，但如果你从上面的仓库自己本地运行，或者使用 &lt;a href=&quot;https://colab.research.google.com/github/jantic/DeOldify/blob/master/ImageColorizerColabStable.ipynb&quot;&gt;Colab 实例&lt;/a&gt;，就可以自由调参。&lt;a href=&quot;https://www.myheritage.com/incolor&quot;&gt;MyHeritage&lt;/a&gt; 也把这个模型封装成了支持调节参数的在线服务。&lt;/p&gt;
+
+&lt;p&gt;我自己写了一个小脚本，用来批量处理整个文件夹里的照片。它会遍历目录中的所有图片，发送到 DeepAI 的图像上色 API，再把结果下载到另一个文件夹中（同时跳过已经上过色的图片）。如果你也用得上，只需把自己的 DeepAI API 密钥设为环境变量，然后运行&lt;a href=&quot;https://github.com/skzv/colorize-photos&quot;&gt;这个脚本&lt;/a&gt;即可：&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;DL_API_KEY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;lt;your-deep-ai-key&amp;gt;
+python3 main.py /path/to/images
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;我的家庭老照片&quot;&gt;我的家庭老照片&lt;/h2&gt;
+&lt;p&gt;下面展示几张我们家老照片的上色效果。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/mama-and-vova.webp&quot; alt=&quot;妈妈抱着哥哥沃瓦&quot; width=&quot;1600&quot; height=&quot;1232&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+90 年代初在乌克兰赫尔松，母亲抱着我哥哥。图片由库兹涅佐夫（Kuznetsov）家族提供。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/mama-and-vova-colorized.webp&quot; alt=&quot;上色后的妈妈与沃瓦&quot; width=&quot;800&quot; height=&quot;616&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+上色之后。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/my-grandmother-allarkadina.jpg&quot; alt=&quot;祖母阿拉尔卡季娜&quot; width=&quot;523&quot; height=&quot;801&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+我的祖母阿拉尔卡季娜（Allarkadina），大概摄于 50 年代去大学的路上。她毕业于多所院校，专攻电气工程，曾是一名非常成功的船舶电气工程师。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/my-grandmother-alla-colourised.webp&quot; alt=&quot;上色后的祖母阿拉尔卡季娜&quot; width=&quot;522&quot; height=&quot;800&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+上色之后。
+&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;看起来真漂亮，栩栩如生。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;父亲看到刚上完色的照片时说的这句话，让我觉得一切折腾都值了。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;越南战争老照片&quot;&gt;越南战争老照片&lt;/h2&gt;
+&lt;p&gt;在为家庭照片写好批量上色脚本几周后，一篇题为&lt;a href=&quot;https://news.ycombinator.com/item?id=27283624&quot;&gt;「北越视角下的越南战争（The Vietnam War from the North Vietnamese Side）」&lt;/a&gt;的帖子登上了 Hacker News 首页。我觉得这正是用这个脚本的绝佳机会，也许能为这些历史影像带来全新的视角。正如电影&lt;a href=&quot;https://www.imdb.com/title/tt7905466/&quot;&gt;《他们已不再变老》（They Shall Not Grow Old）&lt;/a&gt;让一战的残酷变得鲜活而真实一样，我也希望能让北越视角下的人物与场景同样生动起来。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-agent-orange.jpeg&quot; alt=&quot;橙剂摧毁的丛林黑白照&quot; width=&quot;1600&quot; height=&quot;1179&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+橙剂（Agent Orange）对丛林造成的毁灭性破坏。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-agent-orange-colourised.webp&quot; alt=&quot;橙剂摧毁的丛林彩色照&quot; width=&quot;800&quot; height=&quot;590&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+上色之后。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-downed-aircraft.jpeg&quot; alt=&quot;当地人查看坠毁的美军飞机黑白照&quot; width=&quot;1600&quot; height=&quot;1111&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+当地人正在查看一架坠毁的美军飞机，飞行员为斯蒂芬·欧文·马瑟尔曼（Stephen Owen Musselman）中尉。他未能生还——战争即是地狱。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-downed-aircraft-colourised.webp&quot; alt=&quot;当地人查看坠毁的美军飞机彩色照&quot; width=&quot;800&quot; height=&quot;556&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+上色之后。
+&lt;/p&gt;
+
+&lt;p&gt;所有原始黑白照片都可以在&lt;a href=&quot;https://rarehistoricalphotos.com/vietnam-war-images-from-vietnamese-photographers/&quot;&gt;这里&lt;/a&gt;查看，上色后的版本则在&lt;a href=&quot;https://imgur.com/a/aJbpMjf&quot;&gt;这里&lt;/a&gt;。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;hacker-news-上的反响&quot;&gt;Hacker News 上的反响&lt;/h2&gt;
+
+&lt;p&gt;我的尝试收获了不少赞誉，&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/praise.webp&quot; alt=&quot;赞誉评论截图&quot; width=&quot;624&quot; height=&quot;934&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;也招来了一些反感，&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/contempt.png&quot; alt=&quot;反感评论截图&quot; width=&quot;546&quot; height=&quot;286&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+那条被折叠（[flagged]）的评论挺可惜的，因为它其实点出了一个很有意思的观点，大意是「请不要这么做」。
+&lt;/p&gt;
+
+&lt;p&gt;但最重要的是，它引发了许多非常有价值的讨论。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/discussion.webp&quot; alt=&quot;讨论评论截图&quot; width=&quot;654&quot; height=&quot;946&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;由这批上色照片引发的完整讨论帖可以在&lt;a href=&quot;https://news.ycombinator.com/item?id=27284795&quot;&gt;这里&lt;/a&gt;看到。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;模型的局限性&quot;&gt;模型的局限性&lt;/h2&gt;
+
+&lt;p&gt;这场讨论中有两个方面让我印象尤为深刻。第一点，是对 AI 局限性的清醒提醒。&lt;/p&gt;
+
+&lt;p&gt;例如，把这个模型用到一张建造中的金门大桥老照片上，它会输出一座白色的大桥。公平地说，这倒也不算完全离谱——大桥在施工初期确实是白色的；但根据 &lt;a href=&quot;https://github.com/jantic/DeOldify&quot;&gt;DeOldify 仓库&lt;/a&gt;的说明，在这张照片拍摄时，大桥其实已经刷上了红色防锈底漆。虽然训练数据里大概包含建造中的金门大桥，模型也确实认出了这是建造中的同一座桥，但它无法判断照片的拍摄日期，也就不知道此时桥身早已涂上了红底漆。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/golden-gate.webp&quot; alt=&quot;白色的金门大桥？&quot; width=&quot;1200&quot; height=&quot;472&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+白色的金门大桥？它确实曾是白色的——但不是拍这张照片的时候。
+&lt;/p&gt;
+
+&lt;p&gt;还有一些场景本身就模棱两可。比如下面这张图，仅凭画面特征，模型分不清地面是草地还是柏油路，于是错误地把柏油路涂成了绿色，而人类上色师往往能判断准确。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/a-celebration-colourised.webp&quot; alt=&quot;一场庆祝活动&quot; width=&quot;800&quot; height=&quot;522&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+模型没能分辨出地面是柏油路而不是草坪。
+&lt;/p&gt;
+
+&lt;p&gt;另一个有趣的现象是，衣物往往缺乏足够鲜明的色调、纹理、特征或上下文来支持准确上色。除非衣服本身有非常明显的特征或场景线索，否则模型特别倾向于把衣服涂成紫色。原因大概在于，当模型无法可靠推断衣服颜色时，紫色处于模糊色彩空间的中间地带，是一个能最小化训练损失的「保守押注」。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-divers-colourised.webp&quot; alt=&quot;越南潜水员——全都是紫色？&quot; width=&quot;796&quot; height=&quot;800&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+我不觉得过去人们穿紫色衣服的频率有这个模型以为的那么高。
+&lt;/p&gt;
+
+&lt;p&gt;事实上，我父亲后来还问我能不能把照片里几件物品的颜色调准一点。遗憾的是我没有继续深究这个需求，一时也不太清楚该怎么精准修改。不过正如一位网友所说，就算颜色并不完全准确，它们依然让画面鲜活了起来。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;伦理考量&quot;&gt;伦理考量&lt;/h2&gt;
+
+&lt;p&gt;清楚了这些局限之后，我们就能更好地思考 AI 上色背后的伦理影响。这也是那场讨论中让我印象深刻的第二个方面。一开始做这个项目时，我压根没想过伦理问题，但收到的一些反馈促使我认真反思，对此我很感激。&lt;/p&gt;
+
+&lt;p&gt;最核心的伦理考量在于「真实性」。就像围绕深度伪造（Deepfake）会混淆真假的争议一样，人工上色也可能改变我们对历史的感知。AI 会对过去世界的色彩做出自己的选择，而这些选择未必符合史实。举个例子，如果我们保存并传播 AI 生成的「白色金门大桥」，观众所体验到的历史画面就是失实的。当然，黑白版本本身也不是当时真实世界的样子。也许真正的症结在于：看黑白照片时，观众心里很清楚过去并不是黑白的；但看彩色照片时，观众很容易误以为历史原本就是这个模样。&lt;/p&gt;
+
+&lt;p&gt;有些人甚至认为这种后期修饰是在篡改历史，而且有时候情况确实如此。看看下面这个近期的例子：&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;柬埔寨要求美国媒体机构 Vice 撤回一篇刊登了红色高棉遇难者新上色照片的文章，称这些照片是对逝者的亵渎，因为部分遇难者的脸上被篡改加上了笑容。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p class=&quot;caption&quot; style=&quot;margin-top:-25px;&quot;&gt;&lt;a href=&quot;https://www.aljazeera.com/news/2021/4/11/cambodia-condemns-vice-for-altered-khmer-rouge-images&quot;&gt;来源&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;这项抗议完全站得住脚。看起来模型出现了过拟合，训练集里大概率充斥着面带微笑的人脸，因此它硬生生把遇难者的面容改成了更接近训练数据的样子——加上了笑容。这是一个非常典型的反面教材，说明草率使用 AI 会带来怎样的陷阱。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.myheritage.com/incolor&quot;&gt;MyHeritage&lt;/a&gt; 使用的也是我用到的同款 DeOldify 模型，他们采取了一种折中做法：给所有经过上色处理的照片打上水印。我觉得他们的理由很有说服力：&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;我们在上色照片的左下角加上了一个特殊的浮雕调色板图标，以此将后期上色的照片与原始彩色照片区分开来。尽管效果高度逼真，但上色照片的颜色是由自动算法模拟生成的，未必与原始场景中的真实色彩一致。所有上色照片都会带有这个调色板图标，以便用户将其与真实色彩的照片区分开。我们希望这一负责任的做法能被其他使用照片上色技术的机构采纳。至于仅经过色彩修复的照片则不会带有该图标，因为它们的色彩本身是真实的。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;就我家而言，家人们都知道这些照片是我用 AI 后期上色的，也看得出有些颜色并不完全准确。但即便色彩有偏差，照片里的人物与场景依然重新焕发了生机。这让我想起高中时在养老院做志愿者的经历：当时我用 Google 街景把一位老人带回了他 50 年未曾回去过的德累斯顿童年故居；而这一次，我用 AI 把全家人瞬间带回了数十年前的美好时光。技术终究是一种工具，我很庆幸自己生活在这样一个能让此类「魔法」成为现实的时代。&lt;/p&gt;
+</description>
+          <pubDate>Sat, 12 Jun 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/zh/bringing-colour-and-life-to-black-and-white-photos</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/bringing-colour-and-life-to-black-and-white-photos</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>将套利建模为最短路径问题</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    解析套利的本质，并介绍一种高效寻找无风险瞬时套利机会的算法。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;有谁不喜欢赚钱呢？&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;如果能把「赚钱」这个问题转化为「寻找最短路径」问题，会怎么样？至少有一种经典场景可以做到这一点：利用套利机会。&lt;/p&gt;
+
+&lt;h2 id=&quot;什么是套利&quot;&gt;什么是套利？&lt;/h2&gt;
+
+&lt;p&gt;&lt;em&gt;套利（Arbitrage）_是指在不同市场之间，或以不同形式买卖资产，从而利用价格差异获利的行为。而从事套利的人被称为_套利者（Arbitrageur）&lt;/em&gt;——听起来确实挺高级的。&lt;/p&gt;
+
+&lt;p&gt;我们先来看一个简单的例子。假设保罗（Paul）、彼得（Peter）和鲍勃（Bob）住在一个村子里，他们以物易物，交换胡萝卜、土豆和生菜。鲍勃用土豆换胡萝卜，彼得用生菜换土豆，保罗用生菜换胡萝卜。&lt;/p&gt;
+
+&lt;p&gt;进一步假设：鲍勃愿意用 2 个土豆换 1 根胡萝卜，彼得愿意用 1 棵生菜换 2 个土豆，保罗愿意用 2 根胡萝卜换 1 棵生菜。如果我们把每个人都看作对应商品的市场，那么兑换率如下所示：&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;市场&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;兑换率&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;鲍勃（土豆换胡萝卜）&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2 土豆/胡萝卜&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;彼得（生菜换土豆）&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;1 生菜/2 土豆 = 0.5 生菜/土豆&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;保罗（胡萝卜换生菜）&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2 胡萝卜/生菜&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+村子里各种商品的兑换率。
+&lt;/p&gt;
+
+&lt;p&gt;你察觉到其中的机会了吗？&lt;/p&gt;
+
+&lt;p&gt;作为一个有商业头脑的人，你自然会想抓住这个机会。假设你手里有 5 根胡萝卜，先去找鲍勃，按他愿意接受的兑换率把 5 根胡萝卜换成 10 个土豆：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+5 \text{ carrots} \times 2 \space \frac{\text{potatoes}}{\text{carrots}} = 10 \text{ potatoes} \tag{1} \label{eq:arb_example}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;接着，你拿着土豆去找彼得，因为他愿意用 5 棵生菜换你的 10 个土豆。然后你拿着这 5 棵生菜去找保罗，他会用 10 根胡萝卜换你的生菜。&lt;/p&gt;
+
+&lt;p&gt;经过几笔聪明的交易，你的胡萝卜财富翻了一倍。你利用套利机会，把 5 根胡萝卜变成了 10 根。&lt;/p&gt;
+
+&lt;p&gt;后来，村民们可能会发展出更成熟的市场，不再只有鲍勃、彼得和保罗这三个交易者。这个小村子可能会出现胡萝卜/生菜市场、生菜/土豆市场和土豆/胡萝卜市场，每笔交易的即时汇率会随着大家的交易意愿不断波动。&lt;/p&gt;
+
+&lt;p&gt;但套利的原理始终不变。只要以这些汇率挂单交易的人手里还有胡萝卜、生菜和土豆可供兑换，这个机会就可以一直被利用，直到市场重新达到均衡状态。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;现代市场中的套利&quot;&gt;现代市场中的套利&lt;/h2&gt;
+
+&lt;p&gt;提到现代市场，你首先想到的恐怕不是胡萝卜、土豆和生菜。如果你关注外汇（Forex），想到的多半是美元、英镑和日元。在这种情况下，我们面对的是美元/英镑市场、英镑/日元市场和日元/美元市场，每个市场中都有大量交易者在同时参与。接下来我们就以这些货币作为交易标的来举例，但请记住，这一原理适用于几乎所有可交易的资产。&lt;/p&gt;
+
+&lt;p&gt;假设在某一时刻，汇率如下所示：&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;市场&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;汇率&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;英镑 (£) / 美元 ($)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0.8 英镑/美元&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;日元 (¥) / 英镑 (£)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;100 日元/英镑&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;美元 ($) / 日元 (¥)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0.013 美元/日元&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+外汇市场汇率示例。
+&lt;/p&gt;
+
+&lt;p&gt;如果你从鲍勃、彼得和保罗交易胡萝卜、生菜和土豆的例子里学到了什么，你现在肯定能一眼看出这里的机会。&lt;/p&gt;
+
+&lt;p&gt;拿 1 美元换成英镑，你会得到 £0.8。再把英镑换成日元，你会得到 ¥80。最后把日元拿到日元/美元市场换回美元……现在你手里有了 $1.04！&lt;/p&gt;
+
+&lt;p&gt;但你必须动作够快，赶在别的套利者之前出手。这种机会转瞬即逝，一旦流动性被耗尽，汇率就会重新趋于一致。&lt;/p&gt;
+
+&lt;p&gt;细心的读者可能会发现，我们在例子里没有考虑交易手续费。在实际操作中，你当然必须把手续费算进去，才能判断是否存在真正能赚钱的套利机会。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;争分夺秒&quot;&gt;争分夺秒&lt;/h2&gt;
+
+&lt;p&gt;希望你现在已经直观地理解了为什么速度至关重要。汇率瞬息万变，而且在某个特定汇率上可供成交的「货量」是有限的。&lt;/p&gt;
+
+&lt;p&gt;尽管我们目前讨论的例子还算简单，但现实中的套利机会可能跨越很多笔交易，变得极为复杂。我们的例子只用了 3 笔交易，但如果需要 10 笔呢？在一个包含 20 种货币、两两之间都有交易市场的网络中，你能多快找到套利机会？&lt;/p&gt;
+
+&lt;p&gt;用计算机来找显然是标准答案。但我们还需要一个高效的算法，免得被别人抢先一步。&lt;/p&gt;
+
+&lt;p&gt;为此，我们可以借助数学和计算机科学中的几个巧妙洞见。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;将市场建模为图&quot;&gt;将市场建模为图&lt;/h2&gt;
+
+&lt;p&gt;图（Graph）是一种极其重要的数据结构，应用极其广泛。许多社会结构和自然结构都可以用图来建模，而事实证明，金融市场也是其中之一。&lt;/p&gt;
+
+&lt;p&gt;在我们的场景里，把每种货币看作一个节点（Node）。从一个节点移动到另一个节点，就对应着将一种货币兑换成另一种货币。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-white.png&quot; alt=&quot;简化的货币图&quot; width=&quot;448&quot; height=&quot;283&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+简化示意图——实际上每个方向都应该有一条独立的有向边。
+&lt;/p&gt;
+
+&lt;p&gt;因此，沿着节点之间的边移动，就应该按对应的汇率来换算货币金额。&lt;/p&gt;
+
+&lt;p&gt;也就是说，从美元节点移动到英镑节点，相当于乘以 0.8 英镑/美元。我们可以直接把汇率设为每条边的权重（Weight）。&lt;/p&gt;
+
+&lt;p&gt;需要注意的是，两个方向的汇率只是_近似_互为倒数。如果美元换英镑的汇率是 0.8 英镑/美元，那么反过来的汇率大约是 1/(0.8 英镑/美元) = 1.25 美元/英镑。这对我们的建模意味着：必须把每个市场上的买入和卖出分别视作两条独立的有向边，各自带有不同的权重。&lt;/p&gt;
+
+&lt;p&gt;双向汇率之所以只是_近似_互为倒数，是因为货币买卖价格之间存在微小差价，即买卖价差（Buy-Sell Spread）。举个例子，如果在某一时刻，你可以按 0.8 英镑/美元的价格买入英镑（当前别人愿意卖给你的价格），但把英镑卖回美元时的汇率却是 0.82 英镑/美元（即 1.22 美元/英镑，也就是当前别人愿意从你手里买入的价格），那么你的图模型就会长这样（为简洁起见省去了其他汇率）：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-w-exchange-rates-white.png&quot; alt=&quot;带汇率的货币图&quot; width=&quot;451&quot; height=&quot;378&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;一系列连续交易可以建模为沿着图中的边行进，而最终的交易结果则是把沿途经过的边权重&lt;strong&gt;&lt;em&gt;相乘&lt;/em&gt;&lt;/strong&gt;计算出来的。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;识别套利机会&quot;&gt;识别套利机会&lt;/h2&gt;
+
+&lt;p&gt;既然我们已经建好了模型，那么在图中到底要找什么样的结构，才对应着一个套利机会呢？&lt;/p&gt;
+
+&lt;p&gt;要判断一系列交易是否盈利，我们需要一个统一的衡量标准。换句话说，如果交易从美元开始，那最后也必须回到美元。把最终得到的美元数额和最初投入的美元数额一比，就能知道是赚了还是亏了。&lt;/p&gt;
+
+&lt;p&gt;在我们的图里，这意味着交易路径必须回到起点节点。在上面的例子中，我们从美元节点出发，最终又回到美元节点。在图论术语中，这叫做&lt;strong&gt;环（Cycle）&lt;/strong&gt;。所以我们要找的是某种环——但什么样的环才有利可图呢？&lt;/p&gt;
+
+&lt;p&gt;注意，如果我们把沿途边的汇率相乘，有效汇率的单位会逐次消去并转换：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+a \space \frac{\cancel{£}}{$} \times b \space \frac{¥}{\cancel{£}} = ab \space \frac{¥}{$}  \tag{2} \label{eq:units_of_exchange_rate}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;而当我们回到起点节点时，这个数值就变成无量纲的了——它从汇率变成了收益率倍数！沿着图中的一个环走一圈，把沿途的汇率全部相乘，得到的正是完成这组交易后的回报率倍数：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+a \space \frac{\cancel{£}}{\cancel{$}} \times b \space \frac{\cancel{¥}}{\cancel{£}} \times c \space \frac{\cancel{$}}{\cancel{¥}} = abc \space \text{[dimensionless]}  \tag{3} \label{eq:unitless_exchange}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;如果市场是完全有效的，所有汇率都处于均衡状态，那么我们的回报率倍数 \(abc\) 就会等于 1。如果边权重的乘积大于 1，比如 1.02，那就意味着这笔套利能带来 2% 的收益。&lt;/p&gt;
+
+&lt;p&gt;因此，推广到任意 \(n\) 笔交易，一个套利机会对应的就是如下不等式：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\prod_i^n{e_i} = e_ie_2...e_n &amp;gt; 1  \tag{4} \label{eq:arbitrage_return}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;其中 \(e_i\) 表示 \(n\) 笔交易中第 \(i\) 笔交易的汇率。&lt;/p&gt;
+
+&lt;p&gt;所以，我们需要一个算法，能在市场构成的有向图中找到一个边权重乘积大于 1 的环。你当然可以尝试从头发明一个新算法——但在计算机科学里，就像在生活中一样，把陌生问题归约（Reduce）到我们已经知道怎么解决的经典问题上，往往事半功倍。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;bellman-ford-算法&quot;&gt;Bellman-Ford 算法&lt;/h2&gt;
+
+&lt;p&gt;寻找最短路径是计算机科学中非常基础且常见的问题，适用于各种场景。把图和地图对应起来，最直观的例子就是在地图上找最短路线。不过只要动一点脑筋，许多其他类型的问题也能转化为最短路径问题。接下来我要向你证明，寻找套利机会正是其中之一。&lt;/p&gt;
+
+&lt;p&gt;首先，明确一下什么是最短路径问题。给定图中的两个节点 \(s\) 和 \(t\)，最短路径指的是使边权重之_和_最小的那条路径。也就是说，从 \(s\) 走到 \(t\)，把一路上经过的边权重累加起来，总和最小——即总代价最小——的路径就是最短路径。&lt;/p&gt;
+
+&lt;p&gt;接下来，了解一下最短路径问题的不同类别也很有帮助。在最直观的例子——比如在地图上找最短路线——中，所有边的权重都必须是正数。除非你有时光机，否则沿着一条路往前开是不可能让你的行程时间变短的。对于只包含正权边的图，著名的 Dijkstra 算法可以求出到图中所有节点的最短路径。&lt;/p&gt;
+
+&lt;p&gt;然而，图完全可以包含负权边。在这种情况下，走过一条负权边会降低整条路径的总代价。但如果图中存在一个总权重为负的_环_，那你就可以一直沿着这个_环_绕圈——每绕一圈，路径总代价就更低一点——于是最短路径的代价会趋近于 \(-\infty\)。面对这种情况，如果最短路径算法能够检测出负权环（Negative Weight Cycle），那就非常关键了，否则算法就会永远陷在负权环里打转。&lt;/p&gt;
+
+&lt;p&gt;Bellman-Ford 算法正是这样的算法。作为 Dijkstra 最短路径算法更通用的版本，它能够处理负权边。为此，它具备检测_负权环_的能力——也就是找出图中边权重_相加_小于 0 的环。&lt;/p&gt;
+
+&lt;p&gt;但问题来了：我们需要找的是边权重&lt;strong&gt;&lt;em&gt;乘积&lt;/em&gt;&lt;/strong&gt;大于 1 的环，一个只能找边权重&lt;strong&gt;&lt;em&gt;总和&lt;/em&gt;&lt;/strong&gt;小于 0 的环的算法，怎么帮得上忙呢？&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;对数来救场&quot;&gt;对数来救场&lt;/h2&gt;
+
+&lt;p&gt;下一个关键洞见是：利用对数恒等式，可以把乘积变成求和：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\log{ab} = \log{a} + \log{b}  \tag{5} \label{eq:log_product_identity}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;这样一来，我们就能把「寻找_乘积_大于 1 的环」转化为「寻找_总和_大于 0 的环」！具体做法就是对每个汇率取对数，将其作为对应边的权重。&lt;/p&gt;
+
+&lt;p&gt;我们对不等式两边同时取对数来验证一下。先对左边取对数，就把求乘积转化成了求和：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\log{\prod_i^n{e_i}} = \log{e_ie_2...e_n} = \log{e_1} + ... + \log{e_n} = \sum_i^n{\log{e_i}} \tag{6} 
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;对右边取对数，正好把 1 变成了 0：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{\log{e_i}} &amp;gt; \log{1} \rightarrow \sum_i^n{\log{e_i}} &amp;gt; 0 \tag{7}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;离目标只差一步了。最后一步，为了彻底归约到已知算法能直接解决的形式，我们把每条边的权重都乘以 -1。这样就把「寻找正权环」变成了「寻找负权环」：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{-\log{e_i}} &amp;lt; 0 \tag{8}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;而这正是 Bellman-Ford 算法的拿手好戏！按上述方式构建图并运行 Bellman-Ford 算法，就能快速高效地帮我们找出套利机会，因为我们已经成功把套利问题转化成了寻找最短路径的问题——更确切地说，是寻找_无限短的路径_。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/neg-log-currency-graph-white.png&quot; alt=&quot;负对数货币图&quot; width=&quot;448&quot; height=&quot;283&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+我们要寻找的是一个负权环，其中每条边的权重都是对应汇率的负对数。
+&lt;/p&gt;
+
+&lt;p&gt;事后回看，负权环与套利机会之间的对应关系其实顺理成章：负权环每走一圈就会降低一次路径代价，而套利环路每走一圈就会让你赚一次钱。其中的精妙之处，就在于通过给边权重取 \(-\log\)，把「乘积大于 1」的问题优雅地转换成了「总和小于 0」。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;实战验证&quot;&gt;实战验证&lt;/h2&gt;
+
+&lt;p&gt;我们来用前面例子中的汇率跑一遍这个算法，看看它是否能准确识别出套利机会。对各汇率取 \(-\log\)（自然对数），得到：&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;市场&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;-log(汇率)&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;英镑 (£) / 美元 ($)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0.223&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;日元 (¥) / 英镑 (£)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;-4.605&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;美元 ($) / 日元 (¥)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;4.343&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;把这几笔交易的权重加起来，不等式成立——&lt;em&gt;我们找到了一个负权环&lt;/em&gt;！&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{-\log{e_i}} = 0.223 - 4.605 + 4.343 = -0.039 \label{eq:neg_log_exchange_rate_example} \tag{9}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;我们可以逆向执行对数变换，还原出乘积并算出回报率：&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\prod_i^n{e_i} &amp;amp;= \exp{\sum_i^n{-\log{e_i}}} \\
+\prod_i^n{e_i} &amp;amp;= \exp(0.039) = 1.04 \tag{10}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;这正好就是我们之前算出来的 4% 回报率。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;回到现实世界&quot;&gt;回到现实世界&lt;/h2&gt;
+
+&lt;p&gt;既然套利机会对应着图里的负权环，那听起来岂不是可以沿着这个环一直绕圈，无限赚钱？现实当然没那么美好。&lt;/p&gt;
+
+&lt;p&gt;任何一个套利机会所对应的流动性——也就是在价格发生明显变动之前可以成交的资金体量——都是非常有限的，而且会被各路算法交易员瞬间抢食殆尽；他们为了比对手快上哪怕几微秒，一直在不断逼近计算技术和物理定律的极限。&lt;/p&gt;
+
+&lt;p&gt;话虽如此，把图论和经典的最短路径算法应用到金融领域来解决实际问题——顺便聊聊赚钱——依然是一次非常有趣的思维体操，希望你也像我一样乐在其中。&lt;/p&gt;
+</description>
+          <pubDate>Sun, 25 Apr 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/zh/arbitrage-as-a-shortest-path-problem</link>
+          <guid isPermaLink="true">https://blog.skz.dev/zh/arbitrage-as-a-shortest-path-problem</guid>
+        </item>
+      
+    
+  </channel>
+</rss>
+

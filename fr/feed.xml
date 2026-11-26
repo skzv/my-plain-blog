@@ -1,0 +1,1993 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blog de Sasha Kuznetsov</title>
+    <description>Expériences et explications de Sasha Kuznetsov en apprentissage automatique, vision par ordinateur, finance quantitative et logiciel, avec démos interactives et projets personnels.</description>
+    <link>https://blog.skz.dev/fr/</link>
+    <atom:link href="https://blog.skz.dev/fr/feed.xml" rel="self" type="application/rss+xml" />
+    <language>fr</language>
+    
+      
+        <item>
+          <title>Des explications interactives d'articles d'IA avec intuitivepapers.ai</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Peut-on transformer automatiquement des articles denses de machine learning en explications interactives et vérifiées ?
+&lt;/p&gt;
+
+&lt;p&gt;Lire des articles de recherche en apprentissage automatique peut être d’une lenteur frustrante. Un article consacre en général ses pages à ce qu’il apporte de nouveau et suppose que vous avez déjà les cinq notions préalables bien fraîches en tête ; résultat, une fois sur deux, je finis par remonter toute une chaîne de références plus anciennes avant que l’article lui-même ne devienne clair.&lt;/p&gt;
+
+&lt;p&gt;Le raccourci facile aujourd’hui consiste à glisser le PDF dans un LLM et à lui demander une explication. Je le fais souvent, et c’est pratique pour un premier survol, mais il se trompe étonnamment souvent sur des détails subtils. Un signe inversé dans une équation, une dérivation présentée comme exacte alors qu’il s’agit d’une approximation, ou une confusion sur la variable réellement mise à jour peuvent changer du tout au tout le comportement d’un algorithme. Et quand on ne maîtrise pas encore bien l’article, il est très difficile de repérer ces erreurs dans une explication qui a par ailleurs l’air parfaitement plausible.&lt;/p&gt;
+
+&lt;p&gt;Ce que je voulais, c’étaient des explications qui construisent l’intuition et les mathématiques main dans la main, avec des figures que l’on peut réellement manipuler. J’avais vu à quel point cela change tout lorsque j’avais réalisé ma &lt;a href=&quot;/fr/gradient-descent&quot;&gt;démonstration interactive de la descente de gradient&lt;/a&gt; il y a quelques années : faire glisser un curseur et voir un algorithme osciller ou converger enseigne des choses qu’une équation figée ne transmet jamais vraiment.&lt;/p&gt;
+
+&lt;h2 id=&quot;commencer-par-diffusionblocks&quot;&gt;Commencer par DiffusionBlocks&lt;/h2&gt;
+
+&lt;p&gt;J’ai commencé par construire une première &lt;a href=&quot;https://intuitivepapers.ai/diffusionblocks/&quot;&gt;explication de l’article DiffusionBlocks de Sakana AI&lt;/a&gt; avec Claude. Il m’a fallu environ une semaine d’allers-retours pour obtenir un résultat propre. Une grande partie de ce temps a servi à revérifier chaque équation par rapport aux sources primaires (comme l’article EDM) et au dépôt GitHub officiel des auteurs.&lt;/p&gt;
+
+&lt;p&gt;Ce travail de vérification a d’ailleurs mis au jour une véritable erreur de signe imprimée dans l’article lui-même. L’article définit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Δσ = σ_prev - σ_next &amp;gt; 0&lt;/code&gt; et écrit sa mise à jour d’Euler à l’équation (4) avec &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(z - D)&lt;/code&gt;, ce qui éloigne en fait l’état de la prédiction du débruiteur. En discrétisant leur équation (1), on obtient &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(D - z)&lt;/code&gt;, et effectivement, un coup d’œil au code officiel des auteurs (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;model.py&lt;/code&gt;) a confirmé que l’implémentation utilise bien le signe corrigé. Un résumé classique généré par un LLM se serait contenté de recopier la coquille imprimée, et je ne m’en serais probablement jamais aperçu.&lt;/p&gt;
+
+&lt;p&gt;C’est ce qui m’a donné envie de savoir quelle part de toute cette semaine de travail pouvait être automatisée. Pouvais-je construire un pipeline qui récupère les sources réelles d’un article, vérifie les mathématiques préalables dans la littérature primaire et le code, fabrique des figures interactives et relit son propre brouillon avant de publier ?&lt;/p&gt;
+
+&lt;p&gt;Le résultat s’appelle &lt;a href=&quot;https://intuitivepapers.ai/&quot;&gt;intuitivepapers.ai&lt;/a&gt;. Le site a démarré avec vingt explications — couvrant aussi bien des classiques que des articles plus récents comme Attention, BERT, les GAN, les VAE, CLIP, PPO, Mamba et Adam — et dépasse désormais les 150 explications grâce au pipeline qui tourne selon un calendrier automatique.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/home.webp&quot; alt=&quot;Page d'accueil d'intuitivepapers.ai présentant des explications interactives d'articles de machine learning&quot; width=&quot;1280&quot; height=&quot;820&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+La page d'accueil d'intuitivepapers.ai.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/library.webp&quot; alt=&quot;Bibliothèque de vingt explications d'articles d'IA avec aperçus de figures&quot; width=&quot;1280&quot; height=&quot;2621&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+La bibliothèque initiale de vingt articles. Chaque carte affiche un aperçu en direct d'une figure issue de son explication.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;à-quoi-ressemble-une-explication&quot;&gt;À quoi ressemble une explication&lt;/h2&gt;
+
+&lt;p&gt;Chaque page commence par les prérequis et monte progressivement jusqu’à l’idée centrale de l’article dans l’ordre des dépendances. Sur ordinateur, une barre latérale que j’appelle la tour de concepts cartographie cette chaîne de dépendances afin que l’on voie comment les briques s’empilent, et de courts extraits de code relient la notation mathématique à ce qui s’exécute réellement.&lt;/p&gt;
+
+&lt;p&gt;Ma partie préférée, ce sont les figures interactives. Par exemple, PPO utilise un objectif écrêté (&lt;em&gt;clipped objective&lt;/em&gt;) pour empêcher les mises à jour de politique d’aller trop loin en une seule étape. Dans la figure ci-dessous, vous pouvez faire varier le ratio de probabilités et inverser le signe de l’avantage pour voir exactement où la fonction objectif s’aplatit et cesse de produire un gradient. Jouer avec pendant dix secondes fait comprendre la logique de l’écrêtage bien plus vite que de fixer l’expression &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;min&lt;/code&gt; toute seule.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/ppo-figure.png&quot; alt=&quot;Objectif écrêté interactif de PPO montrant le ratio de probabilités et l'avantage&quot; width=&quot;1280&quot; height=&quot;820&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Explorer l'objectif écrêté de PPO en faisant glisser le ratio de probabilités et en inversant le signe de l'avantage.
+&lt;/p&gt;
+
+&lt;p&gt;Tout s’adapte également aux écrans de téléphone, où je finis moi-même par faire une bonne partie de mes lectures :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/mobile-ppo.png&quot; alt=&quot;Explication de l'article PPO avec une figure intégrée sur téléphone&quot; width=&quot;400&quot; height=&quot;840&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:520px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+L'explication de PPO sur téléphone, avec la même figure interactive intégrée.
+&lt;/p&gt;
+
+&lt;p&gt;Autre exemple : CLIP, qui entraîne des encodeurs d’image et de texte à aligner les paires correspondantes. La grille interactive ci-dessous évalue chaque image face à chaque légende d’un lot : la diagonale lumineuse regroupe les vraies paires qui sont rapprochées, tandis que tout ce qui est hors diagonale correspond à des paires incompatibles qui sont repoussées.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/clip-grid.png&quot; alt=&quot;Grille de similarité CLIP comparant des images avec des légendes correspondantes et non correspondantes&quot; width=&quot;664&quot; height=&quot;593&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+La grille de similarité image-légende de CLIP. Les paires correspondantes se trouvent sur la diagonale.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;comment-fonctionne-le-pipeline&quot;&gt;Comment fonctionne le pipeline&lt;/h2&gt;
+
+&lt;p&gt;Un simple prompt du type « explique cet article » donne exactement le genre de résumés superficiels que je voulais éviter. Pour obtenir un résultat plus fiable, j’ai découpé la génération en un pipeline en plusieurs étapes, avec toute une série de contrôles automatisés entre le brouillon et la mise en ligne.&lt;/p&gt;
+
+&lt;p&gt;D’abord, plutôt que de laisser un modèle paraphraser des équations de mémoire, le pipeline récupère le rendu HTML d’arXiv (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arxiv.org/html/&amp;lt;id&amp;gt;&lt;/code&gt;) et convertit le MathML en LaTeX avec &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pandoc&lt;/code&gt;, de sorte que les équations et les chiffres de l’article soient extraits mot pour mot.&lt;/p&gt;
+
+&lt;p&gt;Ensuite, il vérifie les concepts préalables dans les sources primaires — définitions, signes et conventions — et lorsque le texte de l’article laisse un détail ambigu, il consulte le code officiel des auteurs et cite le fichier ainsi que les numéros de ligne exacts dans un panneau de provenance en bas de page. Tout cela est consolidé dans une fiche de référence vérifiée sur laquelle s’appuie le rédacteur, plutôt que d’écrire directement à partir de l’article brut.&lt;/p&gt;
+
+&lt;p&gt;À partir de là, le pipeline construit des figures interactives sur mesure directement en HTML5 Canvas (sans bibliothèque de graphiques) et rédige l’explication dans l’ordre des dépendances, en associant les équations à des exemples numériques concrets et à du pseudo-code concis.&lt;/p&gt;
+
+&lt;p&gt;Avant toute publication, le brouillon passe par une combinaison de vérifications déterministes et de modèles critiques :&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Une passe déterministe gratuite recherche les tics rédactionnels typiques de l’IA, valide la syntaxe KaTeX, vérifie que les versions mobiles étroites des équations sont mathématiquement équivalentes aux versions bureau sans déborder de l’écran d’un téléphone, et balaie chaque figure interactive sur ordinateur comme sur mobile à travers différents états de curseurs et de boutons pour détecter les étiquettes qui se chevauchent ou sont coupées.&lt;/li&gt;
+  &lt;li&gt;Des critiques distincts évaluent ensuite la fidélité par rapport à l’article, la clarté, le ton, les figures et les captures d’écran rendues.&lt;/li&gt;
+  &lt;li&gt;Les problèmes confirmés passent par une étape de correction, le site est recompilé et seuls les contrôles ayant échoué sont relancés, sur quelques itérations au maximum. Si un problème subsiste à la fin, le pipeline échoue de manière sûre (&lt;em&gt;fail closed&lt;/em&gt;) et ouvre une pull request en brouillon au lieu de publier automatiquement.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;L’ensemble du pipeline tourne quotidiennement via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;launchd&lt;/code&gt; sur le Mac mini sous mon bureau. Chaque matin, il prend l’article le plus voté de la file d’attente (qui combine un backlog sélectionné à la main et les suggestions des lecteurs), attend la réinitialisation des quotas de session du modèle pour reprendre automatiquement si une limite est atteinte, et déploie la page finale une fois que la compilation et les revues passent sans erreur.&lt;/p&gt;
+
+&lt;p&gt;Voici ci-dessous l’un des schémas dessinés sur canvas pour l’explication de Mamba, qui décompose les éléments d’un bloc Mamba.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/mamba-block-fig.jpeg&quot; alt=&quot;Schéma détaillant les composants d'un bloc Mamba&quot; width=&quot;1280&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Décomposition d'un bloc Mamba, dessinée sur canvas pour l'explication de Mamba.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;remarques-finales&quot;&gt;Remarques finales&lt;/h2&gt;
+
+&lt;p&gt;Tout a commencé parce que je voulais vraiment comprendre un seul article, et cela s’est transformé en une expérience pour voir jusqu’où pouvait aller la vérification automatisée. Croiser les sources primaires, lire le code des auteurs et balayer les différents états des figures permet d’attraper beaucoup d’erreurs subtiles, même si cela ne rend évidemment pas le résultat infaillible. Les figures interactives complexes restent la partie la plus difficile à réussir de manière fiable sans regard humain, et il arrive encore qu’une explication maladroite ou un bug dans un cas limite passe entre les mailles du filet.&lt;/p&gt;
+
+&lt;p&gt;Pour y remédier, chaque page dispose d’un champ de retour en bas. Les signalements des lecteurs servent à corriger les erreurs sur la page et à resserrer les règles du pipeline afin que les prochaines explications évitent les mêmes écueils.&lt;/p&gt;
+
+&lt;p&gt;S’il y a un article de machine learning que vous aviez prévu d’étudier sérieusement, allez jeter un œil à &lt;a href=&quot;https://intuitivepapers.ai/&quot;&gt;intuitivepapers.ai&lt;/a&gt;. Vous pouvez proposer un article ou voter pour l’un de ceux déjà en file d’attente, et si vous repérez une erreur dans une explication, n’hésitez pas à me la signaler via le champ de retour afin que je puisse la corriger.&lt;/p&gt;
+</description>
+          <pubDate>Fri, 05 Jun 2026 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/fr/intuitivepapers-ai-interactive-paper-explainers</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/intuitivepapers-ai-interactive-paper-explainers</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>ccmux : Gérer des agents de programmation IA sur plusieurs appareils</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Un gestionnaire de sessions tmux construit avec des amis pour suivre des agents de programmation sur plusieurs machines et les piloter depuis mon téléphone.
+&lt;/p&gt;
+
+&lt;p&gt;J’ai généralement une dizaine d’agents de programmation qui tournent en même temps entre mon Mac mini et mon ordinateur portable. Maintenir les sessions actives en arrière-plan avec tmux est assez simple ; la vraie pénibilité, c’est de garder le fil : se rappeler sur quelle machine j’ai lancé telle tâche, me connecter en SSH pour vérifier si Claude travaille encore ou s’il est bloqué depuis une heure sur une question oui/non, et ne disposer d’aucun moyen pratique de lui répondre quand je ne suis pas devant mon bureau.&lt;/p&gt;
+
+&lt;p&gt;Ce que je voulais, c’était lancer une session sur le Mac mini, m’éloigner, recevoir une notification sur mon téléphone dès que l’agent avait besoin d’une réponse, lui répondre depuis là, puis reprendre cette même session plus tard sur mon portable sans avoir à taper toute une série de commandes SSH et tmux entre-temps.&lt;/p&gt;
+
+&lt;p&gt;Avec Daniel Mandragona et Mike Choi, j’ai donc construit &lt;a href=&quot;https://ccmux.ai/&quot;&gt;ccmux&lt;/a&gt;, un gestionnaire de sessions tmux multi-appareils conçu pour les agents de programmation IA. Je détaille ci-dessous son fonctionnement, la façon dont les briques s’assemblent et ce que nous avons développé pour mobile.&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/hero-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/hero.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Interface terminal de ccmux affichant des sessions d'agents de programmation réparties sur plusieurs projets
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Un rapide aperçu de ccmux, avec cinq sessions d'agents en cours sur quatre projets.
+&lt;/p&gt;
+
+&lt;h2 id=&quot;le-tableau-de-bord&quot;&gt;Le tableau de bord&lt;/h2&gt;
+
+&lt;p&gt;Quand vous ouvrez &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux&lt;/code&gt;, vous obtenez une liste unique de toutes les sessions d’agents de programmation en cours sur l’ensemble de vos machines, avec un code couleur selon l’état de chaque agent : actif (en train de générer du texte), inactif ou en attente d’une réponse de votre part. Sur la droite figurent un panneau Appareils listant les autres machines de votre réseau, ainsi qu’un panneau d’utilisation qui suit le quota de 5 heures de Claude afin de voir quand vous approchez de la limite.&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/dashboard-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/dashboard.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Tableau de bord ccmux avec l'état des sessions, les appareils connectés et l'utilisation de Claude
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Le tableau de bord. Les lignes de session sont colorées selon leur état, avec les appareils connectés et l'utilisation de Claude sur la droite.
+&lt;/p&gt;
+
+&lt;p&gt;Pour plonger dans n’importe quelle session, il suffit de la sélectionner et d’appuyer sur &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Enter&lt;/code&gt;, ce qui vous rattache directement à la session tmux de l’agent. Quand vous avez terminé, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ctrl-b d&lt;/code&gt; détache la session et vous ramène au tableau de bord pendant que l’agent continue de tourner sur la machine qui l’a lancé.&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/attach-detach-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/attach-detach.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Attachement à une session tmux et retour au tableau de bord ccmux
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Appuyer sur Enter pour s'attacher à une session, puis Ctrl-b d pour se détacher et revenir au tableau de bord.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;sous-le-capot&quot;&gt;Sous le capot&lt;/h2&gt;
+
+&lt;p&gt;Nous voulions que tmux reste la véritable source de vérité plutôt que d’enfermer les sessions dans un wrapper propriétaire. Si vous cessez un jour d’utiliser ccmux, chaque agent en cours d’exécution reste une session tmux tout à fait classique à laquelle vous pouvez vous rattacher manuellement.&lt;/p&gt;
+
+&lt;p&gt;Chaque machine exécute deux binaires Go :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux&lt;/code&gt; est l’interface terminal avec laquelle vous interagissez, construite avec la pile Bubble Tea de &lt;a href=&quot;https://charm.sh/&quot;&gt;Charm&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; est un petit démon en arrière-plan qui interroge tmux toutes les deux secondes, détermine l’état de chaque session et expose cet état via un socket Unix local ainsi qu’une API HTTP optionnelle.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;La détection d’état est l’une des parties les plus délicates. Tant qu’un agent diffuse activement de la sortie, le démon le marque comme actif. Dès qu’une invite de saisie apparaît et que le panneau reste silencieux pendant quelques secondes, le démon passe la session à l’état &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;needs_input&lt;/code&gt;. Tant que des sessions sont actives, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; maintient aussi un verrou &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;caffeinate&lt;/code&gt; sous macOS (ou &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd-inhibit&lt;/code&gt; sous Linux) afin qu’un Mac mini ou un ordinateur portable ne se mette pas en veille au milieu d’une longue tâche — avec un seuil de batterie sur portable pour éviter qu’une machine oubliée ne se vide complètement.&lt;/p&gt;
+
+&lt;p&gt;Pour la découverte multi-machines, nous avons utilisé &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt;. À chaque rafraîchissement, ccmux exécute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tailscale status --json&lt;/code&gt;, sonde les machines joignables sur le port &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;7474&lt;/code&gt; (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/v1/health&lt;/code&gt;) et fusionne automatiquement dans le tableau de bord tous les démons qui répondent. Ainsi, pas besoin de maintenir une liste d’hôtes ni d’exposer le moindre port sur l’Internet public. Comme la couche WireGuard de Tailscale assure déjà le chiffrement et l’identité des appareils, le démon parle en HTTP en clair sur l’adresse IP du tailnet et rejette les requêtes comportant des en-têtes navigateur &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Origin&lt;/code&gt; ou &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Sec-Fetch-*&lt;/code&gt; afin qu’aucune page web ne puisse lui parler.&lt;/p&gt;
+
+&lt;p&gt;Lorsque vous appuyez sur &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Enter&lt;/code&gt; sur une session distante, ccmux lance un véritable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tmux attach&lt;/code&gt; via SSH ou Mosh directement vers l’hôte où tourne l’agent, au lieu de relayer le terminal à travers une couche intermédiaire. Claude Code est l’agent par défaut, mais ccmux prend aussi en charge Codex, Cursor, Antigravity, Gemini CLI et d’autres en enregistrant un choix d’agent par projet et en utilisant les options de lancement et de reprise propres à chaque outil.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;lutiliser-depuis-un-téléphone&quot;&gt;L’utiliser depuis un téléphone&lt;/h2&gt;
+
+&lt;p&gt;Piloter mes agents depuis mon téléphone était la raison principale qui m’a poussé à créer cet outil. Le souci avec un simple SSH sur mobile, c’est que les connexions coupent sans arrêt — dès qu’on passe du Wi-Fi au réseau cellulaire, qu’on verrouille l’écran ou qu’on traverse une zone blanche. &lt;a href=&quot;https://mosh.org/&quot;&gt;Mosh&lt;/a&gt; gère cela bien mieux, car il survit aux changements de réseau comme à la mise en veille et reprend la session exactement où elle en était dès que le signal revient.&lt;/p&gt;
+
+&lt;p&gt;Lorsque ccmux détecte un terminal étroit (moins de 120 colonnes), il replie automatiquement le tableau de bord en une seule colonne déroulante afin que la même interface reste agréable sur un écran de téléphone :&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;430&quot; height=&quot;900&quot; poster=&quot;/assets/video/ccmux/phone-poster.webp&quot; style=&quot;max-height:420px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/phone.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Tableau de bord ccmux dans un terminal mobile étroit
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+L'interface terminal qui se replie en mise en page mobile via Mosh.
+&lt;/p&gt;
+
+&lt;p&gt;Les notifications se sont avérées très simples à mettre en place. Dès qu’une session passe à l’état &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;needs_input&lt;/code&gt;, le démon déclenche la cloche standard du terminal (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BEL&lt;/code&gt;). Les applications de terminal iOS qui surveillent cette cloche la convertissent directement en notification push, sans aucun relais cloud au milieu. Dans &lt;a href=&quot;https://getmoshi.app/&quot;&gt;Moshi&lt;/a&gt; — un client Mosh pour iOS — ccmux peut également relier &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;moshi-hook&lt;/code&gt; aux hooks de Claude Code pour envoyer des notifications catégorisées (validation requise vs tâche terminée) et vous permettre d’ouvrir directement la session d’un simple tap.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/ccmux/moshi.webp&quot; alt=&quot;ccmux exécuté dans l'application terminal Moshi sur un iPhone&quot; width=&quot;610&quot; height=&quot;1323&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:520px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ccmux dans Moshi sur un iPhone.
+&lt;/p&gt;
+
+&lt;p&gt;Malgré tout, manipuler une interface terminal sur un écran de téléphone peut vite sembler à l’étroit, surtout quand on veut simplement jeter un œil à ses sessions ou rédiger un prompt un peu long. Nous avons donc aussi construit une application iOS native qui discute directement avec &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; via Tailscale. On associe son téléphone en lançant &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux pair&lt;/code&gt; sur son Mac et en scannant le QR code affiché dans le terminal. À partir de là, l’application reçoit en direct l’état des sessions en SSE et s’attache aux panneaux tmux interactifs via un pont PTY WebSocket rendu avec SwiftTerm.&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+&amp;lt;img src=&quot;/assets/img/ccmux/ios-dashboard.webp&quot; alt=&quot;Application iOS ccmux listant les sessions d'agents de programmation&quot; width=&quot;1206&quot; height=&quot;2622&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;display:inline-block;margin:0 6px;max-height:460px;width:auto&quot; //&amp;gt;
+&amp;lt;img src=&quot;/assets/img/ccmux/ios-terminal.webp&quot; alt=&quot;Terminal tmux interactif dans l'application iOS ccmux&quot; width=&quot;1206&quot; height=&quot;2622&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;display:inline-block;margin:0 6px;max-height:460px;width:auto&quot; //&amp;gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+L'application iOS native : tableau de bord des sessions à gauche, terminal en direct à droite.
+&lt;/p&gt;
+
+&lt;p&gt;Sur iOS, nous nous sommes vite heurtés à un constat : piloter un terminal et rédiger un prompt exigent des claviers radicalement opposés. Un terminal demande des frappes brutes, des flèches directionnelles et une touche retour arrière rapide sans que la correction automatique ne vienne tout gâcher, alors qu’écrire tout un paragraphe d’instructions pour un agent sans correction automatique ni sélection de texte devient vite pénible. Nous avons donc ajouté directement dans la vue terminal un sélecteur entre le mode Raw (chaque touche part directement au PTY) et le mode Chat (une zone de saisie classique façon iMessage pour composer des prompts).&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;400&quot; height=&quot;870&quot; poster=&quot;/assets/video/ccmux/ios-mode-toggle-poster.webp&quot; style=&quot;max-height:460px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/ios-mode-toggle.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Bascule entre les modes de saisie Raw et Chat dans l'application iOS ccmux
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Passage du mode terminal brut (Raw) au mode Chat pour rédiger des prompts.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;remarques-finales&quot;&gt;Remarques finales&lt;/h2&gt;
+
+&lt;p&gt;J’ai utilisé ccmux quotidiennement pendant des mois, et quelques autres personnes se sont mises à l’utiliser aussi. Durant ces mêmes mois, de nombreux autres outils dédiés à la gestion d’agents de programmation ont vu le jour, y compris des projets financés avec des équipes à temps plein. En tant que projet personnel mené à trois, il n’avait pas vraiment de sens de tenter de suivre le rythme en tant que produit commercial, nous avons donc choisi de ne pas le pousser dans cette direction. Je continue néanmoins de bricoler sur le dépôt de temps en temps, et je voulais écrire cet article pour documenter ce que nous avons construit.&lt;/p&gt;
+
+&lt;p&gt;Tout reste en ligne sur &lt;a href=&quot;https://ccmux.ai/&quot;&gt;ccmux.ai&lt;/a&gt;, et le code source est disponible sur &lt;a href=&quot;https://github.com/skzv/ccmux&quot;&gt;GitHub&lt;/a&gt; sous licence FSL-1.1-MIT. Si vous voulez l’essayer sur macOS ou Linux, vous pouvez l’installer et lancer l’assistant de configuration avec :&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-fsSL&lt;/span&gt; https://raw.githubusercontent.com/skzv/ccmux/main/scripts/install.sh | sh
+ccmux setup
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;La &lt;a href=&quot;https://ccmux.ai/docs/&quot;&gt;documentation d’installation&lt;/a&gt; explique comment connecter plusieurs machines via Tailscale et configurer l’accès mobile.&lt;/p&gt;
+</description>
+          <pubDate>Fri, 05 Jun 2026 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/fr/ccmux-tmux-manager-for-ai-coding-agents</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/ccmux-tmux-manager-for-ai-coding-agents</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Reconstruction 3D à partir de photos publiques par apprentissage automatique</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Peut-on reconstruire le monde à partir de photos publiques ?
+&lt;/p&gt;
+
+&lt;h2 id=&quot;cartographier-le-monde&quot;&gt;Cartographier le monde&lt;/h2&gt;
+
+&lt;p&gt;Internet regorge de photos publiques provenant de sources variées : Reddit, YouTube, photos publiées sur Google Maps, etc.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/google-maps-photos.webp&quot; alt=&quot;Exemple de photos Google Maps&quot; width=&quot;1600&quot; height=&quot;1232&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; style=&quot;max-height:400px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Photos publiques disponibles sur Google Maps
+&lt;/p&gt;
+
+&lt;p&gt;Je me suis demandé : serait-il possible de créer une carte 3D du monde à partir de toutes ces données ? Un appareil photo supprime toute l’information 3D au moment de la prise de vue — mais grâce à l’apprentissage automatique de pointe, nous pouvons la retrouver et transformer une photo comme celle-ci :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Image d'entrée Safeway 0&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée Safeway 0.
+&lt;/p&gt;
+
+&lt;p&gt;en un modèle 3D comme celui-là :&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Un autre exemple, pris au célèbre aéroport de Singapour :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0.jpeg&quot; alt=&quot;Image d'entrée de l'aéroport de Singapour&quot; width=&quot;960&quot; height=&quot;1280&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:600px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée de l'aéroport de Singapour.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1012&quot; height=&quot;1008&quot; poster=&quot;/assets/video/3d-reconstruction/sg-airport-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/sg-airport-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Et même une photo de forêt :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0.jpg&quot; alt=&quot;Image d'entrée d'une forêt&quot; width=&quot;1500&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée d'une forêt.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1358&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/forest-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/forest-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Pour obtenir ce résultat, j’ai combiné un modèle de profondeur basé sur l’apprentissage automatique et un peu d’algèbre linéaire.&lt;/p&gt;
+
+&lt;h2 id=&quot;projection-de-caméra&quot;&gt;Projection de caméra&lt;/h2&gt;
+
+&lt;p&gt;On peut voir un appareil photo comme réalisant une projection de la 3D vers la 2D, comme sur le schéma ci-dessous. Cette opération fait disparaître l’information liée à la 3e dimension : la profondeur.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/camera-projection.png&quot; alt=&quot;Visualisation de la projection de caméra&quot; width=&quot;850&quot; height=&quot;356&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Projection de caméra de la 3D vers la 2D. Source : [1]
+&lt;/p&gt;
+
+&lt;p&gt;Notre objectif consiste à retrouver cette 3e dimension, puis à déterminer comment inverser cette projection.&lt;/p&gt;
+
+&lt;h2 id=&quot;paramètres-intrinsèques-de-la-caméra&quot;&gt;Paramètres intrinsèques de la caméra&lt;/h2&gt;
+
+&lt;p&gt;Connaître la profondeur de chaque pixel de l’image ne suffit pas pour la reconstruire en 3D. En effet, les caractéristiques de l’appareil photo — et au premier chef sa distance focale — déterminent la manière dont les points de l’espace 3D sont projetés sur les pixels 2D ; pour inverser cette transformation, nous avons donc besoin de ces propriétés optiques. Voyez la démonstration ci-dessous, où différentes distances focales produisent des images sensiblement différentes :&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;600&quot; height=&quot;600&quot; poster=&quot;/assets/video/3d-reconstruction/face-focal-length-poster.webp&quot; style=&quot;max-height:400px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/3d-reconstruction/face-focal-length.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    Démonstration de l'effet de la distance focale sur un visage
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Démonstration de l'effet de la distance focale sur l'image. Source : [2]
+&lt;/p&gt;
+
+&lt;p&gt;Il s’ensuit logiquement que si l’on veut reconstruire le visage en 3D à partir de l’une quelconque de ces images, il faut connaître les paramètres de la caméra.&lt;/p&gt;
+
+&lt;p&gt;En utilisant les propriétés des triangles semblables illustrées ci-dessous, on voit que la relation entre les coordonnées image et les points 3D est simple :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+x = f \frac{X}{Z} \space\space\space\space\space y = f \frac{Y}{Z} \tag{1} \label{eq:camera perspective projection}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/camera-perspective-focal.png&quot; alt=&quot;Projection perspective de la caméra&quot; width=&quot;1073&quot; height=&quot;834&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Projection perspective de la caméra
+&lt;/p&gt;
+
+&lt;p&gt;En inversant cette transformation pour reprojeter les points de l’image en 3D, on obtient :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+X = \frac{x \cdot Z}{f} \space\space\space\space\space Y = \frac{y \cdot Z}{f} \space\space\space\space\space Z = Z \tag{2} \label{eq:inverse camera perspective projection}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Les deux pièces manquantes dont nous avons besoin sont donc la profondeur en chaque pixel, \(Z\), et la distance focale de la caméra, \(f\). Or aucune des deux n’est directement disponible dans les photos publiques : les métadonnées EXIF, qui pourraient contenir des informations sur l’appareil photo, sont généralement supprimées.&lt;/p&gt;
+
+&lt;p&gt;Notons qu’il est également possible de décrire la transformation complète entre les repères 3D et 2D en tenant compte de la pose de la caméra, comme illustré ci-dessous. Mais dans le cadre de cet article, nous nous limitons au repère local de la caméra.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/complete-camera-model.jpg&quot; alt=&quot;Modèle complet de caméra&quot; width=&quot;1280&quot; height=&quot;720&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Modèle complet de caméra. Source : [3]
+&lt;/p&gt;
+
+&lt;h2 id=&quot;cartes-de-profondeur&quot;&gt;Cartes de profondeur&lt;/h2&gt;
+
+&lt;p&gt;C’est la sortie récente du &lt;a href=&quot;https://github.com/apple/ml-depth-pro&quot;&gt;modèle DepthPro d’Apple&lt;/a&gt; qui a rendu ce projet possible. Des modèles d’estimation de profondeur existent depuis longtemps, mais celui-ci se distingue sur deux points essentiels :
+    1. Il fournit la profondeur à une échelle métrique absolue, ce qui signifie que les reconstructions 3D conservent de vraies proportions métriques, même à partir d’une seule image monoculaire.
+    2. Il estime directement la distance focale de la caméra.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/depth-pro-teaser.webp&quot; alt=&quot;Aperçu de Depth Pro&quot; width=&quot;1242&quot; height=&quot;535&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Aperçu de Depth Pro. Source : [4]
+&lt;/p&gt;
+
+&lt;p&gt;J’ai fait tourner ce modèle sur toute une série de photos publiques pour estimer leurs cartes de profondeur et leurs focales, comme ci-dessous. Par exemple, pour cette image :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Image d'entrée Safeway 1&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée Safeway 1.
+&lt;/p&gt;
+
+&lt;p&gt;La carte de profondeur et la focale estimées correspondantes sont :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1-depth-black.png&quot; alt=&quot;Carte de profondeur Safeway 1&quot; width=&quot;507&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Carte de profondeur Safeway 1 et distance focale prédites par le modèle DepthPro.
+&lt;/p&gt;
+
+&lt;p&gt;J’ai ensuite appliqué les équations \((2)\) pour reprojeter chaque pixel en 3D, créé un nuage de points et visualisé le résultat avec Open3D :&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;reconstructions-3d&quot;&gt;Reconstructions 3D&lt;/h2&gt;
+
+&lt;p&gt;Découvrez tous mes exemples ci-dessous. Regardez en particulier l’exemple de la skyline de New York : j’étais curieux de voir comment le modèle s’en sortirait sur une scène immense comme l’horizon de Manhattan. Comme on pouvait s’y attendre, DepthPro n’a pas produit une bonne carte de profondeur. Le jeu de données d’entraînement s’est très certainement concentré sur des échelles plus modestes.&lt;/p&gt;
+
+&lt;h3 id=&quot;coex-mall&quot;&gt;COEX Mall&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/coex-0.jpg&quot; alt=&quot;Image d'entrée COEX Mall&quot; width=&quot;924&quot; height=&quot;483&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée COEX Mall.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/coex-0-depth-black.png&quot; alt=&quot;Carte de profondeur COEX Mall&quot; width=&quot;506&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Carte de profondeur COEX Mall et distance focale prédites par le modèle DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1398&quot; height=&quot;848&quot; poster=&quot;/assets/video/3d-reconstruction/coex-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/coex-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;forêt&quot;&gt;Forêt&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0.jpg&quot; alt=&quot;Image d'entrée forêt&quot; width=&quot;1500&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée d'une forêt.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0-depth-black.png&quot; alt=&quot;Carte de profondeur forêt&quot; width=&quot;506&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Carte de profondeur de la forêt et distance focale prédites par le modèle DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1358&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/forest-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/forest-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;skyline-de-new-york&quot;&gt;Skyline de New York&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/nyc-0.webp&quot; alt=&quot;Image d'entrée New York&quot; width=&quot;1000&quot; height=&quot;560&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée de New York.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/nyc-depth-black.png&quot; alt=&quot;Carte de profondeur New York&quot; width=&quot;498&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Carte de profondeur de New York et distance focale prédites par le modèle DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1382&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/nyc-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/nyc-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;safeway-1&quot;&gt;Safeway 1&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-0.webp&quot; alt=&quot;Image d'entrée Safeway 0&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée Safeway 0.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-0-depth-black.png&quot; alt=&quot;Carte de profondeur Safeway 0&quot; width=&quot;506&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Carte de profondeur Safeway 0 et distance focale prédites par le modèle DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1066&quot; height=&quot;776&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-0-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-0-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;safeway-2&quot;&gt;Safeway 2&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Image d'entrée Safeway 1&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée Safeway 1.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1-depth-black.png&quot; alt=&quot;Carte de profondeur Safeway 1&quot; width=&quot;507&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Carte de profondeur Safeway 1 et distance focale prédites par le modèle DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;aéroport-de-singapour&quot;&gt;Aéroport de Singapour&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0.jpeg&quot; alt=&quot;Image d'entrée aéroport de Singapour&quot; width=&quot;960&quot; height=&quot;1280&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:600px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Image publique d'entrée de l'aéroport de Singapour.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0-depth-black.png&quot; alt=&quot;Carte de profondeur aéroport de Singapour&quot; width=&quot;387&quot; height=&quot;432&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Carte de profondeur de l'aéroport de Singapour et distance focale prédites par le modèle DepthPro.
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1012&quot; height=&quot;1008&quot; poster=&quot;/assets/video/3d-reconstruction/sg-airport-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/sg-airport-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;notes&quot;&gt;Notes&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Projection de caméra de la 3D vers la 2D. Source : &lt;a href=&quot;https://www.researchgate.net/figure/The-perspective-projection-of-a-camera-model_fig2_324584663&quot;&gt;ResearchGate&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Démonstration de l’effet de la distance focale sur l’image. Source : &lt;a href=&quot;https://www.diyphotography.net/gif-explains-changing-focal-length-impacts-portrait&quot;&gt;DIY Photography&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Modèle complet de caméra. Source : &lt;a href=&quot;https://robotacademy.net.au/lesson/summary-of-image-geometry/&quot;&gt;Robot Academy&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Aperçu de Depth Pro. Source : &lt;a href=&quot;https://github.com/apple/ml-depth-pro&quot;&gt;Apple&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+          <pubDate>Thu, 21 Aug 2025 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/fr/3d-reconstruction-from-public-photos</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/3d-reconstruction-from-public-photos</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Prédire comment le marché ouvrira demain</title>
+          <description>&lt;p&gt;&lt;em&gt;Prédire l’avenir&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Un week-end où de mauvaises nouvelles économiques étaient tombées, je me suis demandé quel impact elles auraient sur les marchés à l’ouverture du lundi. En creusant la question, j’ai découvert que, pendant que les bourses actions sont fermées, les contrats à terme (&lt;em&gt;futures&lt;/em&gt;) sur les indices sous-jacents continuent de s’échanger, et qu’on peut observer ce marché à terme pour voir comment les traders réagissent déjà et intègrent les nouvelles informations dans les prix — un peu comme une boule de cristal 🔮.&lt;/p&gt;
+
+&lt;p&gt;Comme les prix à terme et les prix au comptant sont liés, nous pouvons calculer ce que les marchés à terme estiment être la juste valeur actuelle de chaque indice en actualisant la valeur future vers le présent. Cela nous donne le cours d’ouverture implicite de chaque indice avant même l’ouverture de la bourse — ainsi, dès le dimanche soir, on peut voir si le marché risque d’ouvrir &lt;span style=&quot;color: #66ff66;&quot;&gt;à la hausse&lt;/span&gt; ou &lt;span style=&quot;color: #ff6666;&quot;&gt;à la baisse&lt;/span&gt; le lendemain.&lt;/p&gt;
+
+&lt;p&gt;Ci-dessous, je détaille toutes les pièces de ce calcul, jusqu’au tableau de bord que j’ai construit pour avoir un aperçu des mouvements d’ouverture du lendemain sur &lt;a href=&quot;https://impliedopen.com&quot;&gt;impliedopen.com&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/save-game.webp&quot; alt=&quot;Aperçu du tableau de bord que j'ai construit pour anticiper les mouvements du marché le lendemain&quot; width=&quot;1168&quot; height=&quot;1312&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Un aperçu du tableau de bord que j'ai construit pour anticiper les mouvements du marché le lendemain.
+&lt;/p&gt;
+
+&lt;h2 id=&quot;les-contrats-à-terme-futures&quot;&gt;Les contrats à terme (futures)&lt;/h2&gt;
+
+&lt;p&gt;Les contrats à terme (&lt;em&gt;futures&lt;/em&gt;) sont des instruments qui permettent aux traders de parier sur le prix &lt;em&gt;futur&lt;/em&gt; d’un actif sous-jacent à la date d’échéance du contrat. Observez le prix et la date d’échéance du contrat à terme sur le S&amp;amp;P 500 ci-dessous. Il se négocie actuellement au-dessus du cours du S&amp;amp;P 500, mais qu’est-ce que cela nous dit sur la valeur actuelle du S&amp;amp;P 500 ?&lt;/p&gt;
+
+&lt;p&gt;Pour relier le prix du contrat à terme à la juste valeur actuelle implicite fixée par le marché à terme, nous devons tenir compte du temps qui nous sépare de la date d’échéance du contrat.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/futures-price.webp&quot; alt=&quot;Contrat à terme S&amp;amp;P 500&quot; width=&quot;943&quot; height=&quot;826&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Contrat à terme sur le S&amp;amp;P 500
+&lt;/p&gt;
+
+&lt;p&gt;Nous y parvenons grâce au modèle du coût de portage (&lt;em&gt;cost of carry&lt;/em&gt;), qui prend en compte le taux d’intérêt sans risque, le rendement des dividendes et le temps restant jusqu’à l’échéance. Il repose sur l’hypothèse que le cours de l’indice devrait croître au taux sans risque actuel (essentiellement une hypothèse d’absence d’arbitrage), diminué de la baisse de valeur liée au versement des dividendes.&lt;/p&gt;
+
+&lt;p&gt;Nous pouvons exprimer cette relation par :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+    F = S \times e^{(r - q) \times t} \tag{0}  \label{eq:coc}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;où \(F\) est le prix du contrat à terme, \(S\) est le cours actuel de l’indice, \(r\) est le taux d’intérêt sans risque, \(q\) est le rendement des dividendes et \(t\) est le temps restant jusqu’à l’échéance.&lt;/p&gt;
+
+&lt;h2 id=&quot;remonter-le-temps&quot;&gt;Remonter le temps&lt;/h2&gt;
+
+&lt;p&gt;Pour déduire la juste valeur actuelle de l’indice à partir du prix du contrat à terme, on actualise ce prix vers le présent en inversant la formule précédente :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+    S = F \times e^{-(r - q) \times t} \tag{1}  \label{eq:discount}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Avant l’ouverture de la bourse, cette juste valeur constitue notre meilleure estimation du cours d’ouverture de l’indice.&lt;/p&gt;
+
+&lt;h2 id=&quot;le-taux-sans-risque&quot;&gt;Le taux sans risque&lt;/h2&gt;
+
+&lt;p&gt;Un placement sans risque existe-t-il vraiment ? Les bons du Trésor américain (&lt;em&gt;Treasury bills&lt;/em&gt; ou &lt;em&gt;T-bills&lt;/em&gt;) — la dette émise par le Trésor des États-Unis — sont considérés comme (quasiment) sans risque parce que :&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;le gouvernement américain a une probabilité de défaut très faible : il peut émettre sa propre monnaie et dispose d’un solide historique de remboursement ;&lt;/li&gt;
+  &lt;li&gt;leur courte maturité réduit l’exposition aux variations de taux d’intérêt et aux incertitudes de long terme ;&lt;/li&gt;
+  &lt;li&gt;le marché est extrêmement liquide ;&lt;/li&gt;
+  &lt;li&gt;il n’y a pas de risque de crédit au sens où l’État américain ne fait pas faillite comme une entreprise ou une collectivité émettrice d’obligations.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Pour le taux sans risque de ces calculs, j’ai choisi le T-bill à 3 mois.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/3m-bond-yield-1.png&quot; alt=&quot;Rendement des bons du Trésor américain à 3 mois&quot; width=&quot;993&quot; height=&quot;633&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Rendement des bons du Trésor américain à 3 mois
+&lt;/p&gt;
+
+&lt;p&gt;On suppose que les actifs sous-jacents progressent au moins au taux sans risque, faute de quoi les investisseurs n’auraient aucun intérêt à y placer leur argent.&lt;/p&gt;
+
+&lt;h2 id=&quot;le-rendement-des-dividendes&quot;&gt;Le rendement des dividendes&lt;/h2&gt;
+
+&lt;p&gt;Bien que nous supposions que les sous-jacents croissent au moins au taux sans risque, il faut tenir compte du fait que les indices baissent d’un montant équivalent lorsque des dividendes sont détachés. Pour cela, j’utilise le rendement de dividende le plus récent de chaque indice — même si un modèle plus précis chercherait probablement à anticiper le rendement de dividende futur.&lt;/p&gt;
+
+&lt;p&gt;Voici le dernier rendement de dividende du S&amp;amp;P 500 que j’utilise dans mes calculs.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/sp500-dividend-yield.png&quot; alt=&quot;Dernier rendement de dividende du S&amp;amp;P 500&quot; width=&quot;873&quot; height=&quot;641&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Dernier rendement de dividende du S&amp;amp;P 500
+&lt;/p&gt;
+
+&lt;h2 id=&quot;mettre-le-tout-ensemble&quot;&gt;Mettre le tout ensemble&lt;/h2&gt;
+
+&lt;p&gt;Je récupère le dernier cours de l’indice, le prix actuel du contrat à terme, ma meilleure estimation du rendement de dividende, du taux sans risque et du temps jusqu’à l’échéance, et je calcule ainsi ma meilleure estimation de la juste valeur de chaque grand indice. J’ai réuni tout cela sur &lt;a href=&quot;https://impliedopen.com&quot;&gt;impliedopen.com&lt;/a&gt;, intégré ci-dessous :&lt;/p&gt;
+
+&lt;iframe src=&quot;https://impliedopen.com&quot; title=&quot;Tableau de bord d'ouverture implicite des marchés Implied Open&quot; width=&quot;100%&quot; height=&quot;1200px&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;Ce tableau de bord est surtout utile lorsque le marché à terme est ouvert mais que le marché classique est fermé — on peut alors s’appuyer sur les contrats à terme pour voir ce que les traders intègrent dans les prix avant l’ouverture officielle. Quand le marché classique est ouvert, c’est lui qui fournit la « vraie » valeur actuelle de chaque indice, telle qu’évaluée par le marché.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/market-status.png&quot; alt=&quot;Vue de l'état des marchés&quot; width=&quot;751&quot; height=&quot;159&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Vue de l'état des marchés
+&lt;/p&gt;
+
+&lt;h2 id=&quot;remarques-finales&quot;&gt;Remarques finales&lt;/h2&gt;
+
+&lt;p&gt;J’ai monté ce tableau de bord assez vite, et j’ai fini par récupérer une bonne partie des données par scraping, en les mettant en cache toutes les minutes via ma propre API :) Toutes mes excuses si quelque chose casse ou tombe en panne — je finirai par remplacer tout ça par de vraies API, à moins que ce tableau de bord ne devienne obsolète à mesure que les bourses passent à la cotation 24h/24 et 7j/7. Quoi qu’il en soit, je voulais rédiger cet article pour en garder une trace durable.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/it-is-what-it-is.png&quot; alt=&quot;C'est comme ça&quot; width=&quot;690&quot; height=&quot;365&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+C'est comme ça.
+&lt;/p&gt;
+
+&lt;p&gt;Si vous repérez des erreurs dans mes calculs ou si vous avez des suggestions ou des retours, n’hésitez pas à me contacter pour m’en faire part !&lt;/p&gt;
+</description>
+          <pubDate>Sun, 23 Mar 2025 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/fr/predicting-how-the-market-will-open-tomorrow</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/predicting-how-the-market-will-open-tomorrow</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Un bot Telegram pour importer des packs Sticker.ly</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Importez facilement des packs animés Sticker.ly dans Telegram
+&lt;/p&gt;
+
+&lt;style&gt;
+video {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+}
+&lt;/style&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://sticker.ly&quot;&gt;Sticker.ly&lt;/a&gt; est une application très populaire de création et de gestion de packs d’autocollants pour Android et iPhone, avec plus de 100 millions de téléchargements rien que sur &lt;a href=&quot;https://play.google.com/store/apps/details?id=com.snowcorp.stickerly.android&amp;amp;hl=en_US&amp;amp;gl=US&quot;&gt;le Google Play Store&lt;/a&gt;. Elle permet d’importer des packs d’autocollants dans iMessage, WhatsApp et Telegram. Cependant, l’importation de packs d’autocollants animés est réservée exclusivement à WhatsApp.&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; preload=&quot;metadata&quot; width=&quot;498&quot; height=&quot;1034&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-animated-import-cropped-poster.webp&quot; style=&quot;max-height:600px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-animated-import-cropped.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Utilisateur passionné et évangéliste de Telegram, j’encourage souvent mes amis à me rejoindre sur la plateforme pour discuter. Beaucoup sont frustrés de ne pas y retrouver la riche bibliothèque d’autocollants disponible sur d’autres messageries comme WhatsApp. J’avais promis de régler le problème, et c’est enfin chose faite. Voici le &lt;a href=&quot;https://t.me/StickerlyImportBot&quot;&gt;Sticker.ly Sticker Pack Import Bot&lt;/a&gt; :&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;470&quot; height=&quot;496&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-bot-screen-poster.webp&quot; style=&quot;max-height:400px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-bot-screen.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Pour utiliser le bot, il suffit de lui envoyer l’URL d’un pack Sticker.ly, par exemple &lt;a href=&quot;https://sticker.ly/s/HBBCR8&quot;&gt;https://sticker.ly/s/HBBCR8&lt;/a&gt;. Le bot convertit alors les autocollants dans un format animé compatible avec Telegram et vous renvoie un lien pour ajouter le pack animé directement à votre bibliothèque.&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;446&quot; height=&quot;524&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-import-poster.webp&quot; style=&quot;max-height:500px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-import.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        Votre navigateur ne prend pas en charge la balise vidéo.
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Bien que le bot prenne également en charge l’importation de packs statiques, je vous déconseille de l’utiliser pour cela, puisque Sticker.ly et Telegram gèrent déjà nativement l’importation des packs statiques.&lt;/p&gt;
+
+&lt;p&gt;Veuillez noter que le bot est actuellement en version bêta : certaines erreurs peuvent donc survenir. Si vous rencontrez un problème lors de la création d’un pack d’autocollants, réessayez et suivez les instructions du bot pour supprimer un pack partiellement créé si nécessaire.&lt;/p&gt;
+</description>
+          <pubDate>Wed, 05 Apr 2023 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/fr/telegram-stickerly-import-bot</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/telegram-stickerly-import-bot</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Optimisation boîte noire et réglage d'hyperparamètres avec Vizier de Google</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Optimiser automatiquement et intelligemment n'importe quel type de système
+&lt;/p&gt;
+
+&lt;style&gt;
+img {
+  max-height: 350px;
+}
+&lt;/style&gt;
+
+&lt;p&gt;Lorsque vous construisez un modèle d’apprentissage automatique — ou tout autre système algorithmique — vous devez faire des choix d’architecture. En apprentissage automatique, par exemple, il vous faut décider du nombre de neurones dans une couche de réseau ou du taux de descente de gradient. Si vous concevez un &lt;a href=&quot;https://en.wikipedia.org/wiki/Particle_filter&quot;&gt;filtre particulaire&lt;/a&gt; pour suivre l’état d’un robot, vous devrez choisir la forme d’une fonction de vraisemblance. Ou encore, vous cherchez peut-être la taille de tampon et le nombre de threads qui minimisent votre consommation de ressources de calcul. Comment trouver l’architecture optimale de votre système ?&lt;/p&gt;
+
+&lt;p&gt;Vous pourriez essayer à la main : tester différentes valeurs pour le nombre de neurones, essayer différents pas de descente de gradient. Mais ce processus est lent, fastidieux et plein de pièges. Heureusement, il existe des services capables d’optimiser votre système à votre place, de façon intelligente et efficace.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;présentation-de-vizier&quot;&gt;Présentation de Vizier&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/google/vizier&quot;&gt;Vizier&lt;/a&gt; est un service d’optimisation créé chez Google pour l’optimisation boîte noire et le réglage d’hyperparamètres. Il peut optimiser n’importe quel système du moment que vous pouvez lui fournir des entrées — suggérées par Vizier — et récupérer des sorties — des métriques que Vizier cherche à optimiser, en les maximisant ou en les minimisant. Le système lui-même est traité comme une boîte noire.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/black-box-optimization.png&quot; alt=&quot;Optimisation boîte noire&quot; width=&quot;629&quot; height=&quot;319&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+L'optimisation boîte noire n'exige aucune compréhension du système lui-même, tant qu'on peut lui fournir des entrées et récupérer des sorties. Source : Per Instance Algorithm Configuration for Continuous Black Box Optimization - Figure scientifique sur ResearchGate. Disponible sur : https://www.researchgate.net/figure/black-box-Optimization_fig1_322035981 [consulté le 23 février 2023]
+&lt;/p&gt;
+
+&lt;p&gt;Contrairement aux méthodes d’optimisation qui ne sont pas des boîtes noires, comme &lt;a href=&quot;/fr/gradient-descent&quot;&gt;la descente de gradient&lt;/a&gt;, qui exigent de comprendre la relation entre les paramètres du système et la métrique à minimiser ou maximiser, un système boîte noire comme Vizier n’a besoin d’aucune connaissance interne du système. Il n’en explore pas moins l’espace des paramètres efficacement pour trouver les valeurs qui optimisent votre système. Cela le rend également plus robuste face à des fonctions de métrique complexes, discontinues ou non convexes.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;paramètres-vs-hyperparamètres&quot;&gt;Paramètres vs hyperparamètres&lt;/h2&gt;
+
+&lt;p&gt;Petite parenthèse : cette distinction vient de l’apprentissage automatique, où les « paramètres » désignent les valeurs internes au modèle utilisées pour l’inférence et apprises lors de l’entraînement sur un jeu de données, tandis que les hyperparamètres décrivent l’architecture du modèle ou la procédure d’entraînement. Un service d’optimisation boîte noire comme Vizier peut servir à optimiser n’importe quel type de système ; ce ne serait pas un moyen efficace d’entraîner directement un modèle d’apprentissage automatique, mais c’est un très bon outil pour en optimiser l’architecture.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;un-exemple&quot;&gt;Un exemple&lt;/h2&gt;
+
+&lt;p&gt;Je vais prendre un exemple qui ne relève pas de l’apprentissage automatique, mais qui illustre très bien la puissance et la simplicité d’un algorithme d’optimisation boîte noire comme Vizier. Imaginons que nous ayons un signal bruité comme celui ci-dessous :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/some-noisy-signal.png&quot; alt=&quot;Un signal bruité&quot; width=&quot;368&quot; height=&quot;246&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Un signal bruité.
+&lt;/p&gt;
+
+&lt;p&gt;Essayons de trouver une fonction analytique qui s’ajuste à ce signal. Nous hésitons entre ajuster une loi &lt;a href=&quot;https://en.wikipedia.org/wiki/Normal_distribution&quot;&gt;gaussienne&lt;/a&gt; ou une loi de &lt;a href=&quot;https://en.wikipedia.org/wiki/Laplace_distribution&quot;&gt;Laplace&lt;/a&gt;, et chacune de ces deux fonctions possède ses propres paramètres — comme la moyenne et la variance — que nous devons aussi estimer.&lt;/p&gt;
+
+&lt;p&gt;Tant que nous pouvons fournir à Vizier une métrique à optimiser, il trouvera pour nous la fonction optimale.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;mise-en-place-du-problème&quot;&gt;Mise en place du problème&lt;/h2&gt;
+&lt;p&gt;Le premier paramètre que nous voulons explorer est le type de modèle : gaussien ou Laplace :&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+    'parameter_id': 'model',
+    'categorical_value_spec' : {
+        'values': [
+            'gaussian',
+            'laplace',
+        ]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Mais chaque modèle possède son propre ensemble de paramètres qui définit sa forme. Appelons-les les « paramètres enfants » de chaque modèle.&lt;/p&gt;
+
+&lt;p&gt;Pour la gaussienne, il s’agit de la moyenne &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt; (\(\mu\)) et de l’écart-type &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sigma&lt;/code&gt; (\(\sigma\)).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/normal-distribution.png&quot; alt=&quot;Loi gaussienne de paramètres mu et sigma&quot; width=&quot;720&quot; height=&quot;460&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Loi gaussienne de paramètres mu et sigma. Source : https://commons.wikimedia.org/wiki/File:Normal_Distribution_PDF.svg
+&lt;/p&gt;
+
+&lt;p&gt;Pour la loi de Laplace — la notation varie selon les auteurs — on trouve généralement le paramètre de position (ou moyenne) &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt; (\(\mu\)) et le facteur d’échelle &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&lt;/code&gt; (\(b\)).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/laplace-distribution.png&quot; alt=&quot;Loi de Laplace de paramètres mu et b&quot; width=&quot;800&quot; height=&quot;600&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Loi de Laplace de paramètres mu et b. Source : https://commons.wikimedia.org/wiki/File:Laplace_pdf_mod.svg
+&lt;/p&gt;
+
+&lt;p&gt;Pour éviter toute confusion avec la moyenne de la gaussienne, appelons &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; plutôt que &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt; le paramètre de position de la loi de Laplace.&lt;/p&gt;
+
+&lt;p&gt;Lorsque l’on tente d’ajuster la loi gaussienne, nous ne voulons pas que Vizier essaie d’estimer les paramètres de la loi de Laplace, et réciproquement. Par chance, on peut définir les paramètres de chaque loi comme des paramètres enfants, ou conditionnels, du paramètre parent &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;model&lt;/code&gt; :&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'conditional_parameter_specs': [
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;mu&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 10.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['gaussian']
+    }
+},
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;sigma&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 1e-1,
+        &quot;max_value&quot;: 5.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['gaussian']
+    }
+},
+    {
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;a&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 10.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['laplace']
+    }
+},
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;b&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 1e-1,
+        &quot;max_value&quot;: 5.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['laplace']
+    }
+}]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Enfin, il faut définir la métrique que Vizier va optimiser. Je souhaite ajuster une fonction au signal aussi fidèlement que possible, et j’évalue la qualité de l’ajustement en calculant la somme des carrés des résidus entre la fonction analytique et les données. Plus cette valeur est petite, meilleur est l’ajustement. Il suffit d’indiquer à Vizier que c’est cette métrique que nous voulons minimiser :&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;metric_ssr = {
+    'metric_id': 'sum_of_squared_residuals',
+    'goal': 'MINIMIZE',
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Nous rassemblons tous ces éléments pour définir notre étude :&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;study = {
+    'display_name': 'vizier_experiment',
+    'study_spec' :
+    {
+        'parameters': [param_model],
+        'metrics': [metric_ssr]
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Notez que Vizier n’a aucune compréhension des paramètres eux-mêmes. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gaussian&lt;/code&gt; et &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Laplace&lt;/code&gt; ne sont pour lui que des modalités d’un paramètre catégoriel, sans aucune autre signification. C’est mon code consommateur qui leur donne un sens — mais du point de vue de Vizier, ce code vit dans une boîte noire. Je ne l’inclus pas ici par souci de concision, mais vous trouverez l’intégralité du code au lien situé à la fin de l’article.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;la-recherche&quot;&gt;La recherche&lt;/h2&gt;
+
+&lt;p&gt;À chaque essai, Vizier nous propose un jeu de paramètres à tester. Nous évaluons nous-mêmes la performance de ces paramètres, calculons la métrique (la somme des carrés des résidus) et renvoyons le résultat à Vizier. Vizier s’en sert alors pour générer le jeu de paramètres suivant.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/vizier-trials.png&quot; alt=&quot;Vizier proposant des paramètres pour les essais&quot; width=&quot;1280&quot; height=&quot;281&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Vizier proposant des paramètres pour chaque essai.
+&lt;/p&gt;
+
+&lt;p&gt;Remarquez que Vizier ne propose des paramètres gaussiens que lorsque le modèle est gaussien, et inversement pour le modèle de Laplace.&lt;/p&gt;
+
+&lt;p&gt;Comment Vizier cherche-t-il les paramètres optimaux ? Il peut effectuer une recherche sur grille ou aléatoire, mais la vraie magie réside dans la combinaison d’autres algorithmes qu’il emploie : bandits à processus gaussiens, recherche par combinaison linéaire, ou leurs variantes.&lt;/p&gt;
+
+&lt;p&gt;Depuis GCP, nous pouvons consulter ces graphiques très parlants de la progression de Vizier :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/study-progress-table.webp&quot; alt=&quot;Tableau d'étude montrant l'évolution de la métrique optimisée et des paramètres de chaque essai&quot; width=&quot;1600&quot; height=&quot;1071&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Tableau d'étude montrant l'évolution de la métrique optimisée et les paramètres de chaque essai.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/parallel-chart.webp&quot; alt=&quot;Graphique en coordonnées parallèles montrant les jeux de paramètres testés et la métrique obtenue&quot; width=&quot;1600&quot; height=&quot;726&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Graphique en coordonnées parallèles montrant les jeux de paramètres testés et la valeur de métrique correspondante.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;ajustement-optimal&quot;&gt;Ajustement optimal&lt;/h2&gt;
+
+&lt;p&gt;On voit que la loi de Laplace l’emporte légèrement sur la gaussienne :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/optimal-parallel-chart.webp&quot; alt=&quot;Graphique en coordonnées parallèles zoomé sur les meilleurs essais minimisant la somme des carrés des résidus&quot; width=&quot;1600&quot; height=&quot;550&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Graphique en coordonnées parallèles zoomé sur les meilleurs essais qui minimisent la somme des carrés des résidus. La loi de Laplace offre un meilleur ajustement que la loi gaussienne.
+&lt;/p&gt;
+
+&lt;p&gt;Nous interrogeons Vizier pour récupérer les paramètres du meilleur essai et les traçons :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/noisy-signal-fit.png&quot; alt=&quot;Ajustement optimisé sur le signal bruité&quot; width=&quot;543&quot; height=&quot;289&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Paramètres optimisés ajustés au signal bruité.
+&lt;/p&gt;
+
+&lt;p&gt;L’ajustement est presque parfait ! Les paramètres trouvés par Vizier sont très proches de ceux que j’avais utilisés pour générer le signal avant d’y ajouter du bruit : une loi de Laplace avec \(a=5\) et \(b=2\).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/original-laplace-signal.png&quot; alt=&quot;Signal de Laplace d'origine&quot; width=&quot;862&quot; height=&quot;728&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Signal de Laplace d'origine.
+&lt;/p&gt;
+
+&lt;p&gt;À titre de comparaison, une gaussienne aurait un sommet plus arrondi et des queues plus fines.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/gaussian-signal.png&quot; alt=&quot;Signal gaussien&quot; width=&quot;878&quot; height=&quot;726&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Une loi gaussienne à titre de comparaison.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;comment-reproduire-cela-&quot;&gt;Comment reproduire cela ?&lt;/h2&gt;
+
+&lt;p&gt;Le notebook Colab que j’ai utilisé pour rédiger cet article est disponible &lt;a href=&quot;https://github.com/skzv/vizier-blog-post/blob/main/vizier_blog_post.ipynb&quot;&gt;ici&lt;/a&gt;. J’ai utilisé l’API Vertex AI Vizier de GCP parce qu’elle génère des graphiques sympas comme ceux inclus dans cet article, mais attention : cela peut coûter cher (1 $ par essai). Vizier est également open source et disponible &lt;a href=&quot;https://github.com/google/vizier&quot;&gt;ici&lt;/a&gt;.&lt;/p&gt;
+</description>
+          <pubDate>Wed, 22 Feb 2023 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/fr/blackbox-optimization-with-vizier</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/blackbox-optimization-with-vizier</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Évaluation d'options par la méthode de Monte-Carlo</title>
+          <description>&lt;p&gt;&lt;em&gt;Le casino des options&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Prédire l’évolution du cours des actions est un défi séduisant, chargé de promesses de richesse. Malheureusement, prévoir de manière fiable et régulière les cours futurs est généralement considéré comme impossible. En revanche, nous pouvons utiliser des modèles pour formuler des prévisions utiles, gérer le risque et réaliser des profits de façon &lt;em&gt;probabiliste&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;le-mouvement-brownien-géométrique&quot;&gt;Le mouvement brownien géométrique&lt;/h2&gt;
+&lt;p&gt;L’un des modèles les plus couramment utilisés est le mouvement brownien géométrique (&lt;a href=&quot;https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.04%3A_Geometric_Brownian_Motion&quot;&gt;1&lt;/a&gt;, &lt;a href=&quot;http://www.columbia.edu/~ks20/FE-Notes/4700-07-Notes-GBM.pdf&quot;&gt;2&lt;/a&gt;) — d’ailleurs, la célèbre &lt;a href=&quot;https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model&quot;&gt;formule de Black-Scholes pour l’évaluation des options&lt;/a&gt; repose elle aussi sur ce modèle. Il s’écrit sous la forme :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ S(t) = S(0)\exp{((\mu-\frac{\sigma^2}{2})t + \sigma B(t))} \tag{0}  \label{eq:gbm}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;où \(B(t)\) est un mouvement brownien standard. Si nous notons \(S(0)\) le cours initial de l’action, \(\mu\) le &lt;a href=&quot;https://en.wikipedia.org/wiki/Rate_of_return#Logarithmic_or_continuously_compounded_return&quot;&gt;rendement composé continu&lt;/a&gt; moyen et \(\sigma\) la &lt;a href=&quot;https://en.wikipedia.org/wiki/Volatility_(finance)&quot;&gt;volatilité&lt;/a&gt; du titre, nous pouvons alors générer des trajectoires de prix très réalistes.&lt;/p&gt;
+
+&lt;div id=&quot;plot-0&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;\(\mu\)&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;mean-slider&quot; type=&quot;range&quot; min=&quot;-2.5&quot; max=&quot;1&quot; value=&quot;0&quot; step=&quot;0.01&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;mean-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;\(\sigma\)&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;sigma-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; value=&quot;0&quot; step=&quot;0.01&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;sigma-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate0()&quot;&gt;Régénérer&lt;/button&gt;&lt;/p&gt;
+
+&lt;div style=&quot;display:none&quot; id=&quot;mean-0&quot;&gt;0&lt;/div&gt;
+&lt;div style=&quot;display:none&quot; id=&quot;sigma-0&quot;&gt;0&lt;/div&gt;
+&lt;div style=&quot;display:none&quot; id=&quot;option-mean-0&quot;&gt;0&lt;/div&gt;
+
+&lt;p&gt;Alors, que signifie tout cela, et pourquoi est-ce un bon modèle pour le prix des titres financiers ?&lt;/p&gt;
+
+&lt;h3 id=&quot;les-rendements-logarithmiques&quot;&gt;Les rendements logarithmiques&lt;/h3&gt;
+&lt;p&gt;En finance quantitative, il est courant de travailler avec des rendements composés en continu plutôt qu’avec des rendements simples. Cela signifie qu’au lieu d’étudier le rendement simple entre deux périodes de cotation \(1 + R_t = \frac{S(t)}{S(t-1)}\), on s’intéresse au rendement composé \(r_t = \ln{(1 + R_t)} = \ln{\frac{S(t)}{S(t-1))}}\). Cette formulation a une propriété très pratique : on retrouve le cours d’une action simplement en sommant les rendements logarithmiques :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ S(t) = S(0)\exp{(r_1 + r_2 + ... + r_{t-1})} \tag{1}  \label{eq:rr}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;C’est également pratique parce qu’une hypothèse classique en finance veut que les rendements logarithmiques d’une action soient indépendants et suivent une loi normale de moyenne \(\mu\) et de variance \(\sigma^2\). Remarquons que pour de faibles rendements, le rendement simple \(R_t\) est très proche du rendement logarithmique \(r_t\) puisque \(r_t = \ln{(1 + R_t)} \approx R_t\) ; l’écart entre les deux est donc minime et l’on peut assimiler les deux à une distribution normale. Ensuite, si les rendements logarithmiques suivent une loi normale, alors le cours de l’action suit une loi &lt;em&gt;log-normale&lt;/em&gt;. On observe empiriquement ce comportement dans une certaine mesure, même si dans la réalité les cours boursiers présentent des « queues plus épaisses » — c’est-à-dire que les événements extrêmes surviennent plus souvent que ne le prédit une loi normale. Voici les rendements mensuels de l’action IBM qui illustrent ce phénomène.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/monte-carlo-stocks/IBM-returns.webp&quot; alt=&quot;Rendements mensuels d'IBM&quot; width=&quot;1282&quot; height=&quot;1008&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Rendements mensuels simples et logarithmiques de l'action IBM comparés à des lois normales ajustées. On observe davantage de rendements aux extrémités que ne le prévoirait la loi normale : c'est ce qu'on appelle des « queues épaisses » ou un « excès de kurtosis ». Image tirée de « Analysis of Financial Time Series, 3rd Ed. » par Ruey S. Tsay.
+&lt;/p&gt;
+
+&lt;p&gt;Ce modèle a un autre atout : il n’autorise que des prix strictement positifs. Or les titres financiers ont presque toujours un prix positif (même si dans certains cas rares ils peuvent devenir négatifs — pensez au &lt;a href=&quot;https://assets.weforum.org/editor/kE8TpkO7bzo3dLFWEh9UDvgqRuZPOmURhnh0FfwOVYc.png&quot;&gt;krach pétrolier de 2020&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;Nous voulons donc un processus capable de générer une suite de rendements \(r_t\) suivant une loi normale — ce qui fait du mouvement brownien un choix tout naturel.&lt;/p&gt;
+
+&lt;h2 id=&quot;le-mouvement-brownien&quot;&gt;Le mouvement brownien&lt;/h2&gt;
+&lt;p&gt;Le &lt;a href=&quot;https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.01%3A_Standard_Brownian_Motion&quot;&gt;mouvement brownien&lt;/a&gt; décrit le déplacement d’une particule dans un fluide ou un gaz. Cette particule rebondit de manière « aléatoire » dans le milieu qui l’entoure, traçant une trajectoire particulièrement bruitée et erratique. On peut le voir comme la limite d’une marche aléatoire dont l’intervalle de temps entre deux pas et la taille de chaque pas tendent tous deux vers zéro (avec une nuance importante : si le pas de temps vaut \(t\), la taille du pas doit être de \(\sqrt{t}\) — ce qui garantit que la variance du processus croît exactement proportionnellement au temps). Imaginez tirer à pile ou face pour décider d’avancer ou de reculer d’un pas, puis faire tendre l’intervalle entre chaque tirage vers zéro. Vous traceriez une trajectoire qui ressemble à ceci :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/monte-carlo-stocks/wiener-process-zoom.png&quot; alt=&quot;Mouvement brownien en 1D&quot; width=&quot;800&quot; height=&quot;600&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Mouvement brownien [arithmétique] unidimensionnel. Le mouvement brownien géométrique correspond à l'exponentielle de ce processus. &lt;a target=&quot;_blank&quot; href=&quot;http://creativecommons.org/licenses/by-sa/3.0/&quot; title=&quot;Creative Commons Attribution-Share Alike 3.0&quot;&gt;CC BY-SA 3.0&lt;/a&gt;, &lt;a target=&quot;_blank&quot; href=&quot;https://commons.wikimedia.org/w/index.php?curid=1426987&quot;&gt;Source&lt;/a&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Le mouvement brownien possède l’excellente propriété que ses incréments suivent une loi normale, exactement ce que nous recherchons. On peut simuler un processus brownien à pas discrets en échantillonnant dans une loi normale (bien que si seule la valeur finale d’une série temporelle vous importe, n’importe quelle distribution de variance unitaire ferait l’affaire : d’après le théorème central limite, la somme de variables aléatoires finit de toute façon par tendre vers une gaussienne).&lt;/p&gt;
+
+&lt;p&gt;Le mouvement brownien nous fournit ainsi la suite de rendements logarithmiques normalement distribués \(r_t\) demandée dans \(\eqref{eq:rr}\) :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ r(t) = (\mu-\frac{\sigma^2}{2})t + \sigma B(t) \tag{2}  \label{eq:bm}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;En prenant l’exponentielle de ce processus, nous retrouvons notre équation pour modéliser l’évolution d’un cours boursier.&lt;/p&gt;
+
+&lt;p&gt;Un point particulièrement intéressant ici est le terme de dérive \(\mu - \frac{\sigma^2}{2}\) qui entraîne le processus de façon linéaire, comme son nom l’indique. Le rôle de \(\mu\) est évident : c’est le rendement composé continu moyen du titre et, en l’absence de bruit (ou de volatilité), le prix de l’action ne ferait que croître (ou décroître) à ce rythme composé. Mais d’où vient le \(-\frac{\sigma^2}{2}\) ? Il s’avère que l’espérance d’une variable log-normale vaut \(\exp(\mu + \sigma^2/2)\). Comme le prix de l’action suit une &lt;em&gt;loi log-normale&lt;/em&gt; (alors que les rendements suivent une &lt;em&gt;loi normale&lt;/em&gt;) et que nous voulons que l’espérance du cours après capitalisation continue soit égale à \(S(0)\exp(\mu t)\), il faut appliquer ce terme correctif de \(-\frac{\sigma^2}{2}\) au processus.&lt;/p&gt;
+
+&lt;p&gt;Il existe aussi un argument presque philosophique en faveur du mouvement brownien comme base de ce modèle. Une hypothèse classique en finance est que les marchés sont efficients, c’est-à-dire qu’il ne devrait pas exister d’opportunité d’arbitrage. Le marché devrait donc être imprévisible : si un acteur parvenait à le prédire, cela créerait une opportunité d’arbitrage qui serait immédiatement exploitée jusqu’à disparaître. Du bruit aléatoire (ce qu’est essentiellement le mouvement brownien) constitue donc un choix pertinent pour modéliser les marchés.&lt;/p&gt;
+
+&lt;h2 id=&quot;évaluation-doptions&quot;&gt;Évaluation d’options&lt;/h2&gt;
+
+&lt;p&gt;La simulation de Monte-Carlo est une technique statistique inspirée des casinos de Monaco. Tout comme un joueur remet son sort aux probabilités, nous confions les résultats d’une analyse statistique au hasard. En réalisant suffisamment d’essais, nous pouvons tirer des conclusions statistiquement significatives.&lt;/p&gt;
+
+&lt;p&gt;Considérons l’évaluation d’une option d’achat (&lt;em&gt;call&lt;/em&gt;) de prix d’exercice (&lt;em&gt;strike&lt;/em&gt;) de 105 $ sur cette action. Quelle serait la valeur espérée de l’option à l’échéance, si l’évolution du titre suit un mouvement brownien géométrique ? Nous pouvons l’estimer en générant une série de trajectoires de cours, chacune jouant le rôle d’un essai. La valeur finale de chaque essai donne la valeur intrinsèque de l’option via la relation \(V = \max(0, S - K)\), où \(S\) est le cours de l’action et \(K\) le prix d’exercice. La moyenne des valeurs finales nous fournit une estimation du prix de l’option à l’échéance, tandis que leur écart-type mesure notre degré de certitude quant au fait que l’option expire proche de cette valeur.&lt;/p&gt;
+
+&lt;div id=&quot;plot-1&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate1()&quot;&gt;Régénérer&lt;/button&gt;&lt;/p&gt;
+&lt;div id=&quot;mean-1&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;sigma-1&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;option-mean-1&quot;&gt;0&lt;/div&gt;
+
+&lt;p&gt;Nous pouvons augmenter le nombre d’essais pour accroître la précision statistique de l’estimation. Relancer la simulation (en cliquant sur « Régénérer ») sur un grand nombre de tirages (ci-dessous) produit des écarts beaucoup plus faibles entre deux expériences que sur un petit nombre de tirages (ci-dessus).&lt;/p&gt;
+
+&lt;div id=&quot;plot-2&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate2()&quot;&gt;Régénérer&lt;/button&gt;&lt;/p&gt;
+&lt;div id=&quot;mean-2&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;sigma-2&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;option-mean-2&quot;&gt;0&lt;/div&gt;
+
+&lt;h2 id=&quot;scénarios-plus-avancés&quot;&gt;Scénarios plus avancés&lt;/h2&gt;
+&lt;p&gt;La simulation de Monte-Carlo sur les valeurs à l’échéance reste relativement simple, et pas forcément indispensable puisqu’une telle analyse peut généralement se résoudre analytiquement. La véritable puissance de la méthode de Monte-Carlo se révèle face à des scénarios beaucoup plus difficiles, voire impossibles, à résoudre par le calcul exact. Par exemple, pour analyser une option américaine, qui peut être exercée à tout moment, on peut vouloir calculer la probabilité que le cours de l’action dépasse le prix d’exercice à n’importe quel instant de la vie de l’option. Il suffit alors de compter combien de trajectoires franchissent cette barrière — ce qui est très simple à faire avec une simulation de Monte-Carlo.&lt;/p&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdn.plot.ly/plotly-2.4.2.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js&quot; integrity=&quot;sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; src=&quot;/assets/js/monte-carlo-options.js&quot;&gt;&lt;/script&gt;
+
+</description>
+          <pubDate>Thu, 16 Dec 2021 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/fr/monte-carlo-options-pricing</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/monte-carlo-options-pricing</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Démonstration interactive de la descente de gradient</title>
+          <description>&lt;p&gt;&lt;em&gt;Quel est cet algorithme si particulier ?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;La descente de gradient est un algorithme d’optimisation qui permet de trouver le minimum (local) d’une fonction.&lt;/p&gt;
+
+&lt;h2 id=&quot;pourquoi-est-ce-utile-&quot;&gt;Pourquoi est-ce utile ?&lt;/h2&gt;
+
+&lt;p&gt;Imaginons que vous disposiez d’une fonction \(f(x,y)\). Cette fonction peut représenter un coût pour vous, tandis que \(x\) et \(y\) sont des paramètres d’entrée qui font varier ce coût. Naturellement, vous allez chercher les valeurs de \(x\) et \(y\) qui minimisent ce coût. Cela revient à trouver le minimum de \(f(x,y)\). Par exemple, nous pourrions vouloir trouver le minimum de cette fonction, tracée ci-dessous :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+f(x,y)=3(1 - x)^2 e^{- x^2 - (y + 1)^2} - 10(\frac{x}{5} - x^3 - y^5) e^{-x^2 - y^2} - \frac{1}{3} e^{-(x+1)^2 - y^2} \tag{0}  \label{eq:cost_func}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;div id=&quot;plot-0&quot;&gt;&lt;/div&gt;
+
+&lt;p&gt;C’est précisément là que la descente de gradient entre en jeu.&lt;/p&gt;
+
+&lt;h2 id=&quot;pourquoi-la-descente-de-gradient-&quot;&gt;Pourquoi la descente de gradient ?&lt;/h2&gt;
+
+&lt;p&gt;De vos cours de calcul différentiel élémentaire, vous vous souvenez peut-être d’une méthode pour trouver le minimum d’une fonction : calculer la dérivée première, l’égaler à zéro et résoudre l’équation :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+f'(x,y)=0 \tag{1}  \label{eq:first_deriv}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Cela révèle l’emplacement des extrema (maxima et minima) de la fonction. Le signe de la dérivée seconde \(f''(x,y)\) indique ensuite si ces extrema sont des maxima locaux ou des minima locaux. Toutefois, résoudre l’équation de la dérivée première \(\eqref{eq:first_deriv}\) peut s’avérer loin d’être trivial et nécessite souvent des méthodes numériques. Et à mesure que la fonction de coût fait intervenir de plus en plus de dimensions, par exemple \(f(x,y,z,w,q,u,v,...)\), le problème devient vite ingérable. La descente de gradient offre une méthode efficace pour localiser des minima en exploitant astucieusement la dérivée première.&lt;/p&gt;
+
+&lt;h2 id=&quot;lalgorithme-de-descente-de-gradient&quot;&gt;L’algorithme de descente de gradient&lt;/h2&gt;
+
+&lt;p&gt;L’intuition derrière la descente de gradient est très naturelle, et je parie que vous adopteriez spontanément la même démarche dans une situation physique analogue. Imaginez que vous soyez plongé dans un épais brouillard, ne pouvant voir qu’à quelques mètres devant vous et ressentir la pente du sol sous vos pieds. Vous cherchez à atteindre le fond d’une vallée aussi vite que possible. Vous n’allez certainement pas perdre votre temps à marcher à plat — ni pire encore, à monter. Pour descendre vite, vous observez la pente là où vous vous trouvez et vous avancez dans la direction où la descente est la plus raide. « Gradient » est un synonyme de pente : vous êtes donc en train d’effectuer une descente de gradient. À l’inverse, si vous cherchiez à atteindre le sommet d’une colline, vous suivriez la pente la plus raide vers le haut à chaque instant. Ce serait alors une &lt;em&gt;montée&lt;/em&gt; de gradient.&lt;/p&gt;
+
+&lt;h2 id=&quot;le-gradient&quot;&gt;Le gradient&lt;/h2&gt;
+&lt;p&gt;Le gradient est essentiellement un autre mot pour désigner la pente. Tout le monde connaît la notion de pente en une dimension. En 1D, puisqu’on ne peut avancer ou reculer que sur une seule ligne, la pente est clairement définie. En revanche, dans un espace de dimension supérieure — imaginez que vous soyez en randonnée — la pente varie selon la direction que vous choisissez. Comment définir la pente en un point dans ce cas ?&lt;/p&gt;
+
+&lt;p&gt;En analyse vectorielle, on utilise l’opérateur gradient \(\nabla\), qui est le vecteur des pentes (ou dérivées partielles premières) le long de chaque dimension.&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\nabla f(x,y)= \begin{bmatrix}
+           \frac{\partial f}{dx} (x,y) \\
+           \frac{\partial f}{dy} (x,y)
+         \end{bmatrix} \tag{2}  \label{eq:gradient}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Sur une surface 2D définie par \(f(x,y)\), il s’agit de la pente selon l’axe des \(x\) et de la pente selon l’axe des \(y\). La pente dans une direction quelconque (ce qui est essentiel, puisque nous ne sommes pas contraints de nous déplacer uniquement selon l’axe des \(x\) ou celui des \(y\)) s’obtient en combinant les composantes en \(x\) et en \(y\) de la pente dans cette direction. Autrement dit, le produit scalaire d’un vecteur direction avec le gradient donne la pente dans cette direction.&lt;/p&gt;
+
+&lt;p&gt;Une autre propriété remarquable du gradient est qu’il indique la direction de la pente la plus raide. Cela se voit mathématiquement : puisque la pente dans une direction donnée est le produit scalaire de ce vecteur direction avec le gradient, ce produit scalaire est maximal lorsque le vecteur direction est aligné avec le gradient lui-même !&lt;/p&gt;
+
+&lt;p&gt;Ci-dessous, j’ai tracé l’opposé du gradient de \(f(x,y)\) avec Mathematica. Cela nous donne la direction de la plus forte descente en chaque point de \(f\).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/gradient-descent/gradient.png&quot; alt=&quot;Gradient de f&quot; width=&quot;360&quot; height=&quot;361&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Gradient de f représenté sous forme de champ de vecteurs.
+&lt;/p&gt;
+
+&lt;h2 id=&quot;suivre-la-plus-forte-pente-vers-le-bas&quot;&gt;Suivre la plus forte pente vers le bas&lt;/h2&gt;
+&lt;p&gt;Plus haut, nous avons convenu que si vous deviez descendre une vallée à l’aveugle, vous suivriez la pente la plus raide vers le bas pour atteindre le fond le plus vite possible. Mathématiquement, cela revient à descendre la vallée en suivant l’opposé du gradient en chaque point, puisque ce vecteur pointe dans la direction de plus forte descente. En regardant la figure ci-dessus, on voit qu’en suivant les flèches on aboutit bien à un minimum (mais méfiance — chaque minimum possède son propre bassin d’attraction ! Nous y reviendrons).&lt;/p&gt;
+
+&lt;p&gt;Nous pouvons donc définir une procédure. Elle pourrait ressembler à ceci :&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Observer la pente à votre position actuelle et déterminer la direction de plus forte descente.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Faire 5 pas dans cette direction.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Si vous continuez à descendre, revenir à l’étape 1. Sinon, vous êtes au fond !&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Vous vous demandez peut-être d’où viennent ces 5 pas. C’est parfaitement arbitraire. Mais nous pouvons en faire un paramètre de notre procédure. Appelons-le le pas de descente, et notons-le \(\alpha\). Plus \(\alpha\) est grand, moins souvent nous avons besoin d’inspecter la pente autour de nous. Sur le plan du calcul, c’est plus efficace — mais comme vous allez le voir, cela peut aussi poser problème.&lt;/p&gt;
+
+&lt;p&gt;Nous pouvons aller encore plus loin dans l’optimisation. Lorsque la pente locale est encore raide, nous sommes probablement loin du fond de la vallée. Mais à mesure que la pente s’adoucit, on peut supposer que l’on s’approche du fond. Il est donc judicieux de descendre d’un pas proportionnel à la norme du gradient. Notons le gradient \(\bar{g}\), et reformulons notre procédure de descente de gradient :&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Observer la pente à votre position actuelle et déterminer la direction de plus forte descente.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Faire \(\alpha \times \|\bar{g}\|\) pas dans cette direction.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Si vous continuez à descendre, revenir à l’étape 1. Sinon, vous êtes au fond !&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Reste à savoir comment déterminer si nous sommes toujours en train de descendre. Une approche consiste à mesurer de combien nous avons descendu à chaque itération. Si notre altitude varie à peine, c’est que nous sommes déjà quasiment au fond.&lt;/p&gt;
+
+&lt;p&gt;Mathématiquement, notre procédure s’écrit :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\bar{p}_{n+1} = \bar{p}_n - \alpha \nabla f(x,y) \tag{3}  \label{eq:grad_descent}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;où \(p_n\) est notre position à la \(n^{\text{e}}\) itération de la descente. Essayez-la sur la démonstration ci-dessous. Faire varier \(\alpha\) modifie la vitesse de descente, tandis que faire varier \(X\) et \(Y\) change le point de départ sur la surface. Que remarquez-vous ?&lt;/p&gt;
+
+&lt;div id=&quot;plot-1&quot;&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;X&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;x-slider&quot; type=&quot;range&quot; min=&quot;-3&quot; max=&quot;3&quot; value=&quot;0&quot; step=&quot;0.05&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;x-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;Y&lt;/span&gt;
+    &lt;input class=&quot;slider&quot; id=&quot;y-slider&quot; type=&quot;range&quot; min=&quot;-3&quot; max=&quot;3&quot; value=&quot;0&quot; step=&quot;0.05&quot; /&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;y-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;α&lt;/span&gt;
+    &lt;input class=&quot;slider&quot; id=&quot;alpha-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;0.2&quot; value=&quot;0&quot; step=&quot;0.001&quot; /&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;alpha-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;observations&quot;&gt;Observations&lt;/h2&gt;
+
+&lt;p&gt;Vous remarquerez que la descente de gradient est sensible à la position initiale. Elle vous attire vers un minimum local, qui n’est pas forcément le minimum global. La région du domaine à partir de laquelle la descente de gradient converge vers un minimum donné s’appelle le bassin d’attraction de ce minimum.&lt;/p&gt;
+
+&lt;p&gt;Vous constaterez également qu’augmenter le pas de descente \(\alpha\) réduit le nombre d’itérations nécessaires pour atteindre le minimum. Mais s’il est trop grand, l’algorithme dépasse le minimum et peut même diverger.&lt;/p&gt;
+
+&lt;h2 id=&quot;apprentissage-automatique&quot;&gt;Apprentissage automatique&lt;/h2&gt;
+
+&lt;p&gt;Vous avez probablement déjà entendu parler de la descente de gradient dans le contexte de l’apprentissage automatique (machine learning). Dans ce cadre, la fonction de coût représente l’erreur de notre modèle. Il peut par exemple s’agir de l’erreur de classification d’images, et les entrées de la fonction de coût sont les poids du modèle que nous ajustons. Nous pouvons ainsi utiliser la descente de gradient pour trouver la configuration optimale des poids qui minimise l’erreur de classification du réseau de neurones ! Dans ce domaine, le pas de descente \(\alpha\) porte un nom bien précis : le &lt;em&gt;taux d’apprentissage&lt;/em&gt; (&lt;em&gt;learning rate&lt;/em&gt;). Peut-être est-ce ce que nos cerveaux font depuis toujours.&lt;/p&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdn.plot.ly/plotly-2.4.2.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js&quot; integrity=&quot;sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; src=&quot;/assets/js/gradient-descent.js&quot;&gt;&lt;/script&gt;
+
+</description>
+          <pubDate>Sun, 14 Nov 2021 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/fr/gradient-descent</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/gradient-descent</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Le configurateur de Lucid Motors est un jeu vidéo diffusé en streaming dans votre navigateur</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Tout s'éclaire quand on réalise que les moteurs de jeu vidéo sont les meilleurs simulateurs qui existent.
+&lt;/p&gt;
+
+&lt;h2 id=&quot;une-solution-ingénieuse&quot;&gt;Une solution ingénieuse&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.barrons.com/articles/lucid-churchill-merger-ipo-ev-51627308359&quot;&gt;Lucid Motors est entrée en bourse lundi&lt;/a&gt;, et même si je ne compte pas acheter de Lucid de sitôt, je me suis retrouvé à explorer &lt;a href=&quot;https://www.lucidmotors.com/air/configure/&quot;&gt;leur configurateur de véhicule&lt;/a&gt; par curiosité. C’est une véritable œuvre d’art. Il permet d’observer et d’interagir avec la voiture sous presque tous les angles, à l’extérieur comme à l’intérieur :&lt;/p&gt;
+
+&lt;div style=&quot;width:100%;height:100%;position:relative;padding-bottom:52.344%;&quot;&gt;&lt;iframe src=&quot;https://streamable.com/e/cudr66&quot; title=&quot;Embedded video&quot; loading=&quot;lazy&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; allowfullscreen=&quot;&quot; style=&quot;width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p class=&quot;caption video-caption&quot;&gt;Le configurateur de Lucid pour leur modèle phare haut de gamme, la Lucid Air Dream.&lt;/p&gt;
+
+&lt;p&gt;On peut tester différentes teintes et finitions, ouvrir et fermer les portières, et même escamoter l’écran de la console centrale. Le pont du Golden Gate en arrière-plan se reflète dans les flaques d’eau lisses comme un miroir. Le configurateur restitue une foule de détails du véhicule, jusqu’aux lumières sous les poignées de porte qui s’allument quand on les actionne. J’ai l’impression de m’être fait une idée tellement précise de la voiture que je n’ai même plus besoin d’aller la voir en vrai.&lt;/p&gt;
+
+&lt;p&gt;Mais comment Lucid a-t-elle réussi ce tour de force ? Peut-on vraiment attendre du navigateur web d’un utilisateur moyen qu’il effectue en temps réel le rendu d’une telle scène, reflets compris ? Probablement pas. Si cela fonctionne, c’est parce que la scène que vous voyez est calculée par Unity — un moteur de jeu vidéo — qui tourne dans le cloud, déportant la lourde charge de calcul sur un serveur Amazon, avant d’être diffusée en streaming vers votre navigateur via WebRTC, un protocole de streaming vidéo pair-à-pair.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;le-modèle&quot;&gt;Le modèle&lt;/h2&gt;
+
+&lt;p&gt;Au départ, j’avais naïvement supposé que le modèle était rendu directement dans mon navigateur via la dernière &lt;a href=&quot;https://en.wikipedia.org/wiki/WebGL&quot;&gt;bibliothèque WebGL&lt;/a&gt; (une API de rendu graphique 2D et 3D avec accélération matérielle dans les navigateurs web). Et puisque le modèle devait être rendu localement, il devait forcément résider quelque part dans ma RAM, ce qui m’aurait permis de l’extraire et de l’ouvrir dans un éditeur 3D. En particulier, je voulais voir si je pouvais retirer les pare-soleil qui interrompent le pare-brise panoramique presque continu — un effet que Tesla a réussi sur le Model X, et je ne comprends pas bien pourquoi Lucid n’a pas suivi la même voie.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/lucid-air-sun-visors.webp&quot; alt=&quot;Pare-soleil de la Lucid Air interrompant la verrière panoramique&quot; width=&quot;1600&quot; height=&quot;994&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Les pare-soleil de la Lucid Air qui viennent interrompre la verrière panoramique.
+&lt;/p&gt;
+
+&lt;p&gt;J’ai donc plongé dans le code. Après un moment passé dans les outils de développement du navigateur, à parcourir des milliers de lignes de JavaScript minifié, à enregistrer et examiner les requêtes réseau entre mon ordinateur portable et les serveurs de Lucid, je me suis aperçu que la réponse s’affichait littéralement dans la console depuis le début :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/zlbolt-webrtc.png&quot; alt=&quot;Le configurateur est un flux vidéo&quot; width=&quot;691&quot; height=&quot;156&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Le configurateur est un flux WebRTC.
+&lt;/p&gt;
+
+&lt;p&gt;Aucun modèle n’est rendu localement. Ce que je regarde, c’est une vidéo.&lt;/p&gt;
+
+&lt;p&gt;Que se passe-t-il donc en coulisses ? Le configurateur démarre avec un affichage 2D — autrement dit, un panorama saccadé d’images qui donne l’illusion d’une interaction 3D. C’est ainsi que fonctionnent la plupart des visionneuses 3D interactives en ligne. Vous pouvez en voir un aperçu ci-dessous :&lt;/p&gt;
+
+&lt;div style=&quot;width:100%;height:100%;position:relative;padding-bottom:52.344%;&quot;&gt;&lt;iframe src=&quot;https://streamable.com/e/ptjitc&quot; title=&quot;Embedded video&quot; loading=&quot;lazy&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; allowfullscreen=&quot;&quot; style=&quot;width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p class=&quot;caption video-caption&quot;&gt;Une vue 3D saccadée, construite à partir d'une série d'images 2D.&lt;/p&gt;
+
+&lt;p&gt;Ensuite, le client teste ma bande passante et ma latence ; si ma connexion est suffisamment rapide pour supporter un flux vidéo en temps réel, il fait passer la session en 3D :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/latency-test.png&quot; alt=&quot;Test de latence&quot; width=&quot;755&quot; height=&quot;25&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;
+&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/bandwidth-test.png&quot; alt=&quot;Test de bande passante&quot; width=&quot;706&quot; height=&quot;21&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Vous passez en session 3D si votre bande passante le permet.
+&lt;/p&gt;
+
+&lt;p&gt;Cela établit une connexion WebRTC. &lt;a href=&quot;https://en.wikipedia.org/wiki/WebRTC&quot;&gt;WebRTC&lt;/a&gt; est un protocole de streaming pair-à-pair. La scène est calculée ailleurs, puis diffusée en streaming via WebRTC vers mon navigateur.&lt;/p&gt;
+
+&lt;p&gt;En inspectant le contenu de leur requête &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_token&lt;/code&gt;, on découvre quelques détails supplémentaires sur leur fonctionnement.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/get-token-request.png&quot; alt=&quot;Contenu de la requête get_token&quot; width=&quot;829&quot; height=&quot;402&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Contenu de la requête get_token.
+&lt;/p&gt;
+
+&lt;p&gt;Le premier encadré révèle que, pour mesurer votre bande passante, ils téléchargent partiellement &lt;a href=&quot;https://libzl.zlthunder.net/bandwidth-test-img.png&quot;&gt;une image de test de 25 Mo&lt;/a&gt; sur votre appareil et chronomètrent la durée de l’opération. Voici cette image, si vous êtes curieux (rassurez-vous, je l’ai compressée 10 fois).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/bandwidth-test-image.webp&quot; alt=&quot;Image de test de bande passante&quot; width=&quot;895&quot; height=&quot;1263&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Pas grand-chose à voir avec l'automobile, mais parfait pour tester votre bande passante.
+&lt;/p&gt;
+
+&lt;p&gt;Au passage, &lt;a href=&quot;https://www.gimp.org/tutorials/Floating_Logo/Plasma.jpg&quot;&gt;cette image semble provenir de l’effet produit par le greffon plasma de GIMP&lt;/a&gt;. Elle se charge assez lentement ; comme elle ressemble à du bruit, elle doit être quasiment incompressible.&lt;/p&gt;
+
+&lt;p&gt;En ouvrant &lt;a href=&quot;chrome://webrtc-internals/&quot;&gt;chrome://webrtc-internals/&lt;/a&gt;, on obtient plus d’informations sur la connexion WebRTC qui diffuse la scène 3D vers mon navigateur.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/lucid-webrtc.png&quot; alt=&quot;Informations WebRTC&quot; width=&quot;851&quot; height=&quot;399&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Les outils de débogage de Chrome fournissent davantage de détails sur la connexion WebRTC.
+&lt;/p&gt;
+
+&lt;p&gt;À ce stade, vous avez peut-être remarqué qu’aucune de ces URL n’appartient à un domaine Lucid : elles pointent toutes vers &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;zlthunder&lt;/code&gt;. Qui sont-ils ?&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;zerolight&quot;&gt;ZeroLight&lt;/h2&gt;
+
+&lt;p&gt;Une recherche web sur &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;zlthunder&lt;/code&gt; mène à une entreprise nommée &lt;a href=&quot;https://zerolight.com/&quot;&gt;ZeroLight&lt;/a&gt;. Ils expliquent proposer de la visualisation 3D dans le cloud, spécialisée dans l’automobile. Tout s’éclaire maintenant !&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/zero-light.webp&quot; alt=&quot;ZeroLight&quot; width=&quot;1600&quot; height=&quot;640&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Des spécialistes de la visualisation 3D dans le cloud.
+&lt;/p&gt;
+
+&lt;p&gt;Il ne m’a pas fallu longtemps pour tomber sur &lt;a href=&quot;https://unity3d.com/showcase/case-stories/zerolight&quot;&gt;cet article de blog d’Unity&lt;/a&gt; (le célèbre moteur de jeu vidéo) expliquant comment ZeroLight s’est appuyée sur le moteur pour créer un showroom virtuel réaliste, avec physique optimisée, reflets et tout le reste.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/unity-zero-light.webp&quot; alt=&quot;Unity et ZeroLight&quot; width=&quot;1203&quot; height=&quot;658&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Les jeux vidéo nous ont menés bien loin.
+&lt;/p&gt;
+
+&lt;p&gt;Toutes les pièces du puzzle s’assemblent enfin. Lorsque je me connecte au site, il charge un configurateur 2D. Si ma connexion Internet suit, il me relie à une instance d’Unity — un moteur de jeu vidéo 3D — qui tourne sur un serveur AWS. Le serveur reçoit mes mouvements de souris, fait pivoter et zoome la caméra, calcule le rendu dans le cloud et me renvoie le résultat en streaming.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;ça-doit-coûter-cher&quot;&gt;Ça doit coûter cher&lt;/h2&gt;
+
+&lt;p&gt;Imaginez que 1 000 utilisateurs soient connectés au site en même temps : il faut 1 000 instances d’un moteur de jeu vidéo avec accélération matérielle qui reçoivent des entrées et renvoient de gros flux vidéo en temps réel — exactement comme les services de cloud gaming tels que Stadia ou GeForce Now. Mais ils en sont visiblement très conscients : pour limiter les coûts, ils vous déconnectent après 60 secondes d’inactivité :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/inactivity-downgrade.png&quot; alt=&quot;Rétrogradation pour inactivité&quot; width=&quot;524&quot; height=&quot;60&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Rétrograder la session en cas d'inactivité doit faire économiser pas mal d'argent.
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;au-fond-quest-ce-quun-moteur-de-jeu-vidéo-&quot;&gt;Au fond, qu’est-ce qu’un moteur de jeu vidéo ?&lt;/h2&gt;
+
+&lt;p&gt;Même si cet usage d’un moteur de jeu vidéo peut surprendre au premier abord, un moteur de jeu n’est finalement rien d’autre qu’un simulateur optimisé. Les moteurs établis comme Unity intègrent des décennies de recherche sur la simulation des rayons lumineux et d’autres phénomènes physiques. Dès lors, si vous voulez simuler la réalité — même quand cette réalité est un showroom —, un moteur de jeu vidéo est un outil prêt à l’emploi idéal, adaptable à une multitude d’applications.&lt;/p&gt;
+
+&lt;p&gt;Avec le recul, j’aurais sans doute pu comprendre comment fonctionnait le configurateur de Lucid en faisant quelques recherches et en tombant directement sur l’article d’Unity. Mais faire de la rétro-ingénierie sur le configurateur m’a offert une vue bien plus précise des défis, des solutions et de la mécanique interne de leur produit, et je me suis senti comme un détective remontant la piste depuis zéro. Ce qui m’a le plus amusé, au final, c’est l’incroyable degré de complexité atteint par la technologie aujourd’hui : un simulateur physique ultraréaliste, tournant sur un serveur distant dans un centre de données d’Amazon, recevant les commandes de mon ordinateur et me renvoyant le flux vidéo à la vitesse de la lumière, tout cela pour que je puisse jouer avec un configurateur de voiture. Et dire qu’il ne nous avait fallu qu’une calculatrice pour aller sur la Lune !&lt;/p&gt;
+</description>
+          <pubDate>Wed, 28 Jul 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/fr/lucid-configurator-is-a-streaming-video-game</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/lucid-configurator-is-a-streaming-video-game</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Redonner couleur et vie aux photos en noir et blanc</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    L'apprentissage automatique nous permet de coloriser facilement des photos en noir et blanc, mais à quel prix ?
+&lt;/p&gt;
+
+&lt;h2 id=&quot;un-autre-univers&quot;&gt;Un autre univers&lt;/h2&gt;
+
+&lt;p&gt;Bien que la photographie en couleur existe techniquement depuis plus d’un siècle (&lt;a href=&quot;https://www.loc.gov/pictures/related/?fi=name&amp;amp;q=Prokudin-Gorski%20%2C%20Serge%20%20Mikha%20lovich%2C%201863-1944&quot;&gt;Sergueï Prokoudine-Gorski et Piotr Vedenissov, pionniers de la photographie couleur, ont parcouru la Russie impériale pour la documenter en couleurs&lt;/a&gt;), la majeure partie du XXe siècle a été immortalisée en noir et blanc. Même plus tard dans le siècle, une grande partie du monde n’avait pas le luxe de la pellicule couleur : mon père développait encore ses propres photos en noir et blanc dans les années 1980-1990 en Ukraine soviétique, et tandis que les Américains filmaient la guerre du Vietnam tout en couleurs, le point de vue du Nord semble être resté confiné à la photographie en noir et blanc.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/boy-sim-river.jpeg&quot; alt=&quot;Jeune garçon près de la rivière Sim&quot; width=&quot;900&quot; height=&quot;648&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Jeune garçon près de la rivière Sim, une des toutes premières photographies couleur de la Russie impériale. Elle a été réalisée en prenant plusieurs clichés de la même scène à travers différents filtres de couleur. Avec l'aimable autorisation de la Bibliothèque du Congrès.
+&lt;/p&gt;
+
+&lt;p&gt;Certains diront que les images en noir et blanc possèdent une qualité qui leur est propre, et c’est sans doute vrai. Mais pour ma part, le noir et blanc me coupe de la scène. Il paraît manifestement éloigné dans le temps. Nous associons tous le noir et blanc au passé, comme en témoigne ce procédé classique du cinéma qui consiste à passer en noir et blanc pour évoquer un souvenir. Et pour quelqu’un qui perçoit la réalité tout en couleurs, il est difficile de se projeter dans des images en noir et blanc. J’ai du mal à me glisser dans la scène ou à me mettre à la place des personnages, parce que dans mon esprit tout cela appartient à un autre univers, un univers en noir et blanc. Pourtant, dès que ces images sont colorisées, tout paraît soudain plus réel, plus crédible, plus tangible. Il devient alors évident que ce qui y est montré appartient à la même Terre et aux mêmes humains — des gens comme vous et moi.&lt;/p&gt;
+
+&lt;p&gt;Aussi, lorsque mon père a récemment commencé à numériser notre collection de photos de famille — car les tirages papier se dégradent et risquent de disparaître à jamais, emportant avec eux les histoires, les souvenirs et l’héritage qu’ils préservent —, j’ai eu très envie de les coloriser également, afin de pouvoir les vivre plus pleinement et permettre à mes proches d’évoquer les êtres chers disparus ou de raviver les souvenirs de leur passé et de leur jeunesse.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;coloriser-des-photos-avec-lia&quot;&gt;Coloriser des photos avec l’IA&lt;/h2&gt;
+
+&lt;p&gt;La restauration des couleurs peut se faire à la main, mais c’est un travail long et laborieux. Les modèles d’apprentissage automatique offrent un moyen rapide et peu coûteux de coloriser des photos, même s’ils comportent des limites que nous aborderons plus loin dans cet article. Je n’ai pas entraîné mon propre modèle pour cela. D’autres ont déjà consacré des milliers d’heures à concevoir et entraîner des modèles exactement pour cette tâche. J’ai trouvé un modèle existant qui fait un excellent travail.&lt;/p&gt;
+
+&lt;p&gt;J’ai utilisé l’&lt;a href=&quot;https://deepai.org/machine-learning-model/colorizer&quot;&gt;API Image Colorization de DeepAI&lt;/a&gt;. Le modèle déployé en production par DeepAI semble être une variante du modèle DeOldify, disponible sur &lt;a href=&quot;https://github.com/jantic/DeOldify&quot;&gt;ce dépôt GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Je ne pense pas que l’API DeepAI permette d’ajuster les paramètres du modèle, mais vous pouvez le faire si vous l’exécutez vous-même depuis le dépôt ci-dessus ou via &lt;a href=&quot;https://colab.research.google.com/github/jantic/DeOldify/blob/master/ImageColorizerColabStable.ipynb&quot;&gt;une instance Colab&lt;/a&gt;. &lt;a href=&quot;https://www.myheritage.com/incolor&quot;&gt;MyHeritage&lt;/a&gt; propose également cette API sous forme de service avec des paramètres réglables.&lt;/p&gt;
+
+&lt;p&gt;J’ai donc écrit un petit script pour coloriser des dossiers entiers par lots. Il parcourt toutes les photos d’un répertoire, les envoie à l’API Image Colorization de DeepAI et télécharge le résultat dans un dossier séparé (en ignorant les images déjà colorisées). Si cela peut vous être utile, définissez simplement votre clé API DeepAI en variable d’environnement et lancez &lt;a href=&quot;https://github.com/skzv/colorize-photos&quot;&gt;ce script&lt;/a&gt; :&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;DL_API_KEY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;lt;your-deep-ai-key&amp;gt;
+python3 main.py /path/to/images
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;mes-photos-de-famille&quot;&gt;Mes photos de famille&lt;/h2&gt;
+&lt;p&gt;Voici quelques exemples des résultats obtenus sur nos photos de famille.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/mama-and-vova.webp&quot; alt=&quot;Maman avec Vova&quot; width=&quot;1600&quot; height=&quot;1232&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Ma mère tenant mon frère au début des années 1990 à Kherson, en Ukraine. Avec l'aimable autorisation de la famille Kuznetsov.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/mama-and-vova-colorized.webp&quot; alt=&quot;Maman avec Vova colorisée&quot; width=&quot;800&quot; height=&quot;616&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Maintenant en couleur.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/my-grandmother-allarkadina.jpg&quot; alt=&quot;Babouchka Allarkadina&quot; width=&quot;523&quot; height=&quot;801&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Ma grand-mère, Allarkadina, probablement dans les années 1950, en chemin vers l'université. Diplômée de plusieurs instituts avec une spécialisation en génie électrique, elle a mené une brillante carrière d'ingénieure en électrotechnique marine.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/my-grandmother-alla-colourised.webp&quot; alt=&quot;Babouchka Allarkadina colorisée&quot; width=&quot;522&quot; height=&quot;800&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+En couleur.
+&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;C’est tellement beau et vivant.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Ces mots de mon père en découvrant les photos fraîchement colorisées ont suffi à rendre tout ce travail largement rentable.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;photos-de-la-guerre-du-vietnam&quot;&gt;Photos de la guerre du Vietnam&lt;/h2&gt;
+&lt;p&gt;Quelques semaines après avoir préparé ce script de colorisation par lots pour mes photos de famille, un article intitulé &lt;a href=&quot;https://news.ycombinator.com/item?id=27283624&quot;&gt;« The Vietnam War from the North Vietnamese Side »&lt;/a&gt; est arrivé en tête de Hacker News. L’occasion semblait idéale pour appliquer le script et offrir un regard neuf sur des archives historiques. Tout comme &lt;a href=&quot;https://www.imdb.com/title/tt7905466/&quot;&gt;« Pour les soldats tombés » (« They Shall Not Grow Old »)&lt;/a&gt; avait rendu les horreurs de la Première Guerre mondiale vivantes et tangibles, j’avais envie de rendre plus réels les visages et les scènes vus du côté nord-vietnamien.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-agent-orange.jpeg&quot; alt=&quot;Destruction de la jungle par l'Agent Orange&quot; width=&quot;1600&quot; height=&quot;1179&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Destruction de la jungle causée par l'Agent Orange.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-agent-orange-colourised.webp&quot; alt=&quot;Destruction de la jungle par l'Agent Orange en couleur&quot; width=&quot;800&quot; height=&quot;590&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+En couleur.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-downed-aircraft.jpeg&quot; alt=&quot;Habitants inspectant un avion américain abattu&quot; width=&quot;1600&quot; height=&quot;1111&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Des habitants inspectant un avion américain abattu, piloté par le lieutenant Stephen Owen Musselman. Le pilote n'a pas survécu — la guerre est un enfer.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-downed-aircraft-colourised.webp&quot; alt=&quot;Habitants inspectant un avion américain abattu en couleur&quot; width=&quot;800&quot; height=&quot;556&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+En couleur.
+&lt;/p&gt;
+
+&lt;p&gt;Toutes les images originales en noir et blanc sont visibles &lt;a href=&quot;https://rarehistoricalphotos.com/vietnam-war-images-from-vietnamese-photographers/&quot;&gt;ici&lt;/a&gt;, et les versions colorisées &lt;a href=&quot;https://imgur.com/a/aJbpMjf&quot;&gt;ici&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;réactions-sur-hacker-news&quot;&gt;Réactions sur Hacker News&lt;/h2&gt;
+
+&lt;p&gt;Mes essais ont suscité à la fois des éloges&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/praise.webp&quot; alt=&quot;Éloges&quot; width=&quot;624&quot; height=&quot;934&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;et du mépris&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/contempt.png&quot; alt=&quot;Mépris&quot; width=&quot;546&quot; height=&quot;286&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+Dommage pour le commentaire [signalé], car il soulevait un point intéressant. Il disait quelque chose comme « S'il vous plaît, ne faites pas ça. »
+&lt;/p&gt;
+
+&lt;p&gt;mais surtout, ils ont déclenché de très nombreuses discussions passionnantes.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/discussion.webp&quot; alt=&quot;Discussion&quot; width=&quot;654&quot; height=&quot;946&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Le fil complet suscité par les photos colorisées se trouve &lt;a href=&quot;https://news.ycombinator.com/item?id=27284795&quot;&gt;ici&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;limites&quot;&gt;Limites&lt;/h2&gt;
+
+&lt;p&gt;Deux aspects de la discussion m’ont particulièrement marqué. Le premier a été un rappel des limites de l’IA.&lt;/p&gt;
+
+&lt;p&gt;Par exemple, le modèle appliqué à une vieille photo du Golden Gate en construction produit un pont blanc. À vrai dire, ce n’est pas totalement faux — le pont était effectivement blanc au début de sa construction, mais au moment où la photo a été prise, il avait déjà été recouvert d’un apprêt rouge (selon la source indiquée sur le &lt;a href=&quot;https://github.com/jantic/DeOldify&quot;&gt;dépôt DeOldify&lt;/a&gt;). Ainsi, même si les données d’entraînement contenaient probablement le Golden Gate en construction et que le modèle a su reconnaître le même pont en chantier, il était incapable d’en déduire la date et de savoir que l’apprêt rouge avait déjà été appliqué à ce stade.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/golden-gate.webp&quot; alt=&quot;Un Golden Gate blanc ?&quot; width=&quot;1200&quot; height=&quot;472&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+Un Golden Gate blanc ? Il l'a été — mais pas au moment où cette photo a été prise.
+&lt;/p&gt;
+
+&lt;p&gt;Certaines scènes sont ambiguës. Par exemple, d’après les indices visuels de la photo suivante, le modèle ne parvient pas à distinguer si le sol est un champ ou de l’asphalte, et colorise l’asphalte en vert par erreur, là où un coloriste humain aurait probablement vu juste.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/a-celebration-colourised.webp&quot; alt=&quot;Une célébration&quot; width=&quot;800&quot; height=&quot;522&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+Le modèle ne comprend pas que le sol est en asphalte et non en herbe.
+&lt;/p&gt;
+
+&lt;p&gt;Une autre observation intéressante : les vêtements manquent souvent de teintes, de textures, de motifs ou de contexte suffisamment distinctifs pour être colorisés avec justesse. Le modèle avait tendance à colorier les vêtements en violet — sauf lorsqu’un indice ou un contexte précis l’en dissuadait. C’est probablement parce que, lorsqu’il ne parvient pas à inférer correctement la couleur d’un vêtement, le violet constitue un pari prudent, quelque part au milieu de l’espace chromatique ambigu, qui minimise la fonction de perte lors de l’entraînement.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-divers-colourised.webp&quot; alt=&quot;Plongeurs vietnamiens — tous en violet ?&quot; width=&quot;796&quot; height=&quot;800&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+Je ne pense pas que les vêtements d'autrefois étaient aussi souvent violets que ce modèle voudrait nous le faire croire.
+&lt;/p&gt;
+
+&lt;p&gt;D’ailleurs, mon père m’a demandé de corriger la couleur de certains objets sur nos photos. Malheureusement, je n’ai pas donné suite à cette demande, et je ne vois pas immédiatement comment je pourrais le faire facilement. Mais comme l’a fait remarquer un commentateur, même quand les couleurs sont fausses, elles redonnent tout de même vie aux images.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;considérations-éthiques&quot;&gt;Considérations éthiques&lt;/h2&gt;
+
+&lt;p&gt;Une fois certaines de ces limites bien en tête, nous sommes mieux armés pour examiner les implications éthiques d’une IA de colorisation. C’est le second aspect de la discussion qui m’a marqué. L’éthique ne m’était pas venue à l’esprit en lançant ce projet, mais certains retours m’ont poussé à réfléchir, et j’en suis reconnaissant.&lt;/p&gt;
+
+&lt;p&gt;La principale question éthique est celle de la vérité. À l’instar de la controverse autour des deepfakes qui brouillent notre rapport au vrai, la colorisation artificielle peut altérer notre perception de l’histoire. L’IA fait des choix sur les couleurs du passé qui ne sont pas nécessairement exacts. Par exemple, si l’on conserve et diffuse la version blanche du Golden Gate produite par une telle IA, la version du pont que découvrent les spectateurs n’est pas historiquement fidèle. Bien sûr, la version en noir et blanc ne l’est pas non plus. Le problème tient peut-être au fait que face à une image en noir et blanc, le spectateur sait bien que le passé n’était pas en noir et blanc, tandis que devant une image en couleur, on se laisse facilement convaincre que c’est bien ainsi que l’histoire s’est déroulée.&lt;/p&gt;
+
+&lt;p&gt;Certains vont jusqu’à dire qu’une telle retouche revient à réécrire l’histoire — et il faut reconnaître que cela y ressemble parfois. Prenons cet exemple récent :&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Le Cambodge a demandé au groupe média américain Vice de retirer un article présentant des photographies nouvellement colorisées de victimes des Khmers rouges, estimant que ces images sont une insulte aux morts car certaines ont été modifiées pour y ajouter des sourires.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p class=&quot;caption&quot; style=&quot;margin-top:-25px;&quot;&gt;&lt;a href=&quot;https://www.aljazeera.com/news/2021/4/11/cambodia-condemns-vice-for-altered-khmer-rouge-images&quot;&gt;Source&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;C’est une plainte tout à fait légitime. Le modèle semblait surappris, probablement entraîné majoritairement sur des visages souriants. Il a donc modifié les visages des victimes pour les rapprocher de ses données d’entraînement — en les faisant sourire. C’est un exemple frappant des dérives de l’IA, en particulier lorsqu’on l’applique sans précaution.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.myheritage.com/incolor&quot;&gt;MyHeritage&lt;/a&gt;, qui propose un service de restauration des couleurs basé sur le même modèle DeOldify que celui que j’ai utilisé, tente un compromis en apposant un filigrane sur toutes ses images retouchées. Leur argument est convaincant :&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Nous distinguons les photos colorisées de celles photographiées à l’origine en couleur à l’aide d’un symbole de palette en relief dans le coin inférieur gauche des photos colorisées. Bien que très réalistes, les photos colorisées possèdent des couleurs simulées par des algorithmes automatiques, qui peuvent différer des couleurs réelles de la scène d’origine. L’icône de palette apparaît sur toutes les photos colorisées afin que les utilisateurs puissent les distinguer des photos aux couleurs réelles. Nous espérons que cette pratique responsable sera adoptée par d’autres utilisateurs de technologies de colorisation. Les photos ayant subi une simple restauration des couleurs ne portent pas d’icône, car leurs couleurs sont authentiques.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Dans mon cas, ma famille savait que j’avais colorisé nos photos artificiellement, et chacun pouvait voir que les couleurs n’étaient pas totalement exactes. Mais même imparfaites, ces couleurs ont redonné vie aux photos, aux personnes et aux scènes qu’elles renfermaient. Tout comme lorsque j’étais lycéen bénévole en maison de retraite et que j’ai pu ramener un résident âgé devant sa maison d’enfance à Dresde grâce à Google Street View — un endroit où il n’était pas retourné depuis 50 ans —, j’ai pu utiliser l’IA pour téléporter notre famille vers des moments heureux vieux de plusieurs décennies. La technologie est un outil, et je suis reconnaissant de vivre à une époque où une telle magie est possible.&lt;/p&gt;
+</description>
+          <pubDate>Sat, 12 Jun 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/fr/bringing-colour-and-life-to-black-and-white-photos</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/bringing-colour-and-life-to-black-and-white-photos</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>L'arbitrage comme problème de plus court chemin</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    Une explication de l'arbitrage et un aperçu d'un algorithme efficace pour détecter des opportunités d'arbitrage instantanées et sans risque.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Qui n’aime pas gagner de l’argent ?&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Et si l’on pouvait transformer le problème de gagner de l’argent en un problème de recherche du plus court chemin ? C’est tout à fait possible, du moins d’une manière bien précise : en exploitant des opportunités d’arbitrage.&lt;/p&gt;
+
+&lt;h2 id=&quot;quest-ce-que-larbitrage-&quot;&gt;Qu’est-ce que l’arbitrage ?&lt;/h2&gt;
+
+&lt;p&gt;L’&lt;em&gt;arbitrage&lt;/em&gt; consiste à acheter et vendre un même actif sur différents marchés, ou sous différentes formes, afin de tirer profit des écarts de prix. Et comment appelle-t-on ceux qui le pratiquent ? Des &lt;em&gt;arbitragistes&lt;/em&gt; — un titre plutôt chic, il faut l’avouer.&lt;/p&gt;
+
+&lt;p&gt;Commençons par un exemple. Imaginons que Paul, Peter et Bob vivent dans un village où ils troquent des carottes, des pommes de terre et des laitues. Bob échange des pommes de terre contre des carottes, Peter échange des laitues contre des pommes de terre, et Paul échange des laitues contre des carottes.&lt;/p&gt;
+
+&lt;p&gt;De plus, Bob propose 2 pommes de terre pour une carotte, Peter propose 1 laitue pour 2 pommes de terre, et Paul propose 2 carottes pour 1 laitue. Si nous considérons chaque habitant comme un marché pour ses biens respectifs, à quoi ressembleraient les taux de change ?&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Marché&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Taux de change&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Bob (pommes de terre / carottes)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2 pommes de terre/carotte&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Peter (laitues / pommes de terre)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;1 laitue/2 pommes de terre = 0,5 laitue/pomme de terre&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Paul (carottes / laitues)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2 carottes/laitue&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Les taux de change des marchandises dans notre village.
+&lt;/p&gt;
+
+&lt;p&gt;Vous sentez l’opportunité ?&lt;/p&gt;
+
+&lt;p&gt;Esprit entreprenant que vous êtes, vous allez tenter de l’exploiter. En partant avec 5 carottes, vous allez voir Bob et échangez vos 5 carottes contre 10 pommes de terre, au taux qu’il est prêt à pratiquer.&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+5 \text{ carrots} \times 2 \space \frac{\text{potatoes}}{\text{carrots}} = 10 \text{ potatoes} \tag{1} \label{eq:arb_example}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Ensuite, vous allez voir Peter avec vos pommes de terre, sachant qu’il vous donnera 5 laitues en échange. Puis vous apportez vos 5 laitues à Paul, qui vous les échange contre 10 carottes.&lt;/p&gt;
+
+&lt;p&gt;Après quelques échanges bien sentis, vous avez doublé votre stock de carottes. Vous avez transformé 5 carottes en 10 en exploitant une opportunité d’arbitrage.&lt;/p&gt;
+
+&lt;p&gt;Plus tard, les villageois pourraient développer des marchés plus sophistiqués où Bob, Peter et Paul ne seraient plus les seuls négociants. Ce petit village pourrait ainsi voir naître un marché carotte/laitue, un marché laitue/pomme de terre et un marché pomme de terre/carotte, où les taux en vigueur fluctuent selon ce que chacun est prêt à échanger.&lt;/p&gt;
+
+&lt;p&gt;Mais le principe de l’arbitrage reste identique. Et l’opportunité peut être exploitée jusqu’à ce que les négociants offrant ces taux n’aient plus de carottes, de laitues ou de pommes de terre à échanger. L’opportunité d’arbitrage est exploitée jusqu’à ce que le marché atteigne un équilibre.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;larbitrage-à-lépoque-moderne&quot;&gt;L’arbitrage à l’époque moderne&lt;/h2&gt;
+
+&lt;p&gt;Quand vous pensez aux marchés modernes, vous ne pensez probablement pas à troquer des carottes, des pommes de terre et des laitues. Si vous vous intéressez au marché des changes (le forex), vous pensez plutôt aux dollars, aux livres sterling et aux yens. Dans ce cas, nous aurions un marché dollar/livre, un marché livre/yen et un marché yen/dollar, avec de nombreux opérateurs actifs sur chacun d’eux. À partir de maintenant, prenons ces devises comme exemples de biens échangeables, tout en gardant à l’esprit que les mêmes principes s’appliquent à toutes sortes d’actifs négociables.&lt;/p&gt;
+
+&lt;p&gt;Supposons qu’à un instant donné, les taux de change soient les suivants :&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Marché&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Taux de change&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;livre (£) / dollar ($)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0,8 livre/dollar&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;yen (¥) / livre (£)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;100 yens/livre&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;dollar ($) / yen (¥)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0,013 dollar/yen&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Un exemple de taux de change sur le marché des devises.
+&lt;/p&gt;
+
+&lt;p&gt;Si vous avez retenu la leçon de Bob, Peter et Paul avec leurs carottes, leurs laitues et leurs pommes de terre, vous devriez repérer l’opportunité ici.&lt;/p&gt;
+
+&lt;p&gt;Si vous échangez 1 $ contre des livres, vous obtenez 0,8 £. En les échangeant contre des yens, vous obtenez 80 ¥. Vous apportez ensuite vos yens sur le marché yen/dollar pour les reconvertir en dollars… et vous voilà maintenant avec 1,04 $ !&lt;/p&gt;
+
+&lt;p&gt;Mais il faut agir vite, avant qu’un autre arbitragiste ne vous prenne de vitesse. Ces opportunités n’existent que temporairement, le temps que la liquidité soit absorbée et que les taux se rééquilibrent.&lt;/p&gt;
+
+&lt;p&gt;Les plus attentifs d’entre vous auront remarqué que nous n’avons pas pris en compte les frais de transaction dans notre exemple. Bien entendu, il faut les inclure dans le calcul pour savoir si une opportunité d’arbitrage réellement rentable existe.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;agir-vite&quot;&gt;Agir vite&lt;/h2&gt;
+
+&lt;p&gt;Vous avez sans doute maintenant l’intuition de la raison pour laquelle la vitesse est primordiale. Les taux de change fluctuent rapidement et la quantité disponible à un taux donné est limitée.&lt;/p&gt;
+
+&lt;p&gt;Nous avons travaillé sur des exemples relativement simples jusqu’ici, mais les opportunités d’arbitrage peuvent impliquer de nombreux échanges et devenir extrêmement complexes. Nos exemples comptaient 3 transactions, mais qu’en serait-il s’il en fallait 10 ? Et dans un réseau de 20 devises comportant un marché pour chaque paire, à quelle vitesse pourriez-vous dénicher une opportunité ?&lt;/p&gt;
+
+&lt;p&gt;Utiliser un ordinateur est la réponse évidente. Encore nous faut-il un algorithme efficace, sous peine de voir quelqu’un d’autre saisir l’opportunité avant nous.&lt;/p&gt;
+
+&lt;p&gt;Pour y parvenir, nous pouvons nous appuyer sur quelques idées astucieuses issues des mathématiques et de l’informatique.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;les-marchés-vus-comme-un-graphe&quot;&gt;Les marchés vus comme un graphe&lt;/h2&gt;
+
+&lt;p&gt;Les graphes constituent une structure fondamentale qui trouve des usages dans d’innombrables domaines. De nombreux systèmes sociaux et naturels se modélisent par des graphes, et il s’avère que les marchés en font partie.&lt;/p&gt;
+
+&lt;p&gt;Dans notre cas, considérons chaque devise comme un nœud. Passer d’un nœud à un autre correspond à échanger une devise contre une autre.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-white.png&quot; alt=&quot;Graphe simplifié de devises&quot; width=&quot;448&quot; height=&quot;283&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Graphe simplifié — il devrait y avoir une arête orientée distincte dans chaque sens.
+&lt;/p&gt;
+
+&lt;p&gt;Se déplacer le long d’une arête entre deux nœuds doit donc transformer le montant de devise selon le taux de change.&lt;/p&gt;
+
+&lt;p&gt;Ainsi, passer du nœud dollar au nœud livre correspond à multiplier par 0,8 livre/dollar. Attribuons le taux de change comme poids de chaque arête.&lt;/p&gt;
+
+&lt;p&gt;Notons que les taux de change dans un sens et dans l’autre seront &lt;em&gt;approximativement&lt;/em&gt; inverses l’un de l’autre. Autrement dit, si le taux pour convertir des dollars en livres est de 0,8 livre/dollar, le taux dans le sens inverse sera de 1/(0,8 livre/dollar) = 1,25 dollar/livre. Pour nous, cela implique de bien traiter l’achat et la vente sur chaque marché comme deux arêtes orientées distinctes, avec des poids différents.&lt;/p&gt;
+
+&lt;p&gt;La raison pour laquelle les taux de change dans les deux sens ne sont qu’&lt;em&gt;approximativement&lt;/em&gt; inverses tient aux légers écarts entre les prix d’achat et de vente des devises, ce qu’on appelle le spread (ou fourchette achat-vente). Par exemple, si à un moment donné vous pouvez acheter des livres à 0,8 livre/dollar (le prix auquel quelqu’un accepte de vous vendre), mais que vous pouvez vendre des livres pour des dollars à 0,82 livre/dollar (soit 1,22 dollar/livre, le prix auquel quelqu’un accepte de vous acheter), votre modèle de graphe ressemblera à ceci (en omettant les autres taux par souci de simplicité) :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-w-exchange-rates-white.png&quot; alt=&quot;Graphe de devises avec taux de change&quot; width=&quot;451&quot; height=&quot;378&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Une suite de transactions peut être modélisée par un parcours le long des arêtes de ce graphe, et le résultat de ces transactions s’obtient en &lt;strong&gt;&lt;em&gt;multipliant&lt;/em&gt;&lt;/strong&gt; les poids des arêtes au fil du parcours.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;repérer-lopportunité&quot;&gt;Repérer l’opportunité&lt;/h2&gt;
+
+&lt;p&gt;Maintenant que nous avons un modèle opérationnel, que cherchons-nous dans notre graphe qui corresponde à une opportunité d’arbitrage ?&lt;/p&gt;
+
+&lt;p&gt;Pour savoir si une série d’échanges est rentable, nous avons besoin d’une mesure de rentabilité cohérente. En d’autres termes, si nous commençons notre série d’échanges en dollars, nous devons aussi la terminer en dollars. En comparant la somme en dollars obtenue à la fin à celle de départ, nous saurons si l’opération a été profitable ou non.&lt;/p&gt;
+
+&lt;p&gt;Dans notre graphe, cela signifie que notre suite de transactions doit se terminer au même nœud que celui dont elle est partie. Dans notre exemple, nous sommes partis du nœud dollar et revenus au nœud dollar. En théorie des graphes, c’est ce qu’on appelle un cycle. Nous savons donc que nous cherchons un cycle — mais quel genre de cycle est rentable ?&lt;/p&gt;
+
+&lt;p&gt;Remarquons qu’en multipliant le long des arêtes d’un chemin, nous transformons les unités du taux de change effectif.&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+a \space \frac{\cancel{£}}{$} \times b \space \frac{¥}{\cancel{£}} = ab \space \frac{¥}{$}  \tag{2} \label{eq:units_of_exchange_rate}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Cependant, lorsque nous revenons à notre nœud de départ, la grandeur devient sans dimension. Elle passe d’un taux de change à un facteur de rendement ! Parcourir un cycle dans notre graphe et calculer le produit des taux de change rencontrés revient à calculer le ratio de rendement obtenu à l’issue de la série de transactions.&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+a \space \frac{\cancel{£}}{\cancel{$}} \times b \space \frac{\cancel{¥}}{\cancel{£}} \times c \space \frac{\cancel{$}}{\cancel{¥}} = abc \space \text{[dimensionless]}  \tag{3} \label{eq:unitless_exchange}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Si le marché est parfaitement efficient, notre facteur de rendement, \(abc\), vaudra 1, car les taux de change se sont équilibrés. Si le produit des poids est supérieur à 1, par exemple 1,02, alors notre opportunité d’arbitrage nous aura rapporté un rendement de 2 %.&lt;/p&gt;
+
+&lt;p&gt;Par conséquent, en généralisant à un nombre arbitraire de transactions, une opportunité d’arbitrage correspond à l’inégalité suivante :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\prod_i^n{e_i} = e_ie_2...e_n &amp;gt; 1  \tag{4} \label{eq:arbitrage_return}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;où \(e_i\) désigne le \(i^{\text{e}}\) taux de change, pour chaque transaction \(i\), sur \(n\) transactions.&lt;/p&gt;
+
+&lt;p&gt;Il nous faut donc un algorithme capable de trouver un cycle dans le graphe des marchés dont le produit des poids d’arêtes soit supérieur à 1. On pourrait inventer un algorithme de toutes pièces pour cela — mais en informatique, comme dans la vie en général, il est souvent bien plus judicieux de ramener un problème à un autre qu’on sait déjà résoudre.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;lalgorithme-de-bellman-ford&quot;&gt;L’algorithme de Bellman-Ford&lt;/h2&gt;
+
+&lt;p&gt;La recherche du plus court chemin est un problème classique et fondamental en informatique, applicable à de très nombreux scénarios. L’exemple le plus évident, en faisant le lien entre un graphe et une carte routière, est la recherche de l’itinéraire le plus court sur une carte. Mais avec un peu d’ingéniosité, bien d’autres types de problèmes peuvent aussi se ramener à un problème de plus court chemin. Je vais vous montrer que la recherche d’opportunités d’arbitrage en fait partie.&lt;/p&gt;
+
+&lt;p&gt;Commençons par rappeler ce qu’est le problème du plus court chemin. Étant donné deux nœuds \(s\) et \(t\) dans un graphe, le plus court chemin est celui qui minimise la &lt;em&gt;somme&lt;/em&gt; des poids des arêtes. Autrement dit, on parcourt le chemin de \(s\) à \(t\) en additionnant les poids des arêtes rencontrées ; le chemin dont la somme est minimale est le plus court chemin — celui de coût minimal.&lt;/p&gt;
+
+&lt;p&gt;Ensuite, il est utile de savoir qu’il existe différentes classes de problèmes de plus court chemin. Dans l’exemple évident — comme l’itinéraire le plus court sur une carte — les poids des arêtes sont nécessairement positifs. À moins de disposer d’une machine à remonter le temps, emprunter une route ne peut pas réduire votre temps de trajet. Dans un graphe ne contenant que des poids positifs, le célèbre algorithme de Dijkstra calcule le plus court chemin vers tous les nœuds du graphe.&lt;/p&gt;
+
+&lt;p&gt;Rien n’empêche pourtant un graphe de posséder des arêtes de poids négatif. Dans ce cas, emprunter une telle arête diminue le coût total du chemin. Mais s’il existe un &lt;em&gt;cycle&lt;/em&gt; de poids total négatif, on peut alors parcourir ce &lt;em&gt;cycle&lt;/em&gt; indéfiniment — en abaissant à chaque tour le coût total du chemin — si bien que le plus court chemin aura un coût tendant vers \(-\infty\). Dans ce contexte, il est très précieux que notre algorithme de plus court chemin sache détecter les cycles de poids négatif. Sans quoi la recherche du plus court chemin tournerait en boucle sur ce cycle négatif pour l’éternité.&lt;/p&gt;
+
+&lt;p&gt;L’algorithme de Bellman-Ford est précisément cet algorithme. Version plus générale de l’algorithme de Dijkstra, il gère les poids négatifs. Pour ce faire, il détecte les &lt;em&gt;cycles de poids négatif&lt;/em&gt; — les cycles d’un graphe le long desquels la &lt;em&gt;somme&lt;/em&gt; des poids donne une valeur négative.&lt;/p&gt;
+
+&lt;p&gt;Mais en quoi un algorithme qui trouve des cycles où la &lt;strong&gt;&lt;em&gt;somme&lt;/em&gt;&lt;/strong&gt; des arêtes est inférieure à 0 peut-il nous aider, alors que nous avons besoin d’un algorithme détectant des cycles où le &lt;strong&gt;&lt;em&gt;produit&lt;/em&gt;&lt;/strong&gt; des arêtes est supérieur à 1 ?&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;le-logarithme-à-la-rescousse&quot;&gt;Le logarithme à la rescousse&lt;/h2&gt;
+
+&lt;p&gt;L’idée clé suivante est qu’un produit peut être transformé en une somme grâce à la fonction logarithme, en vertu de l’identité :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\log{ab} = \log{a} + \log{b}  \tag{5} \label{eq:log_product_identity}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Nous pouvons ainsi transformer notre problème de recherche d’un cycle dont le &lt;em&gt;produit&lt;/em&gt; est supérieur à 1 en un problème de recherche d’un cycle dont la &lt;em&gt;somme&lt;/em&gt; est supérieure à 0 ! Il suffit de prendre le logarithme de chaque taux de change et de l’utiliser comme poids de chaque arête.&lt;/p&gt;
+
+&lt;p&gt;Vérifions-le en appliquant le logarithme aux deux membres de notre inégalité. D’abord, prendre le logarithme du membre de gauche transforme le calcul d’un produit en celui d’une somme :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\log{\prod_i^n{e_i}} = \log{e_ie_2...e_n} = \log{e_1} + ... + \log{e_n} = \sum_i^n{\log{e_i}} \tag{6} 
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Le logarithme du membre de droite transforme simplement le 1 en 0 :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{\log{e_i}} &amp;gt; \log{1} \rightarrow \sum_i^n{\log{e_i}} &amp;gt; 0 \tag{7}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;On y est presque, mais pas tout à fait. La dernière étape pour ramener notre problème à celui que l’algorithme connu sait résoudre consiste à multiplier le poids de chaque arête par -1. La recherche d’un cycle de poids positif devient alors la recherche d’un cycle de poids négatif :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{-\log{e_i}} &amp;lt; 0 \tag{8}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Ce que l’algorithme de Bellman-Ford sait faire ! En construisant le graphe de cette manière et en y exécutant Bellman-Ford, nous trouvons rapidement et efficacement les opportunités d’arbitrage, parce que nous avons transformé le problème de l’arbitrage en un problème de plus court chemin — &lt;em&gt;le chemin infiniment le plus court&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/neg-log-currency-graph-white.png&quot; alt=&quot;Graphe de devises avec logarithmes négatifs&quot; width=&quot;448&quot; height=&quot;283&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Nous cherchons un cycle de poids négatif, où les poids sont l'opposé du logarithme des taux de change.
+&lt;/p&gt;
+
+&lt;p&gt;Avec le recul, il paraît tout naturel qu’il y ait une correspondance entre un cycle de poids négatif — qui réduit le coût du chemin à chaque passage — et une opportunité d’arbitrage, qui génère un profit à chaque passage. L’astuce décisive consiste à transformer la recherche d’un produit supérieur à 1 en la recherche d’une somme inférieure à 0 en appliquant \(-\log\) aux poids des arêtes.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;la-preuve-par-lexemple&quot;&gt;La preuve par l’exemple&lt;/h2&gt;
+
+&lt;p&gt;Exécutons cet algorithme sur nos taux de change pour vérifier qu’il identifie correctement l’opportunité d’arbitrage. En transformant les taux par \(-\log\), nous obtenons :&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Marché&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;-log(Taux de change)&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;livre (£) / dollar ($)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0,223&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;yen (¥) / livre (£)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;-4,605&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;dollar ($) / yen (¥)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;4,343&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;En sommant sur les transactions, l’inégalité est bien vérifiée — &lt;em&gt;nous avons trouvé un cycle de poids négatif&lt;/em&gt; !&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{-\log{e_i}} = 0.223 - 4.605 + 4.343 = -0.039 \label{eq:neg_log_exchange_rate_example} \tag{9}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Nous pouvons inverser la transformation logarithmique pour retrouver le produit et calculer le rendement :&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\prod_i^n{e_i} &amp;amp;= \exp{\sum_i^n{-\log{e_i}}} \\
+\prod_i^n{e_i} &amp;amp;= \exp(0.039) = 1.04 \tag{10}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;Ce qui correspond exactement au rendement de 4 % que nous avions calculé plus haut.&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;dans-le-monde-réel&quot;&gt;Dans le monde réel&lt;/h2&gt;
+
+&lt;p&gt;Puisqu’une opportunité d’arbitrage correspond à un cycle de poids négatif, on pourrait croire qu’il suffit de parcourir le cycle à l’infini pour gagner une somme d’argent infinie. Évidemment, il n’en est rien.&lt;/p&gt;
+
+&lt;p&gt;La liquidité — le volume disponible avant que le prix ne bouge de manière significative — associée à toute opportunité d’arbitrage est limitée, et elle est très vite absorbée par des traders algorithmiques qui repoussent les limites de l’informatique et des lois de la physique pour se devancer mutuellement.&lt;/p&gt;
+
+&lt;p&gt;Cela étant dit, j’espère que vous aurez trouvé cet exercice — appliquer la théorie des graphes et un algorithme bien connu de plus court chemin pour résoudre un problème de finance et gagner de l’argent — aussi passionnant que je l’ai toujours trouvé.&lt;/p&gt;
+</description>
+          <pubDate>Sun, 25 Apr 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/fr/arbitrage-as-a-shortest-path-problem</link>
+          <guid isPermaLink="true">https://blog.skz.dev/fr/arbitrage-as-a-shortest-path-problem</guid>
+        </item>
+      
+    
+  </channel>
+</rss>
+

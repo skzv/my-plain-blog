@@ -1,0 +1,1995 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sasha Kuznetsov のブログ</title>
+    <description>Sasha Kuznetsov による機械学習、コンピュータビジョン、クオンツ金融、ソフトウェア開発の実験と解説。インタラクティブなデモや個人プロジェクトを紹介しています。</description>
+    <link>https://blog.skz.dev/ja/</link>
+    <atom:link href="https://blog.skz.dev/ja/feed.xml" rel="self" type="application/rss+xml" />
+    <language>ja</language>
+    
+      
+        <item>
+          <title>intuitivepapers.ai で作るインタラクティブな AI 論文解説</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    難解な機械学習論文を、検証済みのインタラクティブな解説へと自動的に変換できるでしょうか？
+&lt;/p&gt;
+
+&lt;p&gt;機械学習の論文を読む作業は、もどかしいほど時間がかかります。論文はたいてい新しい提案部分に紙幅を割き、その前提となる5つほどの基礎概念はすでに頭に入っているものとして書かれているため、結局のところ本題を理解する前に古い参考文献の連鎖を辿る羽目になることが半分くらいを占めます。&lt;/p&gt;
+
+&lt;p&gt;今どきの手軽な近道は、PDF を LLM に放り込んで解説を頼むことです。私自身よくやりますし、大まかな初見の把握には役立ちますが、意外なほど頻繁に微妙な細部を間違えます。数式の符号が逆になっていたり、導出が厳密なのか近似なのかを取り違えていたり、実際に更新される変数が違っていたりするだけで、アルゴリズムの挙動はまったく別物になってしまいます。しかもその論文をすでによく知っているわけでなければ、一見もっともらしく書かれた解説の中のそうした誤りに気づくのは本当に難しいのです。&lt;/p&gt;
+
+&lt;p&gt;私が欲しかったのは、直感と数式を一緒に積み上げていき、しかも実際に触って動かせる図解がついた解説でした。数年前に&lt;a href=&quot;/ja/gradient-descent&quot;&gt;インタラクティブ勾配降下法デモ&lt;/a&gt;を作ったとき、それがどれほど大きな違いを生むかを実感しました――スライダーを動かしてアルゴリズムがオーバーシュートしたり収束したりする様子を目の当たりにすることで、静的な数式からは決して伝わらない理解が得られるのです。&lt;/p&gt;
+
+&lt;h2 id=&quot;diffusionblocks-から始まった&quot;&gt;DiffusionBlocks から始まった&lt;/h2&gt;
+
+&lt;p&gt;最初は、Claude と一緒に &lt;a href=&quot;https://intuitivepapers.ai/diffusionblocks/&quot;&gt;Sakana AI の DiffusionBlocks 論文の解説ページ&lt;/a&gt;を1本だけ作ることから始めました。納得のいく形に仕上げるまで、やり取りを重ねておよそ1週間かかりました。その時間の多くは、すべての数式を一次文献（EDM 論文など）や著者の公式 GitHub リポジトリと突き合わせて検証することに費やされました。&lt;/p&gt;
+
+&lt;p&gt;その検証の過程で、なんと論文自体に印刷されていた実際の符号ミスまで見つかりました。論文では &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Δσ = σ_prev - σ_next &amp;gt; 0&lt;/code&gt; と定義しておきながら、式 (4) のオイラー更新を &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(z - D)&lt;/code&gt; と書いており、これだとデノイザーの予測から&lt;em&gt;遠ざかる&lt;/em&gt;方向にステップしてしまいます。式 (1) を離散化すると正しくは &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(D - z)&lt;/code&gt; になり、案の定、著者のコード（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;model.py&lt;/code&gt;）を確認すると実装では正しい符号が使われていました。普通の LLM 要約なら論文の誤植をそのまま繰り返していたでしょうし、私自身もおそらく気づかなかったはずです。&lt;/p&gt;
+
+&lt;p&gt;そこで私は考えました――この1週間分の作業は、どこまで自動化できるだろうか？論文の実際のソースを取得し、前提となる数学を一次文献や実装コードと照合して検証し、インタラクティブな図解を作り、公開前に自分のドラフトをレビューするパイプラインを構築できないだろうか？&lt;/p&gt;
+
+&lt;p&gt;そうして生まれたのが &lt;a href=&quot;https://intuitivepapers.ai/&quot;&gt;intuitivepapers.ai&lt;/a&gt; です。最初は Attention、BERT、GAN、VAE、CLIP、PPO、Mamba、Adam といった定番から最新まで20本の解説からスタートし、パイプラインが定期実行され続けるなかで現在では150本以上の解説へと成長しています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/home.webp&quot; alt=&quot;インタラクティブな機械学習論文解説が並ぶ intuitivepapers.ai のホームページ&quot; width=&quot;1280&quot; height=&quot;820&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+intuitivepapers.ai のホームページ。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/library.webp&quot; alt=&quot;図解プレビュー付き20本の AI 論文解説ライブラリ&quot; width=&quot;1280&quot; height=&quot;2621&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+初期の20本の論文ライブラリ。各カードには解説内の図解のライブプレビューが描画されています。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;解説ページの構成&quot;&gt;解説ページの構成&lt;/h2&gt;
+
+&lt;p&gt;各ページは前提知識から始まり、依存関係の順に論文の核心となるアイデアへと積み上げていきます。デスクトップ表示では「コンセプトタワー」と呼んでいるサイドバーがその依存関係の連鎖を可視化してくれるため、各要素がどう積み重なっているかが一目でわかり、短いコードブロックによって数式表記と実際の処理が結びつけられます。&lt;/p&gt;
+
+&lt;p&gt;私のお気に入りはインタラクティブな図解です。たとえば PPO は、1ステップで方策（ポリシー）の更新が行き過ぎるのを防ぐためにクリッピング付き目的関数を使います。下の図では、確率比をドラッグし、アドバンテージの符号を反転させることで、目的関数がちょうどどこで平坦になり勾配が出なくなるのかを自分の目で確かめられます。10秒ほどいじるだけで、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;min&lt;/code&gt; の数式をじっと睨んでいるよりずっと早くクリッピングの仕組みが腑に落ちます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/ppo-figure.png&quot; alt=&quot;確率比とアドバンテージを操作できる PPO クリッピング目的関数のインタラクティブ図解&quot; width=&quot;1280&quot; height=&quot;820&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+確率比をドラッグしアドバンテージの符号を切り替えて、PPO のクリッピング目的関数を探索する図解。
+&lt;/p&gt;
+
+&lt;p&gt;また、すべての要素はスマホ画面にも収まるよう最適化されています。私自身、スマホで読むことがとても多いからです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/mobile-ppo.png&quot; alt=&quot;スマホ上でインライン図解とともに表示される PPO 論文解説&quot; width=&quot;400&quot; height=&quot;840&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:520px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+スマホ上の PPO 解説。同じインタラクティブ図解がインラインで動作します。
+&lt;/p&gt;
+
+&lt;p&gt;もう一つの例は CLIP で、画像エンコーダとテキストエンコーダを学習させて一致するペアが揃うようにします。下のインタラクティブなグリッドでは、バッチ内のすべての画像とすべてのキャプションの組み合わせをスコアリングしています――明るく光る対角線上が引き寄せられる正しいペアで、対角線以外は引き離される不一致のペアです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/clip-grid.png&quot; alt=&quot;画像と一致・不一致キャプションを比較する CLIP 類似度グリッド&quot; width=&quot;664&quot; height=&quot;593&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+CLIP の画像・キャプション類似度グリッド。一致するペアが対角線上に並びます。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;パイプラインの仕組み&quot;&gt;パイプラインの仕組み&lt;/h2&gt;
+
+&lt;p&gt;「この論文を解説して」という1回のプロンプトでは、まさに私が避けたかった浅い要約しか出てきません。より信頼性の高い出力を得るために、生成工程を多段階のパイプラインに分割し、ドラフト作成からデプロイまでの間に複数の自動チェックを挟む構成にしました。&lt;/p&gt;
+
+&lt;p&gt;まず、モデルに記憶頼りで数式を言い換えさせるのではなく、パイプラインが arXiv の HTML 版（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arxiv.org/html/&amp;lt;id&amp;gt;&lt;/code&gt;）を取得し、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pandoc&lt;/code&gt; で MathML を LaTeX に変換することで、論文の数式と数値をそのまま正確に抽出します。&lt;/p&gt;
+
+&lt;p&gt;次に、前提概念を一次文献と照らし合わせて定義・符号・記法を検証します。論文の文章だけでは詳細が曖昧な場合は、著者の公式コードを読みに行き、ページ下部の出典パネル（provenance panel）に正確なファイル名と行番号を引用します。これらすべてを検証済みのリファレンスカードにまとめ、執筆担当は元の論文から直接書くのではなく、このリファレンスカードを基にドラフトを作成します。&lt;/p&gt;
+
+&lt;p&gt;そこからパイプラインは、チャートライブラリを使わず HTML5 Canvas 上に直接カスタムのインタラクティブ図解を構築し、数式に具体的な計算例と短い擬似コードを添えながら依存関係順に解説を書き上げます。&lt;/p&gt;
+
+&lt;p&gt;公開前には、決定論的チェックとモデルによる批評（critic）を組み合わせた検査を通過させます。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;コストのかからない決定論的パスが、文章中の典型的な AI っぽい言い回しをチェックし、KaTeX 構文を検証し、狭いモバイル版の数式がスマホ画面からはみ出さずにデスクトップ版と数学的に等価であることを確認します。さらに、すべてのインタラクティブ図解についてデスクトップ・モバイル双方のスライダーやボタン状態を総当たりで走査し、ラベルの重なりや見切れを検出します。&lt;/li&gt;
+  &lt;li&gt;続いて独立した批評モデル群が、論文との正確性、わかりやすさ、文体、図解、そして実際にレンダリングされたスクリーンショットをレビューします。&lt;/li&gt;
+  &lt;li&gt;確認された指摘事項は修正パスへ渡され、サイトを再ビルドしたうえで失敗したチェックだけを再実行するサイクルを数ラウンド回します。最後まで解決しない項目が残った場合はフェイルクローズ（安全側に停止）とし、自動公開せずにドラフト PR を開く仕組みになっています。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;パイプライン全体は、私のデスクの下にある Mac mini 上で &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;launchd&lt;/code&gt; により毎日定期実行されています。毎朝キュー（厳選したバックログと読者からのリクエストを組み合わせたもの）から最も票数の多い論文を取り出し、実行中にモデルのセッション制限に達した場合はクォータのリセットを待って自動再開し、ビルドとレビューゲートをクリーンに通過したら完成ページをデプロイします。&lt;/p&gt;
+
+&lt;p&gt;以下は Mamba 解説のために Canvas で描画したカスタム図解の一つで、Mamba ブロックの構成要素を分解して示しています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/intuitivepapers/mamba-block-fig.jpeg&quot; alt=&quot;Mamba ブロックの構成要素を示す図解&quot; width=&quot;1280&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Mamba 解説のために Canvas で描画した Mamba ブロックの分解図。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;おわりに&quot;&gt;おわりに&lt;/h2&gt;
+
+&lt;p&gt;1本の論文をきちんと理解したいという動機から始まった試みが、自動検証はどこまで通用するのかという実験へと発展しました。一次文献の照合、著者コードの読解、図解状態の網羅スキャンを組み合わせることで微妙な誤りの多くを防げますが、もちろん出力が完璧になるわけではありません。複雑なインタラクティブ図解は人間の目なしに安定して仕上げるのが依然として最も難しい領域ですし、ときどきぎこちない説明やエッジケースのバグがすり抜けることもあります。&lt;/p&gt;
+
+&lt;p&gt;それを補うため、すべてのページの下部にフィードバック欄を設けています。読者からの報告は該当ページの修正だけでなく、今後の解説で同じミスを繰り返さないようパイプラインのルールを厳格化することにも活かしています。&lt;/p&gt;
+
+&lt;p&gt;ずっと腰を据えて読もうと思っていた機械学習論文がある方は、ぜひ &lt;a href=&quot;https://intuitivepapers.ai/&quot;&gt;intuitivepapers.ai&lt;/a&gt; を覗いてみてください。読みたい論文をリクエストしたり、キュー内の論文に投票したりできますし、もし解説の中に誤りを見つけたら修正できるようフィードバック欄からぜひ知らせてください。&lt;/p&gt;
+</description>
+          <pubDate>Fri, 05 Jun 2026 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ja/intuitivepapers-ai-interactive-paper-explainers</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/intuitivepapers-ai-interactive-paper-explainers</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>ccmux：複数デバイス間で AI コーディングエージェントを管理する</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    複数マシンにまたがるコーディングエージェントを把握し、スマホからも操作できるように友人たちと作った tmux セッションマネージャー。
+&lt;/p&gt;
+
+&lt;p&gt;私は普段、Mac mini とノート PC にまたがって10個ほどのコーディングエージェントを同時に動かしています。tmux でセッションをバックグラウンドに維持すること自体は難しくないのですが、本当に煩わしいのはそれらすべてを把握しておくことです――どのマシンでタスクを始めたか思い出し、Claude がまだ作業中なのかそれとも1時間前から yes/no プロンプトで止まったままなのかを SSH で繋いで確認し、さらにデスクを離れている間は返信するまともな手段もない、という具合です。&lt;/p&gt;
+
+&lt;p&gt;私が欲しかったのは、Mac mini でセッションを立ち上げて席を離れ、エージェントが入力を求めたらスマホに通知が届き、その場で返事をして、あとからノート PC で同じセッションを引き継げる――その間に大量の ssh コマンドや tmux コマンドを打ち込まずに済む仕組みでした。&lt;/p&gt;
+
+&lt;p&gt;そこで Daniel Mandragona と Mike Choi と一緒に、AI コーディングエージェント向けのクロスデバイス tmux セッションマネージャー &lt;a href=&quot;https://ccmux.ai/&quot;&gt;ccmux&lt;/a&gt; を作りました。以下では、その仕組みや各コンポーネントの連携、そしてモバイル向けに構築した内容を紹介します。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/hero-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/hero.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    複数プロジェクトのコーディングエージェントセッションを表示する ccmux のターミナル画面
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ccmux の簡単なツアー。4つのプロジェクトにわたって5つのエージェントセッションが動いています。
+&lt;/p&gt;
+
+&lt;h2 id=&quot;ダッシュボード&quot;&gt;ダッシュボード&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux&lt;/code&gt; を開くと、手元の全マシン上で動いているコーディングエージェントのセッションが一覧表示され、各エージェントの状態――アクティブ（出力生成中）、アイドル、入力待ち――ごとに色分けされます。右側にはネットワーク上の他マシンを表示する Devices パネルと、Claude の5時間クォータを追跡して上限が近づいたときに一目でわかる使用量パネルがあります。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/dashboard-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/dashboard.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    セッション状態、接続デバイス、Claude 使用量を表示する ccmux ダッシュボード
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ダッシュボード。セッション行は状態ごとに色分けされ、右側には接続デバイスと Claude の使用量が表示されます。
+&lt;/p&gt;
+
+&lt;p&gt;任意のセッションに入るには、選択して &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Enter&lt;/code&gt; を押すだけでエージェントの tmux セッションに直接アタッチできます。用が済んだら &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ctrl-b d&lt;/code&gt; でデタッチすればダッシュボードに戻り、エージェントは開始したマシン上でそのまま動き続けます。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1280&quot; height=&quot;640&quot; poster=&quot;/assets/video/ccmux/attach-detach-poster.webp&quot; style=&quot;width:100%;height:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/attach-detach.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    tmux セッションにアタッチして ccmux ダッシュボードへ戻る様子
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Enter でセッションにアタッチし、Ctrl-b d でダッシュボードへ戻る操作。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;内部の仕組み&quot;&gt;内部の仕組み&lt;/h2&gt;
+
+&lt;p&gt;私たちは独自のラッパーの中にセッションを閉じ込めるのではなく、あくまで tmux 自体を唯一の信頼できる情報源（source of truth）として保ちたいと考えました。もし将来 ccmux を使うのをやめても、動いているエージェントはすべて普通の tmux セッションのままなので、手作業でそのままアタッチできます。&lt;/p&gt;
+
+&lt;p&gt;各マシンでは2つの Go バイナリが動作します。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux&lt;/code&gt; は操作用のターミナル UI で、&lt;a href=&quot;https://charm.sh/&quot;&gt;Charm&lt;/a&gt; の Bubble Tea スタックで構築しています。&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; は数秒おきに tmux をポーリングして各セッションの状態を判定し、ローカルの Unix ソケットおよびオプションの HTTP API で公開する軽量なバックグラウンドデーモンです。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;状態判定は特に工夫が要る部分の一つです。エージェントが出力をストリーミングし続けている間、デーモンはそのセッションをアクティブと判定します。入力プロンプトが表示されてペインが数秒間静かになると、デーモンはセッションの状態を &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;needs_input&lt;/code&gt; に切り替えます。またセッションがアクティブな間、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; は macOS では &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;caffeinate&lt;/code&gt; ロック（Linux では &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd-inhibit&lt;/code&gt;）を保持し、長時間のタスク途中で Mac mini やノート PC がスリープしてしまわないようにします――ノート PC 向けにはバッテリー下限設定もあり、放置したマシンが完全に電池切れになるのも防ぎます。&lt;/p&gt;
+
+&lt;p&gt;複数マシンの自動検出には &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt; を使いました。更新のたびに ccmux が &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tailscale status --json&lt;/code&gt; を実行して到達可能なマシンのポート &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;7474&lt;/code&gt;（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/v1/health&lt;/code&gt;）をプローブし、応答したデーモンをすべてダッシュボードへ自動統合します。そのためホスト一覧を手動管理する必要も、インターネットにポートを公開する必要もありません。暗号化とデバイス認証はすでに Tailscale の WireGuard レイヤーが担っているため、デーモンは tailnet IP 上で平文の HTTP を話しつつ、ブラウザ由来の &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Origin&lt;/code&gt; や &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Sec-Fetch-*&lt;/code&gt; ヘッダーを含むリクエストを拒否することで、見知らぬウェブページから勝手に通信されないようにしています。&lt;/p&gt;
+
+&lt;p&gt;リモートセッション上で &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Enter&lt;/code&gt; を押すと、ccmux は別レイヤー経由でターミナルをプロキシするのではなく、エージェントが動いているホストへ SSH または Mosh 経由で本物の &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tmux attach&lt;/code&gt; を直接実行します。デフォルトは Claude Code ですが、プロジェクトごとのエージェント設定を保存し各ツールの起動・再開フラグを使い分けることで、Codex、Cursor、Antigravity、Gemini CLI などにも対応しています。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;スマホから使う&quot;&gt;スマホから使う&lt;/h2&gt;
+
+&lt;p&gt;スマホからエージェントを操作できるようにすることこそ、これを作りたかった最大の理由です。スマホで素の SSH を使うと、Wi-Fi とモバイル回線の切り替えや画面ロック、電波の届かない場所への移動のたびに接続がブツブツ切れてしまいます。その点 &lt;a href=&quot;https://mosh.org/&quot;&gt;Mosh&lt;/a&gt; はローミングやスリープに強く、電波が戻ればそのままセッションを再開してくれるのでずっと快適です。&lt;/p&gt;
+
+&lt;p&gt;ccmux は狭いターミナル（120桁未満）を検出すると、同じインターフェースがスマホ画面でも使えるよう、ダッシュボードを自動的に1列のスクロール表示へと折りたたみます。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;430&quot; height=&quot;900&quot; poster=&quot;/assets/video/ccmux/phone-poster.webp&quot; style=&quot;max-height:420px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/phone.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    幅の狭いモバイルターミナル上の ccmux ダッシュボード
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Mosh 越しにスマホ幅のレイアウトへ自動で折りたたまれた TUI。
+&lt;/p&gt;
+
+&lt;p&gt;通知機能の実装は思いのほかシンプルに収まりました。セッションが &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;needs_input&lt;/code&gt; に遷移するたび、デーモンが標準のターミナルベル（&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BEL&lt;/code&gt;）を鳴らします。ベルを監視している iOS ターミナルアプリは、途中にクラウドリレーを挟むことなくそのままプッシュ通知に変換してくれます。さらに iOS 向け Mosh クライアントの &lt;a href=&quot;https://getmoshi.app/&quot;&gt;Moshi&lt;/a&gt; では、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;moshi-hook&lt;/code&gt; を Claude Code のフックと連携させることで、「承認待ち」「タスク完了」といったカテゴリ別の通知を送り、タップ一つで該当セッションへ直接飛び込むこともできます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/ccmux/moshi.webp&quot; alt=&quot;iPhone 上の Moshi ターミナルアプリで動く ccmux&quot; width=&quot;610&quot; height=&quot;1323&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:520px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+iPhone の Moshi 内で動作している ccmux。
+&lt;/p&gt;
+
+&lt;p&gt;とはいえ、ちょっとセッション一覧を眺めたいときや長めのプロンプトを書きたいとき、スマホ画面でターミナル UI を操作するのはやはり窮屈に感じることがあります。そこで、Tailscale 経由で &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmuxd&lt;/code&gt; と直接通信するネイティブ iOS アプリも作りました。ペアリングは Mac で &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ccmux pair&lt;/code&gt; を実行し、ターミナルに表示された QR コードをスキャンするだけ。あとはアプリが SSE でライブのセッション状態を受信し、SwiftTerm で描画する WebSocket PTY ブリッジ経由でインタラクティブな tmux ペインにアタッチします。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+&amp;lt;img src=&quot;/assets/img/ccmux/ios-dashboard.webp&quot; alt=&quot;コーディングエージェントのセッション一覧を表示する ccmux iOS アプリ&quot; width=&quot;1206&quot; height=&quot;2622&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;display:inline-block;margin:0 6px;max-height:460px;width:auto&quot; //&amp;gt;
+&amp;lt;img src=&quot;/assets/img/ccmux/ios-terminal.webp&quot; alt=&quot;ccmux iOS アプリ内のインタラクティブな tmux ターミナル&quot; width=&quot;1206&quot; height=&quot;2622&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;display:inline-block;margin:0 6px;max-height:460px;width:auto&quot; //&amp;gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ネイティブ iOS アプリ：左がセッションダッシュボード、右がライブターミナル。
+&lt;/p&gt;
+
+&lt;p&gt;iOS アプリを作ってすぐ突き当たった課題の一つが、ターミナル操作とプロンプト執筆では真逆のキーボード挙動が求められるという点でした。ターミナル操作には自動修正に邪魔されない生のキー入力、矢印キー、素早いバックスペースが必要ですが、逆に自動修正もテキスト選択もない環境でエージェント宛てに数段落の指示を書くのは苦行です。そこでターミナル画面の中に、Raw モード（すべてのキー入力がそのまま PTY に届く）と Chat モード（プロンプト作成用の iMessage 風テキスト入力欄）を切り替えられるトグルを設けました。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;400&quot; height=&quot;870&quot; poster=&quot;/assets/video/ccmux/ios-mode-toggle-poster.webp&quot; style=&quot;max-height:460px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/ccmux/ios-mode-toggle.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    ccmux iOS アプリで Raw 入力モードと Chat 入力モードを切り替える様子
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+生のターミナル入力（Raw モード）とプロンプト作成用（Chat モード）の切り替え。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;おわりに&quot;&gt;おわりに&lt;/h2&gt;
+
+&lt;p&gt;私は何ヶ月も毎日 ccmux を使ってきましたし、他にも何人か使ってくれる人が現れました。同じ数ヶ月の間に、資金調達をして専任チームを抱えるプロジェクトを含め、コーディングエージェントを管理するためのツールが数多く登場しました。3人のサイドプロジェクトとしてプロダクト競争を追い続けるのはあまり現実的ではないと考え、その方向で推し進めるのは一区切りにすることにしました。それでも今でもたまにリポジトリをいじっていますし、自分たちが作ったものを記録として残しておきたくてこの記事を書きました。&lt;/p&gt;
+
+&lt;p&gt;サイトは今も &lt;a href=&quot;https://ccmux.ai/&quot;&gt;ccmux.ai&lt;/a&gt; で公開されており、ソースコードも FSL-1.1-MIT ライセンスで &lt;a href=&quot;https://github.com/skzv/ccmux&quot;&gt;GitHub&lt;/a&gt; に置いています。macOS や Linux で試してみたい方は、以下のコマンドでインストールしてセットアップウィザードを実行できます。&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-fsSL&lt;/span&gt; https://raw.githubusercontent.com/skzv/ccmux/main/scripts/install.sh | sh
+ccmux setup
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Tailscale 経由での複数マシン連携やモバイルアクセスの設定方法は、&lt;a href=&quot;https://ccmux.ai/docs/&quot;&gt;セットアップドキュメント&lt;/a&gt;にまとめてあります。&lt;/p&gt;
+</description>
+          <pubDate>Fri, 05 Jun 2026 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ja/ccmux-tmux-manager-for-ai-coding-agents</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/ccmux-tmux-manager-for-ai-coding-agents</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>機械学習を用いた公開写真からの 3D 再構成</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    公開されている写真だけから世界を 3D 再構成できるのでしょうか？
+&lt;/p&gt;
+
+&lt;h2 id=&quot;世界をマッピングする&quot;&gt;世界をマッピングする&lt;/h2&gt;
+
+&lt;p&gt;インターネット上には、Reddit、YouTube、Google マップの投稿写真など、さまざまなソースから集まった膨大な公開写真が存在します。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/google-maps-photos.webp&quot; alt=&quot;Google マップの写真の例&quot; width=&quot;1600&quot; height=&quot;1232&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; style=&quot;max-height:400px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Google マップ上で公開されている写真
+&lt;/p&gt;
+
+&lt;p&gt;そこで私はふと思いました――これだけのデータがあれば、世界の 3D マップを作れるのではないか？カメラで写真を撮ると 3D 情報はすべて失われてしまいますが、最先端の機械学習を使えばそれを復元し、このような写真を、&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Safeway 入力画像 0&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されている Safeway の入力画像 0。
+&lt;/p&gt;
+
+&lt;p&gt;このような 3D モデルへと変換できるのです。&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;有名なシンガポール・チャンギ空港の例も見てみましょう。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0.jpeg&quot; alt=&quot;シンガポール空港 入力画像&quot; width=&quot;960&quot; height=&quot;1280&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:600px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されているシンガポール空港の入力画像。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1012&quot; height=&quot;1008&quot; poster=&quot;/assets/video/3d-reconstruction/sg-airport-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/sg-airport-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;さらには森の写真でも可能です。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0.jpg&quot; alt=&quot;森の入力画像&quot; width=&quot;1500&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されている森の入力画像。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1358&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/forest-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/forest-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p&gt;これを実現するために、機械学習による深度推定モデルとちょっとした線形代数を使いました。&lt;/p&gt;
+
+&lt;h2 id=&quot;カメラ投影&quot;&gt;カメラ投影&lt;/h2&gt;
+
+&lt;p&gt;下の図のように、カメラは 3D から 2D への投影を行っていると見なすことができます。この過程で、3つ目の次元である「深度（奥行き）」の情報が失われます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/camera-projection.png&quot; alt=&quot;カメラ投影の可視化&quot; width=&quot;850&quot; height=&quot;356&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+3D から 2D へのカメラ投影。出典：[1]
+&lt;/p&gt;
+
+&lt;p&gt;私たちの課題は、この失われた3次元目を復元し、そのうえでこの投影を逆変換する方法を見つけることです。&lt;/p&gt;
+
+&lt;h2 id=&quot;カメラの内部パラメータcamera-intrinsics&quot;&gt;カメラの内部パラメータ（Camera Intrinsics）&lt;/h2&gt;
+
+&lt;p&gt;画像を 3D 再構成するには、画像内の各ピクセルの深度を知るだけでは不十分です。なぜなら、3D 空間上の点が 2D のピクセルにどう写像されるかはカメラの特性――とりわけ焦点距離――によって決まるため、その写像を逆算するにはカメラの特性も知る必要があるからです。焦点距離が変わるだけで写り方がどれほど大きく変わるか、下のデモを見てみてください。&lt;/p&gt;
+
+&lt;div style=&quot;text-align:center&quot;&gt;
+  &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;600&quot; height=&quot;600&quot; poster=&quot;/assets/video/3d-reconstruction/face-focal-length-poster.webp&quot; style=&quot;max-height:400px;width:auto&quot;&gt;
+    &lt;source src=&quot;/assets/video/3d-reconstruction/face-focal-length.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+    顔写真と焦点距離の関係のデモ
+  &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+焦点距離が画像に与える影響のデモンストレーション。出典：[2]
+&lt;/p&gt;
+
+&lt;p&gt;したがって、これらの画像のどれからであっても顔を正しく 3D 再構成するには、カメラの特性を知っている必要があるのは論理的に明らかです。&lt;/p&gt;
+
+&lt;p&gt;下図のような相似三角形の性質を使うと、画像上の点と 3D 空間上の点の関係は非常にシンプルに表せます。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+x = f \frac{X}{Z} \space\space\space\space\space y = f \frac{Y}{Z} \tag{1} \label{eq:camera perspective projection}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/camera-perspective-focal.png&quot; alt=&quot;カメラの透視投影&quot; width=&quot;1073&quot; height=&quot;834&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+カメラの透視投影
+&lt;/p&gt;
+
+&lt;p&gt;この変換を逆向きに解いて画像上の点を 3D 空間へ戻すと、次の式が得られます。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+X = \frac{x \cdot Z}{f} \space\space\space\space\space Y = \frac{y \cdot Z}{f} \space\space\space\space\space Z = Z \tag{2} \label{eq:inverse camera perspective projection}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;つまり、私たちが手に入れなければならない欠損ピースは2つ――各ピクセルの深度 \(Z\) と、カメラの焦点距離 \(f\) です。公開写真からはどちらもそのままでは取得できません。カメラ情報が入っている可能性のある EXIF データも、通常は削除されているからです。&lt;/p&gt;
+
+&lt;p&gt;なお、下図のようにカメラの姿勢（位置と向き）まで含めて 3D 座標系と 2D 座標系の完全な変換を記述することも可能ですが、この記事ではカメラのローカル座標系のみを扱います。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/complete-camera-model.jpg&quot; alt=&quot;完全なカメラモデル&quot; width=&quot;1280&quot; height=&quot;720&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+完全なカメラモデル。出典：[3]
+&lt;/p&gt;
+
+&lt;h2 id=&quot;深度マスクdepth-masks&quot;&gt;深度マスク（Depth Masks）&lt;/h2&gt;
+
+&lt;p&gt;このプロジェクトを実現可能にしてくれたのが、Apple が最近公開した &lt;a href=&quot;https://github.com/apple/ml-depth-pro&quot;&gt;DepthPro モデル&lt;/a&gt;です。深度推定モデル自体は以前から存在していましたが、このモデルには大きく異なる点が2つありました。
+    1. 絶対的なメートル法のスケールで深度を出力するため、単眼画像1枚からでも実寸比率の 3D 再構成が可能になる
+    2. カメラの焦点距離まで自動で推定してくれる&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/depth-pro-teaser.webp&quot; alt=&quot;Depth Pro ティーザー画像&quot; width=&quot;1242&quot; height=&quot;535&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Depth Pro ティーザー画像。出典：[4]
+&lt;/p&gt;
+
+&lt;p&gt;私はこのモデルをいくつもの公開写真に適用し、以下のように深度マスクと焦点距離を推定しました。たとえばこちらの画像の場合、&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Safeway 入力画像 1&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されている Safeway の入力画像 1。
+&lt;/p&gt;
+
+&lt;p&gt;推定された深度マスクと焦点距離は次のようになります。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1-depth-black.png&quot; alt=&quot;Safeway 深度マスク 1&quot; width=&quot;507&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro モデルによって予測された Safeway の深度マスク 1 と焦点距離。
+&lt;/p&gt;
+
+&lt;p&gt;あとは式 \((2)\) を使って各ピクセルを 3D 空間へと逆投影して点群（ポイントクラウド）を生成し、Open3D で可視化しました。&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;3d-再構成の実例&quot;&gt;3D 再構成の実例&lt;/h2&gt;
+
+&lt;p&gt;以下に私が試した実例をすべて載せています。特に注目してほしいのはニューヨークのスカイラインの例です。ニューヨークの高層ビル群のような巨大なスケールに対してどこまで通用するのか興味があったのですが、予想通り DepthPro モデルは良好な深度マスクを生成できませんでした。学習データセットはほぼ間違いなく、より小さなスケールのシーンに焦点を当てて作られているのでしょう。&lt;/p&gt;
+
+&lt;h3 id=&quot;coex-モール&quot;&gt;COEX モール&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/coex-0.jpg&quot; alt=&quot;COEX モール 入力画像&quot; width=&quot;924&quot; height=&quot;483&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されている COEX モールの入力画像。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/coex-0-depth-black.png&quot; alt=&quot;COEX モール 深度マスク&quot; width=&quot;506&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro モデルによって予測された COEX モールの深度マスクと焦点距離。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1398&quot; height=&quot;848&quot; poster=&quot;/assets/video/3d-reconstruction/coex-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/coex-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;森&quot;&gt;森&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0.jpg&quot; alt=&quot;森 入力画像&quot; width=&quot;1500&quot; height=&quot;900&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されている森の入力画像。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/forest-0-depth-black.png&quot; alt=&quot;森 深度マスク&quot; width=&quot;506&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro モデルによって予測された森の深度マスクと焦点距離。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1358&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/forest-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/forest-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;ニューヨークのスカイライン&quot;&gt;ニューヨークのスカイライン&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/nyc-0.webp&quot; alt=&quot;ニューヨーク 入力画像&quot; width=&quot;1000&quot; height=&quot;560&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されているニューヨークの入力画像。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/nyc-depth-black.png&quot; alt=&quot;ニューヨーク 深度マスク&quot; width=&quot;498&quot; height=&quot;389&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro モデルによって予測されたニューヨークの深度マスクと焦点距離。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1382&quot; height=&quot;714&quot; poster=&quot;/assets/video/3d-reconstruction/nyc-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/nyc-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;safeway-1&quot;&gt;Safeway 1&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-0.webp&quot; alt=&quot;Safeway 入力画像 0&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されている Safeway の入力画像 0。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-0-depth-black.png&quot; alt=&quot;Safeway 深度マスク 0&quot; width=&quot;506&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro モデルによって予測された Safeway の深度マスク 0 と焦点距離。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1066&quot; height=&quot;776&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-0-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-0-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;safeway-2&quot;&gt;Safeway 2&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1.webp&quot; alt=&quot;Safeway 入力画像 1&quot; width=&quot;680&quot; height=&quot;510&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されている Safeway の入力画像 1。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/safeway-1-depth-black.png&quot; alt=&quot;Safeway 深度マスク 1&quot; width=&quot;507&quot; height=&quot;396&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro モデルによって予測された Safeway の深度マスク 1 と焦点距離。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1360&quot; height=&quot;810&quot; poster=&quot;/assets/video/3d-reconstruction/safeway-1-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/safeway-1-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;シンガポール空港&quot;&gt;シンガポール空港&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0.jpeg&quot; alt=&quot;シンガポール空港 入力画像&quot; width=&quot;960&quot; height=&quot;1280&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; style=&quot;max-height:600px;width:auto&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+公開されているシンガポール空港の入力画像。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/3d-reconstruction/sg-airport-0-depth-black.png&quot; alt=&quot;シンガポール空港 深度マスク&quot; width=&quot;387&quot; height=&quot;432&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+DepthPro モデルによって予測されたシンガポール空港の深度マスクと焦点距離。
+&lt;/p&gt;
+
+&lt;div style=&quot;text-align: center;&quot;&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;1012&quot; height=&quot;1008&quot; poster=&quot;/assets/video/3d-reconstruction/sg-airport-recording-poster.webp&quot; style=&quot;width: 100%; height: auto;&quot;&gt;
+        &lt;source src=&quot;/assets/video/3d-reconstruction/sg-airport-recording.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;脚注&quot;&gt;脚注&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;3D から 2D へのカメラ投影。出典：&lt;a href=&quot;https://www.researchgate.net/figure/The-perspective-projection-of-a-camera-model_fig2_324584663&quot;&gt;ResearchGate&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;焦点距離が画像に与える影響のデモンストレーション。出典：&lt;a href=&quot;https://www.diyphotography.net/gif-explains-changing-focal-length-impacts-portrait&quot;&gt;DIY Photography&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;完全なカメラモデル。出典：&lt;a href=&quot;https://robotacademy.net.au/lesson/summary-of-image-geometry/&quot;&gt;Robot Academy&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Depth Pro ティーザー画像。出典：&lt;a href=&quot;https://github.com/apple/ml-depth-pro&quot;&gt;Apple&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+          <pubDate>Thu, 21 Aug 2025 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ja/3d-reconstruction-from-public-photos</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/3d-reconstruction-from-public-photos</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>明日の市場の寄り付きを予測する</title>
+          <description>&lt;p&gt;&lt;em&gt;未来を予測する&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;ある週末に悪い経済ニュースが流れ、月曜日の寄り付きに市場がどう反応するのか気になりました。そこで調べてみたところ、株式市場が閉まっている間も原資産となる指数の先物取引は続いており、先物市場を見ることでトレーダーたちが新しい情報をすでにどう受け止め、価格に織り込んでいるのかを――まるで水晶玉 🔮 のように――読み取れることを知りました。&lt;/p&gt;
+
+&lt;p&gt;先物価格と現在価格には一定の関係があるため、先物価格を時間軸に沿って現在へと割り引くことで、先物市場が織り込んでいる各指数の現在の理論価格（フェアバリュー）を計算できます。これにより、市場が開く前から各指数のインプライド寄り付き価格がわかり、日曜の夜のうちに翌日の市場が&lt;span style=&quot;color: #66ff66;&quot;&gt;高く&lt;/span&gt;始まりそうか、&lt;span style=&quot;color: #ff6666;&quot;&gt;安く&lt;/span&gt;始まりそうかを見通すことができるのです。&lt;/p&gt;
+
+&lt;p&gt;以下ではこの計算を構成する要素を順を追って説明し、最後に翌日の寄り付き動向を先取りして見られる自作ダッシュボード &lt;a href=&quot;https://impliedopen.com&quot;&gt;impliedopen.com&lt;/a&gt; を紹介します。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/save-game.webp&quot; alt=&quot;翌日の市場動向を先取りして見られる自作ダッシュボードのプレビュー&quot; width=&quot;1168&quot; height=&quot;1312&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+翌日の市場動向を先取りして見られる自作ダッシュボードのプレビュー。
+&lt;/p&gt;
+
+&lt;h2 id=&quot;先物futures&quot;&gt;先物（Futures）&lt;/h2&gt;
+
+&lt;p&gt;先物（先物契約）とは、満期日における原資産の&lt;em&gt;将来&lt;/em&gt;価格に対してトレーダーが賭けることのできる金融商品です。下の SP500 先物の価格と満期日に注目してみてください。現在の SP500 現物価格より高く取引されていますが、これは現在の SP500 の価値について何を示しているのでしょうか？&lt;/p&gt;
+
+&lt;p&gt;先物価格を、先物市場が織り込んでいる現在の理論価格と結びつけるには、現在から先物の満期日までの期間を考慮する必要があります。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/futures-price.webp&quot; alt=&quot;SP500 先物契約&quot; width=&quot;943&quot; height=&quot;826&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+SP500 先物契約
+&lt;/p&gt;
+
+&lt;p&gt;ここで用いるのが保有コストモデル（Cost of Carry モデル）です。無リスク金利、配当利回り、満期までの残存期間を考慮に入れます。このモデルでは、指数の価格は現在の無リスク金利で成長する（本質的には無裁定条件の仮定）一方、配当の支払いによってその分だけ価格が下落すると仮定します。&lt;/p&gt;
+
+&lt;p&gt;この関係は次のように表せます。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+    F = S \times e^{(r - q) \times t} \tag{0}  \label{eq:coc}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;ここで \(F\) は先物価格、\(S\) は現在の株価（指数価格）、\(r\) は無リスク金利、\(q\) は配当利回り、\(t\) は満期までの期間です。&lt;/p&gt;
+
+&lt;h2 id=&quot;時間を遡る&quot;&gt;時間を遡る&lt;/h2&gt;
+
+&lt;p&gt;先物価格から現在の理論価格（フェアバリュー）を算出するには、上の式を逆算して先物価格を現在へ割り引きます。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+    S = F \times e^{-(r - q) \times t} \tag{1}  \label{eq:discount}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;市場が開く前において、この理論価格こそが指数の寄り付き価格に対する最良の推定値となります。&lt;/p&gt;
+
+&lt;h2 id=&quot;無リスク金利risk-free-rate&quot;&gt;無リスク金利（Risk-Free Rate）&lt;/h2&gt;
+
+&lt;p&gt;そもそもリスクゼロの投資など存在するのでしょうか？米国財務省が発行する財務省短期証券（T-bill）は、以下の理由から（ほぼ）無リスクと見なされています。&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;米国政府はデフォルトの可能性が極めて低く、自国通貨を発行でき、債務返済の実績も十分にある&lt;/li&gt;
+  &lt;li&gt;満期が短いため、金利変動や長期的な不確実性に対するエクスポージャーが小さい&lt;/li&gt;
+  &lt;li&gt;市場の流動性が非常に高い&lt;/li&gt;
+  &lt;li&gt;社債や地方債と異なり、米国政府が破産することはないため信用リスクがない&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;今回の計算では、無リスク金利として3ヶ月物米国債（3-month T-bill）を採用しています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/3m-bond-yield-1.png&quot; alt=&quot;3ヶ月物米国債利回り&quot; width=&quot;993&quot; height=&quot;633&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+3ヶ月物米国債利回り
+&lt;/p&gt;
+
+&lt;p&gt;原資産は少なくとも無リスク金利と同程度には成長すると仮定します。そうでなければ、投資家がわざわざこれらの資産に資金を投じる理由がないからです。&lt;/p&gt;
+
+&lt;h2 id=&quot;配当利回りdividend-yield&quot;&gt;配当利回り（Dividend Yield）&lt;/h2&gt;
+
+&lt;p&gt;原資産は少なくとも無リスク金利で成長すると仮定する一方、配当が支払われると原資産の指数はその分だけ下落する点も考慮しなければなりません。ここでは各指数の直近の配当利回りを使っていますが、より精度の高いモデルでは今後の予想配当利回り（フォワード配当利回り）を見積もるのが望ましいでしょう。&lt;/p&gt;
+
+&lt;p&gt;以下は、計算に使用している最新の SP500 配当利回りです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/sp500-dividend-yield.png&quot; alt=&quot;最新の SP500 配当利回り&quot; width=&quot;873&quot; height=&quot;641&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+最新の SP500 配当利回り
+&lt;/p&gt;
+
+&lt;h2 id=&quot;すべてを組み合わせる&quot;&gt;すべてを組み合わせる&lt;/h2&gt;
+
+&lt;p&gt;直近の指数価格、現在取引中の先物価格、配当利回り、無リスク金利、そして満期までの残存期間を集め、主要各指数の理論価格に対する現時点の最良の推定値を計算します。これらすべてをまとめたのが &lt;a href=&quot;https://impliedopen.com&quot;&gt;impliedopen.com&lt;/a&gt; で、下にも埋め込んであります。&lt;/p&gt;
+
+&lt;iframe src=&quot;https://impliedopen.com&quot; title=&quot;Implied Open 市場ダッシュボード&quot; width=&quot;100%&quot; height=&quot;1200px&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;このダッシュボードが最も役立つのは、先物市場が開いていて通常市場（現物市場）が閉まっている時間帯です。通常市場の寄り付き前にトレーダーたちが何を織り込んでいるかを、先物市場から読み取ることができます。一方、通常市場が開いている間は、市場そのものがつけている各指数の「真の」現在価格が表示されます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/market-status.png&quot; alt=&quot;マーケットステータス画面&quot; width=&quot;751&quot; height=&quot;159&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+マーケットステータス画面
+&lt;/p&gt;
+
+&lt;h2 id=&quot;おわりに&quot;&gt;おわりに&lt;/h2&gt;
+
+&lt;p&gt;このダッシュボードはかなり突貫で作ったので、値の多くはスクレイピングして自分の API で1分ごとにキャッシュしています :) もし壊れたり落ちたりしたらごめんなさい――いずれきちんとした API に置き換えるつもりですが、あるいは市場の24時間365日取引が進んでこのダッシュボード自体が役目を終える方が先かもしれません。いずれにせよ、記録として残すためにこのブログ記事を書いておきたかったのです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/predicting-market-open/it-is-what-it-is.png&quot; alt=&quot;まあそんなもんです&quot; width=&quot;690&quot; height=&quot;365&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+まあそんなもんです（It is what it is.）。
+&lt;/p&gt;
+
+&lt;p&gt;計算の誤りに気づいた方や、提案・フィードバックがある方は、ぜひ気軽に連絡して教えてください！&lt;/p&gt;
+</description>
+          <pubDate>Sun, 23 Mar 2025 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ja/predicting-how-the-market-will-open-tomorrow</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/predicting-how-the-market-will-open-tomorrow</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Sticker.ly のスタンプパックをインポートする Telegram Bot</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    アニメーション付き Sticker.ly パックを簡単に Telegram へインポート
+&lt;/p&gt;
+
+&lt;style&gt;
+video {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+}
+&lt;/style&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://sticker.ly&quot;&gt;Sticker.ly&lt;/a&gt; は Android および iPhone 向けの人気スタンプパック作成・管理アプリで、&lt;a href=&quot;https://play.google.com/store/apps/details?id=com.snowcorp.stickerly.android&amp;amp;hl=en_US&amp;amp;gl=US&quot;&gt;Google Play ストア&lt;/a&gt;だけでも1億ダウンロードを超えています。iMessage、WhatsApp、Telegram へのスタンプパックのインポートに対応していますが、アニメーションスタンプパックのインポート機能は WhatsApp のみに限定されています。&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; preload=&quot;metadata&quot; width=&quot;498&quot; height=&quot;1034&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-animated-import-cropped-poster.webp&quot; style=&quot;max-height:600px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-animated-import-cropped.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;熱心な Telegram ユーザーであり布教者でもある私は、やり取りのために友人たちによく Telegram への移行を勧めています。しかし友人の多くは、WhatsApp など他プラットフォームにある豊富なスタンプライブラリが使えないことに不満を感じていました。私はそれを解決すると約束し、ついにやり遂げました。ご紹介します：&lt;a href=&quot;https://t.me/StickerlyImportBot&quot;&gt;Sticker.ly Sticker Pack Import Bot&lt;/a&gt; です。&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;470&quot; height=&quot;496&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-bot-screen-poster.webp&quot; style=&quot;max-height:400px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-bot-screen.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;使い方は簡単で、&lt;a href=&quot;https://sticker.ly/s/HBBCR8&quot;&gt;https://sticker.ly/s/HBBCR8&lt;/a&gt; のような Sticker.ly のパック URL を送るだけです。すると Bot がスタンプを Telegram 対応のアニメーション形式に変換し、アニメーションスタンプパックをライブラリに追加するためのリンクを返してくれます。&lt;/p&gt;
+
+&lt;p&gt;
+    &lt;video autoplay=&quot;&quot; loop=&quot;&quot; muted=&quot;&quot; playsinline=&quot;&quot; disableRemotePlayback=&quot;&quot; loading=&quot;lazy&quot; preload=&quot;metadata&quot; width=&quot;446&quot; height=&quot;524&quot; poster=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-import-poster.webp&quot; style=&quot;max-height:500px;width:auto&quot;&gt;
+        &lt;source src=&quot;/assets/video/telegram-stickerly-import-bot/stickerly-import.mp4&quot; type=&quot;video/mp4&quot; /&gt;
+        お使いのブラウザは video タグに対応していません。
+    &lt;/video&gt;
+&lt;/p&gt;
+
+&lt;p&gt;なお、この Bot は静止画スタンプパックのインポートにも対応していますが、静止画パックについては Sticker.ly と Telegram が標準でインポートに対応しているため、そちらを使うことをおすすめします。&lt;/p&gt;
+
+&lt;p&gt;現在この Bot はベータ版のため、まれに失敗することがあります。スタンプパックの作成時に問題が発生した場合はもう一度試し、必要に応じて Bot 内の案内に従って途中まで作成されたスタンプパックを削除してください。&lt;/p&gt;
+</description>
+          <pubDate>Wed, 05 Apr 2023 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ja/telegram-stickerly-import-bot</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/telegram-stickerly-import-bot</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Google の Vizier によるブラックボックス最適化とハイパーパラメータチューニング</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    あらゆる種類のシステムを自動的かつインテリジェントに最適化する
+&lt;/p&gt;
+
+&lt;style&gt;
+img {
+  max-height: 350px;
+}
+&lt;/style&gt;
+
+&lt;p&gt;機械学習モデルや何らかのアルゴリズム的システムを構築するとき、システムのアーキテクチャについてさまざまな選択を迫られます。たとえば機械学習アプリケーションなら、ニューラルネットワークの層にニューロンをいくつ配置するか、あるいは勾配降下法の学習率をいくつにするかを決めなければなりません。ロボットの状態を追跡する&lt;a href=&quot;https://en.wikipedia.org/wiki/Particle_filter&quot;&gt;パーティクルフィルタ&lt;/a&gt;を作っているなら、尤度関数の形状を選ぶ必要があるでしょう。あるいは、計算リソースの消費を最小化するバッファサイズとスレッド数を探しているかもしれません。こうしたシステムの最適なアーキテクチャはどうすれば見つけられるでしょうか？&lt;/p&gt;
+
+&lt;p&gt;手作業で探すこともできます。ニューロン数をいくつか変えてみたり、勾配降下法の学習率をいろいろ試したりするわけです。しかしこの作業は遅くて退屈なうえ、落とし穴にはまりやすいものです。ありがたいことに、システムを賢く効率的に最適化してくれるサービスが存在します。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;vizier-の紹介&quot;&gt;Vizier の紹介&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/google/vizier&quot;&gt;Vizier&lt;/a&gt; は、ブラックボックス最適化およびハイパーパラメータ最適化のために Google で開発された最適化サービスです。Vizier が提案する入力をシステムに渡し、システムから出力（Vizier が最大化または最小化しようとする評価指標）を受け取ることさえできれば、どのような種類のシステムでも最適化できます。システム自体は「ブラックボックス」として扱われます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/black-box-optimization.png&quot; alt=&quot;ブラックボックス最適化&quot; width=&quot;629&quot; height=&quot;319&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ブラックボックス最適化では、入力を渡して出力を受け取れさえすれば、システム内部を理解する必要はありません。出典：Per Instance Algorithm Configuration for Continuous Black Box Optimization - Scientific Figure on ResearchGate. https://www.researchgate.net/figure/black-box-Optimization_fig1_322035981 [2023年2月23日参照]
+&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;/ja/gradient-descent&quot;&gt;勾配降下法&lt;/a&gt;のような非ブラックボックス最適化手法では、システムのパラメータと最小化・最大化したい指標との関係を理解している必要がありますが、Vizier のようなブラックボックス最適化システムではシステム内部に関する知見が一切不要です。それでもパラメータ空間を効率よく探索し、システムを最適化するパラメータ値を見つけ出してくれます。この性質により、複雑で不連続、あるいは非凸な評価関数に対しても高い頑健性を発揮します。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;パラメータとハイパーパラメータの違い&quot;&gt;パラメータとハイパーパラメータの違い&lt;/h2&gt;
+
+&lt;p&gt;余談ですが、この区別は機械学習の分野に由来します。「パラメータ」はデータセットでの学習を通じて見つけられ、推論時にモデル内部で使われる値を指すのに対し、「ハイパーパラメータ」はモデルのアーキテクチャや学習手順を規定する値を指します。Vizier のようなブラックボックス最適化サービスはあらゆるシステムの最適化に使えますが、機械学習モデルそのものの学習に使うのは効率的ではありません。一方で、モデルのアーキテクチャを最適化するには非常に優れた手段です。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;実例&quot;&gt;実例&lt;/h2&gt;
+
+&lt;p&gt;ここでは機械学習とは無関係でありながら、Vizier のようなブラックボックス最適化アルゴリズムの力強さとシンプルさを示す例を使ってみます。次のようなノイズを含む信号があるとしましょう。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/some-noisy-signal.png&quot; alt=&quot;ノイズを含む信号&quot; width=&quot;368&quot; height=&quot;246&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ノイズを含むある信号。
+&lt;/p&gt;
+
+&lt;p&gt;この信号にフィットする解析関数を見つけてみましょう。&lt;a href=&quot;https://en.wikipedia.org/wiki/Normal_distribution&quot;&gt;ガウス分布（正規分布）&lt;/a&gt;と&lt;a href=&quot;https://en.wikipedia.org/wiki/Laplace_distribution&quot;&gt;ラプラス分布&lt;/a&gt;のどちらを当てはめるべきか決めかねており、さらにどちらの関数にも平均や分散といった推定すべき固有のパラメータがあるとします。&lt;/p&gt;
+
+&lt;p&gt;最適化したい評価指標を Vizier に伝えさえすれば、最適な関数を見つけ出してくれます。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;問題のセットアップ&quot;&gt;問題のセットアップ&lt;/h2&gt;
+&lt;p&gt;最初に探索対象としたいパラメータはモデルの種類、つまりガウス分布かラプラス分布かです。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+    'parameter_id': 'model',
+    'categorical_value_spec' : {
+        'values': [
+            'gaussian',
+            'laplace',
+        ]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;しかし各モデルには、その形状を決める固有のパラメータセットがあります。これらを各モデルの「子パラメータ」と呼ぶことにしましょう。&lt;/p&gt;
+
+&lt;p&gt;ガウス分布の場合は、平均 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt; (\(\mu\)) と標準偏差 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sigma&lt;/code&gt; (\(\sigma\)) です。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/normal-distribution.png&quot; alt=&quot;パラメータ mu と sigma を持つガウス分布&quot; width=&quot;720&quot; height=&quot;460&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+パラメータ mu と sigma を持つガウス分布。出典：https://commons.wikimedia.org/wiki/File:Normal_Distribution_PDF.svg
+&lt;/p&gt;
+
+&lt;p&gt;ラプラス分布の場合は――文献によって記法は異なりますが――一般に、位置パラメータ（平均）&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt; (\(\mu\)) と尺度パラメータ &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&lt;/code&gt; (\(b\)) があります。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/laplace-distribution.png&quot; alt=&quot;パラメータ mu と b を持つラプラス分布&quot; width=&quot;800&quot; height=&quot;600&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+パラメータ mu と b を持つラプラス分布。出典：https://commons.wikimedia.org/wiki/File:Laplace_pdf_mod.svg
+&lt;/p&gt;
+
+&lt;p&gt;ガウス分布の平均と区別するため、ここではラプラス分布の位置パラメータを &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mu&lt;/code&gt; ではなく &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; と呼ぶことにします。&lt;/p&gt;
+
+&lt;p&gt;ガウス分布を当てはめようとしているときに、Vizier にラプラス分布のパラメータまで推定してほしいとは思いませんし、逆もまた然りです。幸いなことに、各分布のパラメータは親パラメータ &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;model&lt;/code&gt; に紐づく子パラメータ（条件付きパラメータ）として指定できます。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;'conditional_parameter_specs': [
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;mu&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 10.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['gaussian']
+    }
+},
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;sigma&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 1e-1,
+        &quot;max_value&quot;: 5.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['gaussian']
+    }
+},
+    {
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;a&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 0,
+        &quot;max_value&quot;: 10.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['laplace']
+    }
+},
+{
+    &quot;parameter_spec&quot;: {
+        &quot;parameter_id&quot;: &quot;b&quot;,
+        &quot;scale_type&quot;: 'UNIT_LINEAR_SCALE',
+        &quot;double_value_spec&quot;: {
+        &quot;min_value&quot;: 1e-1,
+        &quot;max_value&quot;: 5.0,
+        },
+    },
+    &quot;parent_categorical_values&quot;: {
+        &quot;values&quot;: ['laplace']
+    }
+}]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;最後に、Vizier が最適化する評価指標を定義します。関数を信号にできるだけ近づけたいので、解析関数とデータとの残差平方和（sum of squared residuals）を計算して当てはまりの良さを評価することにします。この値が小さいほど当てはまりが良いということです。Vizier に伝えるのは、この指標を最小化したいという点だけです。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;metric_ssr = {
+    'metric_id': 'sum_of_squared_residuals',
+    'goal': 'MINIMIZE',
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;これらをすべてまとめると、問題の定義が完成します。&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;study = {
+    'display_name': 'vizier_experiment',
+    'study_spec' :
+    {
+        'parameters': [param_model],
+        'metrics': [metric_ssr]
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;なお、Vizier 自体はパラメータの意味をまったく理解していません。&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gaussian&lt;/code&gt; も &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Laplace&lt;/code&gt; もカテゴリカルパラメータの値に過ぎず、Vizier にとってはそれ以上の意味を持たないのです。それらに意味を与えるのはパラメータを受け取る私自身のコードですが、Vizier から見ればそのコードはブラックボックスの中にあります。簡潔にするためここではコードを省略していますが、記事末尾のリンクから全容を確認できます。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;探索&quot;&gt;探索&lt;/h2&gt;
+
+&lt;p&gt;各トライアル（試行）で、Vizier は試すべきパラメータの組を提案してきます。私たちはそのパラメータがどれほどうまく機能するかを自前で評価し、指標（残差平方和）を計算して Vizier に返します。すると Vizier はその結果を使って、次に試すべきパラメータの組を生成します。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/vizier-trials.png&quot; alt=&quot;トライアルのパラメータを提案する Vizier&quot; width=&quot;1280&quot; height=&quot;281&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+トライアルごとにパラメータを提案する Vizier。
+&lt;/p&gt;
+
+&lt;p&gt;モデルがガウス分布のときにはガウス分布のパラメータだけを、ラプラス分布のときにはラプラス分布のパラメータだけを提案している点に注目してください。&lt;/p&gt;
+
+&lt;p&gt;Vizier はどうやって最適なパラメータを探索しているのでしょうか？グリッドサーチやランダムサーチも選べますが、真価はガウス過程バンディット（Gaussian process bandits）や線形結合探索（linear combination search）、およびそれらの派生アルゴリズムの組み合わせにあります。&lt;/p&gt;
+
+&lt;p&gt;GCP 上では、Vizier の進捗を示すこうした見やすいチャートも確認できます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/study-progress-table.webp&quot; alt=&quot;最適化対象の指標と各トライアルのパラメータ推移を示すスタディテーブル&quot; width=&quot;1600&quot; height=&quot;1071&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+最適化対象の指標の推移と各トライアルのパラメータを示すスタディテーブル。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/parallel-chart.webp&quot; alt=&quot;試されたパラメータの組と結果の指標値を示す平行座標チャート&quot; width=&quot;1600&quot; height=&quot;726&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+試行されたパラメータの組み合わせと得られた指標値を示す平行座標チャート。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;最適化されたフィット結果&quot;&gt;最適化されたフィット結果&lt;/h2&gt;
+
+&lt;p&gt;ラプラス分布がガウス分布をわずかに上回っていることがわかります。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/optimal-parallel-chart.webp&quot; alt=&quot;残差平方和を最小化した上位トライアルにズームインした平行座標チャート&quot; width=&quot;1600&quot; height=&quot;550&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+残差平方和を最小化した上位トライアルにズームインした平行座標チャート。ガウス分布よりもラプラス分布の方が良いフィットが得られています。
+&lt;/p&gt;
+
+&lt;p&gt;Vizier に最適トライアルのパラメータを問い合わせてプロットしてみます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/noisy-signal-fit.png&quot; alt=&quot;ノイズを含む信号への最適化フィット&quot; width=&quot;543&quot; height=&quot;289&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ノイズを含む信号にフィットするよう最適化されたパラメータ。
+&lt;/p&gt;
+
+&lt;p&gt;ほとんど完璧なフィットです！Vizier が見つけ出したパラメータは、ノイズを加える前に私が信号生成に使った元のパラメータ――\(a=5\)、\(b=2\) のラプラス分布――に極めて近い値でした。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/original-laplace-signal.png&quot; alt=&quot;元のラプラス信号&quot; width=&quot;862&quot; height=&quot;728&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+元のラプラス信号。
+&lt;/p&gt;
+
+&lt;p&gt;比較のため、ガウス分布であれば頂点がより丸く、裾がより薄くなります。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/blackbox-optimization-with-vizier/gaussian-signal.png&quot; alt=&quot;ガウス分布の信号&quot; width=&quot;878&quot; height=&quot;726&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+比較用のガウス分布。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;再現するには&quot;&gt;再現するには？&lt;/h2&gt;
+
+&lt;p&gt;この記事の生成に使った Colab ノートブックは&lt;a href=&quot;https://github.com/skzv/vizier-blog-post/blob/main/vizier_blog_post.ipynb&quot;&gt;こちら&lt;/a&gt;で公開しています。今回掲載したようなクールなチャートが自動生成されるため GCP の Vertex AI Vizier API を使用しましたが、高額になる点（1トライアルあたり1ドル）にはご注意ください。なお、Vizier はオープンソースとしても&lt;a href=&quot;https://github.com/google/vizier&quot;&gt;こちら&lt;/a&gt;で公開されています。&lt;/p&gt;
+</description>
+          <pubDate>Wed, 22 Feb 2023 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/ja/blackbox-optimization-with-vizier</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/blackbox-optimization-with-vizier</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>モンテカルロ法によるオプション価格評価</title>
+          <description>&lt;p&gt;&lt;em&gt;オプションというカジノ&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;株価の動きを予測することは、一攫千金の夢を秘めた魅力的な挑戦です。残念ながら、将来の株価を一貫して確実に予測することは一般に不可能とされています。しかし、モデルを使えば有用な予測を立て、リスクを管理し、&lt;em&gt;確率的に&lt;/em&gt;利益を狙うことはできます。&lt;/p&gt;
+
+&lt;h2 id=&quot;幾何ブラウン運動&quot;&gt;幾何ブラウン運動&lt;/h2&gt;
+&lt;p&gt;よく用いられるモデルの一つが幾何ブラウン運動（Geometric Brownian Motion、&lt;a href=&quot;https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.04%3A_Geometric_Brownian_Motion&quot;&gt;1&lt;/a&gt;, &lt;a href=&quot;http://www.columbia.edu/~ks20/FE-Notes/4700-07-Notes-GBM.pdf&quot;&gt;2&lt;/a&gt;）です。実際、有名な&lt;a href=&quot;https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model&quot;&gt;ブラック＝ショールズ・オプション価格評価式&lt;/a&gt;もこのモデルを前提としています。数式は次の形をとります。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ S(t) = S(0)\exp{((\mu-\frac{\sigma^2}{2})t + \sigma B(t))} \tag{0}  \label{eq:gbm}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;ここで \(B(t)\) は標準ブラウン運動です。\(S(0)\) を初期株価、\(\mu\) を平均&lt;a href=&quot;https://en.wikipedia.org/wiki/Rate_of_return#Logarithmic_or_continuously_compounded_return&quot;&gt;連続複利リターン&lt;/a&gt;、\(\sigma\) を株式の&lt;a href=&quot;https://en.wikipedia.org/wiki/Volatility_(finance)&quot;&gt;ボラティリティ&lt;/a&gt;とすると、非常にリアルな株価の推移経路を生成できます。&lt;/p&gt;
+
+&lt;div id=&quot;plot-0&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;\(\mu\)&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;mean-slider&quot; type=&quot;range&quot; min=&quot;-2.5&quot; max=&quot;1&quot; value=&quot;0&quot; step=&quot;0.01&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;mean-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;\(\sigma\)&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;sigma-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; value=&quot;0&quot; step=&quot;0.01&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;sigma-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate0()&quot;&gt;再生成&lt;/button&gt;&lt;/p&gt;
+
+&lt;div style=&quot;display:none&quot; id=&quot;mean-0&quot;&gt;0&lt;/div&gt;
+&lt;div style=&quot;display:none&quot; id=&quot;sigma-0&quot;&gt;0&lt;/div&gt;
+&lt;div style=&quot;display:none&quot; id=&quot;option-mean-0&quot;&gt;0&lt;/div&gt;
+
+&lt;p&gt;では、この式は何を意味していて、なぜ証券価格の良いモデルになるのでしょうか？&lt;/p&gt;
+
+&lt;h3 id=&quot;対数リターン&quot;&gt;対数リターン&lt;/h3&gt;
+&lt;p&gt;クオンツファイナンスでは、単純リターンではなく連続複利リターン（対数リターン）を扱うのが一般的です。つまり、取引期間ごとの単純リターン \(1 + R_t = \frac{S(t)}{S(t-1)}\) を見るのではなく、連続複利リターン \(r_t = \ln{(1 + R_t)} = \ln{\frac{S(t)}{S(t-1))}}\) に注目します。これには、対数リターンを単純に足し合わせるだけで株価を復元できるという非常に便利な性質があります。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ S(t) = S(0)\exp{(r_1 + r_2 + ... + r_{t-1})} \tag{1}  \label{eq:rr}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;また、金融工学では「株式の対数リターンは互いに独立で、平均 \(\mu\)、分散 \(\sigma^2\) の正規分布に従う」という仮定がよく置かれるため、この点でも好都合です。なお、リターンが小さいときは \(r_t = \ln{(1 + R_t)} \approx R_t\) が成り立ち、単純リターン \(R_t\) は対数リターン \(r_t\) に近似できるため両者の差は大きくなく、単純リターンも対数リターンも正規分布に従うと仮定して差し支えありません。そして対数リターンが正規分布に従うなら、株価そのものは&lt;em&gt;対数正規分布&lt;/em&gt;に従うことになります。これは実証的にもある程度確認されていますが、現実の株価には「ファットテール（裾が厚い分布）」が見られる傾向があります――つまり、正規分布が予測するよりも極端なレア事象が頻繁に起こるのです。以下の IBM 株の月次リターンがその傾向を示しています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/monte-carlo-stocks/IBM-returns.webp&quot; alt=&quot;IBM の月次リターン&quot; width=&quot;1282&quot; height=&quot;1008&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+IBM 株の月次単純リターンおよび対数リターンと、当てはめた正規分布。分布の両端において正規分布の予測より多くのリターンが観測されます。これは『ファットテール』または『超過尖度』と呼ばれます。画像は Ruey S. Tsay 著『Analysis of Financial Time Series, 3rd Ed.』より引用。
+&lt;/p&gt;
+
+&lt;p&gt;さらに、このモデルが優れているのは「正の証券価格しか許さない」という点でもあります。証券価格は通常プラスの値しか取りません（もっとも稀にマイナスになることもあります――&lt;a href=&quot;https://assets.weforum.org/editor/kE8TpkO7bzo3dLFWEh9UDvgqRuZPOmURhnh0FfwOVYc.png&quot;&gt;2020年の原油価格暴落&lt;/a&gt;がその例です）。&lt;/p&gt;
+
+&lt;p&gt;こうして、正規分布に従うリターン \(r_t\) の系列を生み出す確率過程が欲しくなり、そこで自然な選択肢としてブラウン運動が登場します。&lt;/p&gt;
+
+&lt;h2 id=&quot;ブラウン運動&quot;&gt;ブラウン運動&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://stats.libretexts.org/Bookshelves/Probability_Theory/Probability_Mathematical_Statistics_and_Stochastic_Processes_(Siegrist)/18%3A_Brownian_Motion/18.01%3A_Standard_Brownian_Motion&quot;&gt;ブラウン運動&lt;/a&gt;は、液体や気体の中にある微粒子の動きを記述するものです。微粒子は周囲の流体の中で「ランダム」に跳ね回り、その軌跡はノイズに満ちたランダムな形を描きます。これは本質的に、ステップ間の時間と1ステップの歩幅の両方を0に近づけたランダムウォークの極限とみなせます（ただし注意点があり、時間刻みを \(t\) とすると歩幅は \(\sqrt{t}\) にしなければなりません――そうすることで分散がちょうど時間に比例する過程になります）。コインを投げて前に進むか後ろに戻るかを決める場面を想像し、ステップ間の時間を0に近づけてみてください。次のような経路が描かれます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/monte-carlo-stocks/wiener-process-zoom.png&quot; alt=&quot;1次元ブラウン運動&quot; width=&quot;800&quot; height=&quot;600&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+1次元の［算術］ブラウン運動。幾何ブラウン運動はこの過程の指数関数をとったものです。&lt;a target=&quot;_blank&quot; href=&quot;http://creativecommons.org/licenses/by-sa/3.0/&quot; title=&quot;Creative Commons Attribution-Share Alike 3.0&quot;&gt;CC BY-SA 3.0&lt;/a&gt;, &lt;a target=&quot;_blank&quot; href=&quot;https://commons.wikimedia.org/w/index.php?curid=1426987&quot;&gt;出典&lt;/a&gt;
+&lt;/p&gt;
+
+&lt;p&gt;ブラウン運動には「軌跡の増分が正規分布に従う」というまさに私たちが求めていた素晴らしい性質があります。離散ステップのブラウン運動は正規分布からサンプリングすることでシミュレートできます（もっとも、時系列の最終値だけに関心があるなら分散1の任意の分布からサンプリングしても構いません。中心極限定理により、確率変数の和は長期的にガウス分布へ近づくからです）。&lt;/p&gt;
+
+&lt;p&gt;したがって、ブラウン運動によって式 \(\eqref{eq:rr}\) で必要となる正規分布に従う対数リターン \(r_t\) の系列が得られます。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+ r(t) = (\mu-\frac{\sigma^2}{2})t + \sigma B(t) \tag{2}  \label{eq:bm}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;この過程の指数をとることで、株価変動をモデル化する方程式が導かれました。&lt;/p&gt;
+
+&lt;p&gt;ここで特に興味深いのがドリフト項 \(\mu - \frac{\sigma^2}{2}\) です。その名の通り、過程を線形にドリフト（推移）させます。\(\mu\) の意味は明らかで、その株式の平均連続複利リターンです。ノイズ（ボラティリティ）がなければ、株価はこの複利分だけで上昇（または下落）します。では \(-\frac{\sigma^2}{2}\) は何でしょうか？実は、対数正規分布に従う確率変数の期待値は \(\exp(\mu + \sigma^2/2)\) になります。株価は&lt;em&gt;対数正規分布&lt;/em&gt;に従う（一方でリターンは&lt;em&gt;正規分布&lt;/em&gt;に従う）ため、連続複利後の株価の期待値がちょうど \(S(0)\exp(\mu t)\) になるようにするには、過程に \(- \frac{\sigma^2}{2}\) という補正項を加えておく必要があるのです。&lt;/p&gt;
+
+&lt;p&gt;このモデルの基礎にブラウン運動を選ぶことには、哲学的な根拠もあります。金融学では「市場は効率的であり、裁定機会は存在しない」という仮定がよく置かれます。したがって市場は予測不可能であるはずです――もし誰かが予測できるなら、それは裁定機会となり、すぐさま取引されて消えてしまうからです。ゆえに、ランダムノイズ（ブラウン運動の本質はまさにそれです）は市場をモデル化するうえで妥当な選択なのです。&lt;/p&gt;
+
+&lt;h2 id=&quot;オプションの価格評価&quot;&gt;オプションの価格評価&lt;/h2&gt;
+
+&lt;p&gt;モンテカルロ・シミュレーションは、モナコのカジノに着想を得た統計的手法です。ギャンブラーが運命を確率に委ねるように、私たちも統計解析の結果を偶然に委ねます。十分な回数の試行を行えば、統計的に有意な結論を導き出せるのです。&lt;/p&gt;
+
+&lt;p&gt;この株式に対する行使価格 $105 のコールオプションを評価することを考えてみましょう。株価の動きが幾何ブラウン運動に従うとしたとき、満期時におけるオプションの期待価値はいくらになるでしょうか？これを推定するために、1本1本を1回の試行とみなして多数の株価経路を生成します。各試行の満期時株価は、\(V = \max(0, S - K)\) という関係式（\(S\) は株価、\(K\) は行使価格）によってオプションの本質的価値に結びつきます。各試行から得られる満期価値の平均が満期時のオプション価値の推定値となり、標準偏差はオプションがその値付近で満期を迎える確からしさの指標になります。&lt;/p&gt;
+
+&lt;div id=&quot;plot-1&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate1()&quot;&gt;再生成&lt;/button&gt;&lt;/p&gt;
+&lt;div id=&quot;mean-1&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;sigma-1&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;option-mean-1&quot;&gt;0&lt;/div&gt;
+
+&lt;p&gt;試行回数を増やせば、推定値の統計的確実性を高められます。下の試行回数が多いシミュレーションで（「再生成」をクリックして）再実行すると、上の試行回数が少ないシミュレーションに比べて、実験ごとのばらつきがずっと小さくなることがわかります。&lt;/p&gt;
+
+&lt;div id=&quot;plot-2&quot;&gt;&lt;/div&gt;
+&lt;p&gt;&lt;button class=&quot;regenerate-button&quot; onclick=&quot;regenerate2()&quot;&gt;再生成&lt;/button&gt;&lt;/p&gt;
+&lt;div id=&quot;mean-2&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;sigma-2&quot;&gt;0&lt;/div&gt;
+&lt;div id=&quot;option-mean-2&quot;&gt;0&lt;/div&gt;
+
+&lt;h2 id=&quot;より高度なシナリオ&quot;&gt;より高度なシナリオ&lt;/h2&gt;
+&lt;p&gt;満期時の価値だけを見るモンテカルロ・シミュレーションは比較的単純であり、この程度であれば解析的に解けてしまうため、実用上のありがたみはまだ薄いかもしれません。モンテカルロ・シミュレーションが真価を発揮するのは、解析的に解くのが困難、あるいは不可能なシナリオを分析するときです。たとえば、満期前いつでも権利行使できるアメリカン・オプションを分析したい場合、オプションの有効期間中のどこかの時点で株価が行使価格を上回る確率を知りたいかもしれません。モンテカルロ・シミュレーションを使えば、行使価格の境界を一度でも超えた試行がいくつあるかを数えるだけで、それを簡単に求められるのです。&lt;/p&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdn.plot.ly/plotly-2.4.2.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js&quot; integrity=&quot;sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; src=&quot;/assets/js/monte-carlo-options.js&quot;&gt;&lt;/script&gt;
+
+</description>
+          <pubDate>Thu, 16 Dec 2021 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/ja/monte-carlo-options-pricing</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/monte-carlo-options-pricing</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>インタラクティブ勾配降下法デモ</title>
+          <description>&lt;p&gt;&lt;em&gt;この特別なアルゴリズムとは何でしょうか？&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;勾配降下法（Gradient Descent）は、関数の（局所）最小値を見つけるための最適化アルゴリズムです。&lt;/p&gt;
+
+&lt;h2 id=&quot;なぜそれが役に立つのか&quot;&gt;なぜそれが役に立つのか？&lt;/h2&gt;
+
+&lt;p&gt;ある関数 \(f(x,y)\) があるとしましょう。この関数は何らかのコストを表しており、\(x\) と \(y\) はそのコストを変化させる入力だと考えます。当然、コストを最小にする \(x\) と \(y\) の値を見つけたくなるはずです。これが \(f(x,y)\) の最小値を求める問題です。たとえば、以下にプロットされた関数の最小値を見つけたいとしましょう。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+f(x,y)=3(1 - x)^2 e^{- x^2 - (y + 1)^2} - 10(\frac{x}{5} - x^3 - y^5) e^{-x^2 - y^2} - \frac{1}{3} e^{-(x+1)^2 - y^2} \tag{0}  \label{eq:cost_func}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;div id=&quot;plot-0&quot;&gt;&lt;/div&gt;
+
+&lt;p&gt;ここで活躍するのが勾配降下法です。&lt;/p&gt;
+
+&lt;h2 id=&quot;なぜ勾配降下法を使うのか&quot;&gt;なぜ勾配降下法を使うのか？&lt;/h2&gt;
+
+&lt;p&gt;基礎的な微分積分で学んだ、関数の最小値を求める手順を覚えているかもしれません。1階導関数を求め、それを0と置いて方程式を解く方法です。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+f'(x,y)=0 \tag{1}  \label{eq:first_deriv}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;これにより、関数の極値（極大値と極小値）の位置がわかります。さらに2階導関数 \(f''(x,y)\) の符号を見れば、その極値が極大なのか極小なのかも判定できます。しかし、1階導関数の方程式 \(\eqref{eq:first_deriv}\) を解くのは簡単でないことが多く、数値解法が必要になる場合が多々あります。そしてコスト関数が \(f(x,y,z,w,q,u,v,...)\) のように高次元になるにつれ、問題は手に負えなくなっていきます。勾配降下法は、1階導関数を巧みに利用することで、最小値を効率的に見つけ出す手順を提供してくれます。&lt;/p&gt;
+
+&lt;h2 id=&quot;勾配降下法のアルゴリズム&quot;&gt;勾配降下法のアルゴリズム&lt;/h2&gt;
+
+&lt;p&gt;勾配降下法の発想はとても直感的で、似たような物理的状況に置かれれば、きっとあなたも同じ手順にたどり着くはずです。深い霧の中に閉じ込められ、数フィート先しか見えず、足元の地面の傾きしか感じ取れない場面を想像してみてください。あなたはできるだけ早く谷底に下りようとしています。平坦な場所を歩いて時間を無駄にしたり、ましてや上り坂に進んだりするはずがありません。素早く下るには、現在地の傾きを確かめ、最も急な下り坂の方向へ進むでしょう。「勾配（gradient）」とは傾きの言い換えにほかなりません。つまり、あなたが今行っていることこそが勾配降下法なのです。逆に、丘の頂上を目指しているなら、今いる場所で最も急な上り方向へ進みます。こちらは勾配&lt;em&gt;上昇&lt;/em&gt;法（gradient &lt;em&gt;ascent&lt;/em&gt;）と呼ばれます。&lt;/p&gt;
+
+&lt;h2 id=&quot;勾配gradient&quot;&gt;勾配（Gradient）&lt;/h2&gt;
+&lt;p&gt;勾配とは本質的に「傾き」を表す別の言葉です。1次元の状況で傾きを求めることには多くの人が馴染みがあるでしょう。1次元では前に進むか後ろに戻るかしかないため、傾きは一意に定まります。しかし高次元になると――ハイキングに出かけている自分を想像してみてください――どの方向へ進むかによって傾きの値が変わってきます。では、ある地点での傾きをどう定義すればよいのでしょうか？&lt;/p&gt;
+
+&lt;p&gt;ベクトル解析では、各次元方向の傾き（1階偏導関数）を並べたベクトルである勾配演算子 \(\nabla\) を使います。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\nabla f(x,y)= \begin{bmatrix}
+           \frac{\partial f}{dx} (x,y) \\
+           \frac{\partial f}{dy} (x,y)
+         \end{bmatrix} \tag{2}  \label{eq:gradient}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;\(f(x,y)\) で定義される2次元曲面上では、これは x 軸方向の傾きと y 軸方向の傾きから成ります。任意の方向における傾き（私たちは x 軸方向か y 軸方向にしか動けないわけではないので、これは重要です）は、その方向における x 成分と y 成分の傾きを足し合わせることで求められます。言い換えると、方向ベクトルと勾配の内積（ドット積）をとることで、その方向の傾きが得られるのです。&lt;/p&gt;
+
+&lt;p&gt;勾配にはもう一つ面白い性質があります。それは「最も急な傾きの方向」を指し示すということです。これも数学的に理解できます――任意の方向の傾きはその方向ベクトルと勾配の内積で求められるため、勾配自身と内積をとったときに最大になるからです！&lt;/p&gt;
+
+&lt;p&gt;以下に、Mathematica を使って \(f(x,y)\) の負の勾配をプロットしました。これにより、\(f\) 上のすべての点における最急降下方向がわかります。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/gradient-descent/gradient.png&quot; alt=&quot;f の勾配&quot; width=&quot;360&quot; height=&quot;361&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ベクトル場としてプロットした f の勾配。
+&lt;/p&gt;
+
+&lt;h2 id=&quot;最も急な下り坂を辿る&quot;&gt;最も急な下り坂を辿る&lt;/h2&gt;
+&lt;p&gt;先ほど、視界のない中で谷底を目指すなら、一番早く底にたどり着くために地面が最も急に下っている方向へ進むはずだ、という話で一致しました。数学的には、各地点での負の勾配ベクトルが最急降下方向を指しているため、勾配に沿って谷を下っていることになります。上の図を見ると、矢印を辿っていけば最小値に行き着くことがわかります（ただし要注意――それぞれの最小値には固有の「吸引領域（basin of attraction）」があります。これについては後ほど詳しく触れます）。&lt;/p&gt;
+
+&lt;p&gt;こうして手順を定義できます。おおよそ次のような流れになります。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;現在地の傾きを調べ、最も急な下り方向を見極める&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;その方向へ5歩進む&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;まだ下っているなら 1 に戻る。そうでなければ谷底に到着！&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;なぜ5歩なのか疑問に思ったかもしれません。実のところ、これはまったく適当な数字です。そこでこれを手順のパラメータにしてしまいましょう。「降下率」と呼び、記号 \(\alpha\) を割り当てます。降下率が大きいほど、周囲の傾きを調べ直す回数が減ります。計算上はその方が効率的ですが、これから見るように落とし穴もあります。&lt;/p&gt;
+
+&lt;p&gt;さらに、もう一つ工夫ができます。局所的な傾きがまだ急なうちは、おそらく谷底から遠く離れています。一方、傾きが緩やかになってきたら、谷底に近づいていると考えられます。そこで、勾配の大きさに比例した歩幅で下るようにしてみましょう。勾配を記号 \(\bar{g}\) で表し、勾配降下法の手順を再定義します。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;現在地の傾きを調べ、最も急な下り方向を見極める&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;その方向へ \(\alpha \times \|\bar{g}\|\) 歩進む&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;まだ下っているなら 1 に戻る。そうでなければ谷底に到着！&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;次に、「まだ下っているか」をどう判定するでしょうか？一つの方法は、各反復でどれだけ標高が下がったかを確認することです。高度がほとんど変わらなくなっていれば、実質的にもう谷底に着いていると考えられます。&lt;/p&gt;
+
+&lt;p&gt;この手順を数式で表すと次のようになります。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\bar{p}_{n+1} = \bar{p}_n - \alpha \nabla f(x,y) \tag{3}  \label{eq:grad_descent}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;ここで \(p_n\) は降下の \(n\) 回目の反復における位置です。下のデモでぜひ試してみてください。\(\alpha\) を変えると降下率が変化し、\(X\) と \(Y\) を変えると曲面上の初期位置が変わります。どんなことに気づくでしょうか？&lt;/p&gt;
+
+&lt;div id=&quot;plot-1&quot;&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;X&lt;/span&gt;
+    &lt;span&gt;
+        &lt;input class=&quot;slider&quot; id=&quot;x-slider&quot; type=&quot;range&quot; min=&quot;-3&quot; max=&quot;3&quot; value=&quot;0&quot; step=&quot;0.05&quot; /&gt;
+    &lt;/span&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;x-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;Y&lt;/span&gt;
+    &lt;input class=&quot;slider&quot; id=&quot;y-slider&quot; type=&quot;range&quot; min=&quot;-3&quot; max=&quot;3&quot; value=&quot;0&quot; step=&quot;0.05&quot; /&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;y-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span class=&quot;slider-container&quot;&gt;
+    &lt;span class=&quot;slider-label&quot;&gt;α&lt;/span&gt;
+    &lt;input class=&quot;slider&quot; id=&quot;alpha-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;0.2&quot; value=&quot;0&quot; step=&quot;0.001&quot; /&gt;
+    &lt;span class=&quot;slider-value&quot; id=&quot;alpha-slider-value&quot;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;観察してわかること&quot;&gt;観察してわかること&lt;/h2&gt;
+
+&lt;p&gt;勾配降下法は初期位置に敏感だということに気づいたでしょう。アルゴリズムは近くの局所最小値（ローカルミニマム）へと引き寄せられますが、それは大域的最小値（グローバルミニマム）とは限りません。勾配降下法を特定の最小値へと収束させる定義域の領域は、その最小値の「吸引領域（basin of attraction）」と呼ばれます。&lt;/p&gt;
+
+&lt;p&gt;また、降下率 \(\alpha\) を大きくすると最小値に到達するまでの反復回数が減ることもわかります。しかし大きくしすぎると、アルゴリズムが最小値を飛び越えて（オーバーシュートして）しまい、最悪の場合は発散してしまいます。&lt;/p&gt;
+
+&lt;h2 id=&quot;機械学習における勾配降下法&quot;&gt;機械学習における勾配降下法&lt;/h2&gt;
+
+&lt;p&gt;おそらく機械学習の文脈で勾配降下法を耳にしたことがあるでしょう。機械学習では、コスト関数はモデルの誤差を表します。たとえば画像分類の誤差であり、コスト関数への入力は調整対象となるモデルの重み（パラメータ）です。したがって、勾配降下法を使えば、ニューラルネットワークの分類誤差を最小化する最適な重みの組み合わせを見つけ出せるのです！この分野では、降下率 \(\alpha\) には特別な呼び名があり、&lt;em&gt;学習率（learning rate）&lt;/em&gt;と呼ばれます。もしかすると、私たちの脳もずっと同じことをしてきたのかもしれません。&lt;/p&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdn.plot.ly/plotly-2.4.2.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; fetchpriority=&quot;low&quot; src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.5.1/math.js&quot; integrity=&quot;sha512-AfRcJIj922x/jSJpQLnry0DYIBg6EGCtwk/MiQ6QvDlzb7kNFxH8EdqXLkaXXY3YHQS9FrSb8H7LzuLn0CZQ1A==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+
+&lt;script defer=&quot;&quot; src=&quot;/assets/js/gradient-descent.js&quot;&gt;&lt;/script&gt;
+
+</description>
+          <pubDate>Sun, 14 Nov 2021 23:00:00 -0800</pubDate>
+          <link>https://blog.skz.dev/ja/gradient-descent</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/gradient-descent</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>Lucid Motors のコンフィギュレーターはブラウザにストリーミングされるビデオゲームだ</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    ゲームエンジンこそが世の中で最も優れたシミュレーターだと気づけば、なるほどと納得がいきます。
+&lt;/p&gt;
+
+&lt;h2 id=&quot;巧みな解決策&quot;&gt;巧みな解決策&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.barrons.com/articles/lucid-churchill-merger-ipo-ev-51627308359&quot;&gt;Lucid Motors が月曜日に上場しました&lt;/a&gt;。近いうちに Lucid を買う予定があるわけではないのですが、好奇心から&lt;a href=&quot;https://www.lucidmotors.com/air/configure/&quot;&gt;同社の車両コンフィギュレーター&lt;/a&gt;を覗いてみました。これが実に芸術的な出来栄えなのです。車の内外装をほぼあらゆる角度から眺め、操作することができます。&lt;/p&gt;
+
+&lt;div style=&quot;width:100%;height:100%;position:relative;padding-bottom:52.344%;&quot;&gt;&lt;iframe src=&quot;https://streamable.com/e/cudr66&quot; title=&quot;Embedded video&quot; loading=&quot;lazy&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; allowfullscreen=&quot;&quot; style=&quot;width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p class=&quot;caption video-caption&quot;&gt;Lucid のフラッグシップ上位モデル、Lucid Air Dream のコンフィギュレーター。&lt;/p&gt;
+
+&lt;p&gt;ボディカラーやトリムを自在に切り替え、ドアを開閉し、さらにはセンターコンソールのディスプレイを格納することまでできます。背景のゴールデンゲートブリッジがガラスのように滑らかな水たまりに映り込み、ドアハンドルを操作するとその下のライトまで点灯するなど、車両の細部まで見事に再現されています。正直、これだけリアルに体感できれば実車を見に行く必要すらないのではないかと思ってしまうほどです。&lt;/p&gt;
+
+&lt;p&gt;では、Lucid はこれをどうやって実現しているのでしょうか？一般ユーザーのウェブブラウザが、光の反射まですべて含めたこんなシーンをリアルタイムでレンダリングできるでしょうか？おそらく無理でしょう。これが動く理由は、目にしているシーンがクラウド上で動作するゲームエンジン Unity によってレンダリングされており――重い計算負荷を Amazon のサーバーにオフロードして――ピアツーピアの動画ストリーミングプロトコルである WebRTC 経由でブラウザに配信されているからです。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;3d-モデルの正体&quot;&gt;3D モデルの正体&lt;/h2&gt;
+
+&lt;p&gt;最初、私は単純に最新の &lt;a href=&quot;https://en.wikipedia.org/wiki/WebGL&quot;&gt;WebGL ライブラリ&lt;/a&gt;（ウェブブラウザ上でハードウェアアクセラレーションを使って 2D/3D グラフィックスを描画する API）でブラウザ内にレンダリングされていると思い込んでいました。ローカルで描画されているならメモリ（RAM）のどこかにモデルデータがあるはずなので、それを抜き出して 3D モデリングソフトで開けるのではないかと考えたのです。具体的には、ほぼ継ぎ目のないガラスキャノピーを遮っているサンバイザーを取り除いてみたかったのです（Tesla Model X はそれを実現しているのに、なぜ Lucid が倣わなかったのか不思議でした）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/lucid-air-sun-visors.webp&quot; alt=&quot;ガラスキャノピーを遮る Lucid Air のサンバイザー&quot; width=&quot;1600&quot; height=&quot;994&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ガラスキャノピーを遮っている Lucid Air のサンバイザー。
+&lt;/p&gt;
+
+&lt;p&gt;そこでコードを掘り下げてみることにしました。ブラウザの開発者ツールを開き、何千行もの minify された JavaScript を眺め、自分のノート PC と Lucid のサーバー間のネットワークリクエストを記録・調査した末に気づいたのは、答えはずっとコンソールにそのまま出力されていたということでした。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/zlbolt-webrtc.png&quot; alt=&quot;コンフィギュレーターは動画ストリーム&quot; width=&quot;691&quot; height=&quot;156&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+コンフィギュレーターの実体は WebRTC ストリームでした。
+&lt;/p&gt;
+
+&lt;p&gt;ローカルでレンダリングされているモデルなど存在しませんでした。私が見ていたのは動画だったのです。&lt;/p&gt;
+
+&lt;p&gt;では裏側で何が起きているのでしょうか？コンフィギュレーターは最初に 2D 表示――つまり複数の静止画をパノラマ状に並べて 3D 操作のように見せる、ややカクつく表示――で起動します。オンラインのインタラクティブな 3D 展示の大半はこの方式で作られています。以下のデモでその様子がわかります。&lt;/p&gt;
+
+&lt;div style=&quot;width:100%;height:100%;position:relative;padding-bottom:52.344%;&quot;&gt;&lt;iframe src=&quot;https://streamable.com/e/ptjitc&quot; title=&quot;Embedded video&quot; loading=&quot;lazy&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; allowfullscreen=&quot;&quot; style=&quot;width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;&quot;&gt;&lt;/iframe&gt;&lt;/div&gt;
+&lt;p class=&quot;caption video-caption&quot;&gt;一連の 2D 画像で作られた、ややカクつく 3D ビュー。&lt;/p&gt;
+
+&lt;p&gt;続いてクライアント側が回線帯域とレイテンシを測定し、リアルタイム動画ストリームに耐えうる速さがあると判断すると、セッションを 3D にアップグレードします。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/latency-test.png&quot; alt=&quot;レイテンシテスト&quot; width=&quot;755&quot; height=&quot;25&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;
+&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/bandwidth-test.png&quot; alt=&quot;帯域幅テスト&quot; width=&quot;706&quot; height=&quot;21&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+十分な帯域幅があると 3D セッションへアップグレードされます。
+&lt;/p&gt;
+
+&lt;p&gt;これにより WebRTC 接続が開始されます。&lt;a href=&quot;https://en.wikipedia.org/wiki/WebRTC&quot;&gt;WebRTC&lt;/a&gt; はピアツーピアのストリーミングプロトコルです。シーンは別の場所でレンダリングされ、WebRTC 経由で私のブラウザへストリーミングされてくるのです。&lt;/p&gt;
+
+&lt;p&gt;さらに &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get_token&lt;/code&gt; リクエストの中身を確認すると、仕組みの詳細が見えてきます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/get-token-request.png&quot; alt=&quot;get_token リクエストの内容&quot; width=&quot;829&quot; height=&quot;402&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+get_token リクエストの内容。
+&lt;/p&gt;
+
+&lt;p&gt;最初の枠からわかる通り、帯域幅をテストするために&lt;a href=&quot;https://libzl.zlthunder.net/bandwidth-test-img.png&quot;&gt;25 MB のテスト画像&lt;/a&gt;をデバイスへ部分的にダウンロードし、所要時間を計測しています。興味のある方向けに、その画像がこちらです（ご安心ください、10分の1のサイズに圧縮してあります）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/bandwidth-test-image.webp&quot; alt=&quot;帯域幅テスト用画像&quot; width=&quot;895&quot; height=&quot;1263&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+自動車とは何の関係もありませんが、帯域幅のテストにはうってつけです。
+&lt;/p&gt;
+
+&lt;p&gt;ちなみに、&lt;a href=&quot;https://www.gimp.org/tutorials/Floating_Logo/Plasma.jpg&quot;&gt;この画像は GIMP のプラズマプラグインで生成されたエフェクト&lt;/a&gt;のように見えます。読み込みがかなり遅いのですが、ノイズに近い見た目なのでほとんど圧縮が効かないのでしょう。&lt;/p&gt;
+
+&lt;p&gt;また、&lt;a href=&quot;chrome://webrtc-internals/&quot;&gt;chrome://webrtc-internals/&lt;/a&gt; を開くと、3D シーンをブラウザにストリーミングしている WebRTC 接続の詳細情報を見ることができます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/lucid-webrtc.png&quot; alt=&quot;WebRTC の詳細情報&quot; width=&quot;851&quot; height=&quot;399&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+Chrome のデバッグツールで WebRTC 接続のさらに詳しい情報が確認できます。
+&lt;/p&gt;
+
+&lt;p&gt;ここでお気づきの方もいるかもしれませんが、登場する URL はどれも Lucid のドメインではなく、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;zlthunder&lt;/code&gt; 配下になっています。これは一体何者なのでしょうか？&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;zerolight&quot;&gt;ZeroLight&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;zlthunder&lt;/code&gt; でウェブ検索すると、&lt;a href=&quot;https://zerolight.com/&quot;&gt;ZeroLight&lt;/a&gt; という会社に行き着きます。自動車業界に特化したクラウドベースの 3D ビジュアライゼーションを提供している企業です。これで完全に腑に落ちました！&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/zero-light.webp&quot; alt=&quot;ZeroLight&quot; width=&quot;1600&quot; height=&quot;640&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+クラウドベース 3D ビジュアライゼーションの専門企業。
+&lt;/p&gt;
+
+&lt;p&gt;間もなく、&lt;a href=&quot;https://unity3d.com/showcase/case-stories/zerolight&quot;&gt;Unity（著名なゲームエンジン）のブログ記事&lt;/a&gt;も見つかりました。ZeroLight がこのエンジンを活用して、最適化された物理演算や光の反射まで備えたリアルなバーチャルショールームをどう構築したかが紹介されています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/unity-zero-light.webp&quot; alt=&quot;Unity の ZeroLight 事例&quot; width=&quot;1203&quot; height=&quot;658&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+ビデオゲーム技術はここまで進化しました。
+&lt;/p&gt;
+
+&lt;p&gt;これですべてのピースが繋がりました。サイトに接続するとまず 2D コンフィギュレーターが読み込まれ、インターネット回線が十分速ければ、AWS サーバー上で動く 3D ゲームエンジン Unity のインスタンスに接続されます。サーバーは私のマウス操作を受け取って視点を回転・ズームし、クラウド上でレンダリングした結果をストリーミングで送り返してくるのです。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;コストが高そう&quot;&gt;コストが高そう&lt;/h2&gt;
+
+&lt;p&gt;サイトに1,000人のユーザーが同時接続している場面を想像してみてください。入力を受け取りながら大量のリアルタイム動画をストリーミングし続ける、ハードウェアアクセラレーション付きのゲームエンジンインスタンスが1,000台必要になります――まさに Stadia や GeForce Now といったクラウドゲーミング製品と同じです。もっとも、先方もその点は十分に意識しているようで、コスト削減のために60秒間操作がないと切断される仕組みになっています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/lucid-configurator-is-a-streaming-video-game/inactivity-downgrade.png&quot; alt=&quot;無操作時のダウングレード&quot; width=&quot;524&quot; height=&quot;60&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+アイドル時にダウングレードすることで、相当なコストを節約しているはずです。
+&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;そもそもゲームエンジンとは何か&quot;&gt;そもそもゲームエンジンとは何か？&lt;/h2&gt;
+
+&lt;p&gt;最初はゲームエンジンの意外な使い道に思えるかもしれませんが、ゲームエンジンとは突き詰めれば「高度に最適化されたシミュレーター」にほかなりません。Unity のような確立されたゲームエンジンには、光線やさまざまな物理現象をシミュレートするための数十年にわたる研究成果が詰め込まれています。だからこそ、それがショールームであれ現実をシミュレートしたいとき、ゲームエンジンはそのまま使えて幅広い用途に応用できる理想的な道具になるのです。&lt;/p&gt;
+
+&lt;p&gt;後から思えば、少し検索して Unity の記事を見つければ Lucid のコンフィギュレーターの仕組みはすぐわかったかもしれません。しかしリバースエンジニアリングしたことで、製品が抱える課題や解決策、内部メカニズムをより間近に見ることができ、一から手がかりを追う探偵のような気分を味わえました。それでも一番面白かったのは、現代のテクノロジーが到達した凄まじい複雑さです。Amazon のデータセンターにあるリモートサーバー上で超リアルな物理シミュレーターが動き、私のコンピュータからの操作を受け取って光速で映像ストリームを返してくる――それも、車のコンフィギュレーターを触るためだけに。月へ行くのに必要だったのは電卓並みの計算機だけだったというのに！&lt;/p&gt;
+</description>
+          <pubDate>Wed, 28 Jul 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ja/lucid-configurator-is-a-streaming-video-game</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/lucid-configurator-is-a-streaming-video-game</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>白黒写真に色彩と生命を吹き込む</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    機械学習を使えば白黒写真を簡単にカラー化できますが、そこにはどんなリスクがあるのでしょうか？
+&lt;/p&gt;
+
+&lt;h2 id=&quot;もう一つの世界&quot;&gt;もう一つの世界&lt;/h2&gt;
+
+&lt;p&gt;技術的にはカラー写真は1世紀以上前から存在していましたが（&lt;a href=&quot;https://www.loc.gov/pictures/related/?fi=name&amp;amp;q=Prokudin-Gorski%20%2C%20Serge%20%20Mikha%20lovich%2C%201863-1944&quot;&gt;カラー写真の先駆者であるセルゲイ・プロクジン＝ゴルスキーとピョートル・ヴェデニソフは、帝政ロシア各地を旅してフルカラーで記録を残しました&lt;/a&gt;）、20世紀の大部分は白黒で記録されてきました。世紀後半になっても、世界の多くの地域ではカラーフィルムは贅沢品でした。私の父も1980〜90年代のソ連領ウクライナで自ら白黒写真を現像していましたし、アメリカ側がベトナム戦争をフルカラー映像で記録していた一方で、北ベトナム側の視点は白黒写真ばかりが残っているようです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/boy-sim-river.jpeg&quot; alt=&quot;シム川近くの少年&quot; width=&quot;900&quot; height=&quot;648&quot; fetchpriority=&quot;high&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+シム川近くの少年。帝政ロシア時代に撮影されたごく初期のカラー写真です。異なるカラーフィルターを使って同じ情景を複数枚撮影することで実現されました。米国議会図書館提供。
+&lt;/p&gt;
+
+&lt;p&gt;白黒映像には独特の味わいがあると主張する人もいるでしょうし、それももっともだと思います。しかし私にとって、白黒映像はその情景との間に距離を感じさせます。明らかに「遠い昔」のものに見えてしまうのです。映画で回想シーンに白黒映像が使われる定番手法からもわかるように、私たちは皆、白黒を過去と結びつけています。そして普段フルカラーで現実を体験している私にとって、白黒の映像を自分事として体感するのは難しいのです。頭の中で「白黒の別世界」の出来事として処理されてしまい、その場や登場人物の立場に身を置くことがなかなかできません。ところが映像がカラー化されると、途端にすべてがよりリアルで、信じやすく、手触りのあるものに見えてきます。そこに映っているのは同じ地球であり、私やあなたと同じ人間なのだと、はっきりと実感できるようになるのです。&lt;/p&gt;
+
+&lt;p&gt;だからこそ、最近父が家族写真のコレクションをデジタル化し始めたとき――物理的な写真は劣化しますし、そこに刻まれた歴史や思い出、遺産ごと永遠に失われるリスクがあります――私はそれらをカラー化もしてみたいという衝動に駆られました。私自身がもっと深くその写真を感じられるように、そして家族がもう会えない大切な人を偲んだり、若かりし頃の思い出を振り返ったりできるようにするためです。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;ai-で写真をカラー化する&quot;&gt;AI で写真をカラー化する&lt;/h2&gt;
+
+&lt;p&gt;色彩の復元は手作業でも行えますが、途方もない労力がかかります。機械学習モデルは写真を素早く安価にカラー化できる方法を提供してくれますが、記事の後半でお話しするような限界もあります。今回、自分でモデルを学習させたわけではありません。すでに他の人々が何千時間もかけてまさにそのためのモデルを開発・学習させています。私は、非常に良い結果を出す既存のモデルを見つけました。&lt;/p&gt;
+
+&lt;p&gt;使ったのは &lt;a href=&quot;https://deepai.org/machine-learning-model/colorizer&quot;&gt;DeepAI の Image Colorization API&lt;/a&gt; です。DeepAI が本番環境で動かしているモデルは DeOldify モデルの一種のようで、&lt;a href=&quot;https://github.com/jantic/DeOldify&quot;&gt;こちらの GitHub リポジトリ&lt;/a&gt;で公開されています。&lt;/p&gt;
+
+&lt;p&gt;DeepAI の API ではモデルのパラメータを調整できないと思いますが、上記リポジトリや &lt;a href=&quot;https://colab.research.google.com/github/jantic/DeOldify/blob/master/ImageColorizerColabStable.ipynb&quot;&gt;Google Colab インスタンス&lt;/a&gt;から自分で実行すれば調整できます。&lt;a href=&quot;https://www.myheritage.com/incolor&quot;&gt;MyHeritage&lt;/a&gt; も、パラメータ調整可能な形でこの種の機能をサービスとして提供しています。&lt;/p&gt;
+
+&lt;p&gt;私は、ディレクトリ内の写真を一括カラー化する簡単なスクリプトを作りました。指定フォルダ内のすべての写真を走査して DeepAI の Image Colorization API に送信し、結果を別フォルダにダウンロードします（すでにカラー化済みの画像はスキップします）。同じことをしたい方は、ご自身の DeepAI API キーを環境変数に設定して&lt;a href=&quot;https://github.com/skzv/colorize-photos&quot;&gt;こちらのスクリプト&lt;/a&gt;を実行してみてください。&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;DL_API_KEY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;lt;your-deep-ai-key&amp;gt;
+python3 main.py /path/to/images
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;家族の写真&quot;&gt;家族の写真&lt;/h2&gt;
+
+&lt;p&gt;我が家の家族写真に適用した結果の例がこちらです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/mama-and-vova.webp&quot; alt=&quot;母とヴォーヴァ&quot; width=&quot;1600&quot; height=&quot;1232&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+1990年代初頭、ウクライナのヘルソンで弟を抱く母。クズネツォフ家所蔵。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/mama-and-vova-colorized.webp&quot; alt=&quot;カラー化した母とヴォーヴァ&quot; width=&quot;800&quot; height=&quot;616&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+カラー化後。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/my-grandmother-allarkadina.jpg&quot; alt=&quot;祖母のアラルカジーナ&quot; width=&quot;523&quot; height=&quot;801&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+おそらく1950年代、大学へ向かう途中の祖母アラルカジーナ。複数の大学で電気工学を修め、船舶電気技師として立派なキャリアを築きました。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/my-grandmother-alla-colourised.webp&quot; alt=&quot;カラー化した祖母アラルカジーナ&quot; width=&quot;522&quot; height=&quot;800&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+カラー化後。
+&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;すごく素敵で、生き生きとしているね。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;新しく色がついた写真を見たときの父のこの一言だけで、やった甲斐がすべて報われました。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;ベトナム戦争の写真&quot;&gt;ベトナム戦争の写真&lt;/h2&gt;
+
+&lt;p&gt;家族写真向けの一括カラー化スクリプトを作ってから数週間後、&lt;a href=&quot;https://news.ycombinator.com/item?id=27283624&quot;&gt;“The Vietnam War from the North Vietnamese Side”&lt;/a&gt;（「北ベトナム側から見たベトナム戦争」）という記事が Hacker News のトップに上がりました。スクリプトを試して歴史的資料に新しい視点をもたらすには絶好の機会だと思いました。映画&lt;a href=&quot;https://www.imdb.com/title/tt7905466/&quot;&gt;『彼らは生きていた（They Shall Not Grow Old）』&lt;/a&gt;が第一次世界大戦の惨禍を生々しい現実として蘇らせたように、北ベトナム側の人々や情景をリアルに感じてもらいたいと考えたのです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-agent-orange.jpeg&quot; alt=&quot;枯葉剤によって破壊されたジャングル（白黒）&quot; width=&quot;1600&quot; height=&quot;1179&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+枯葉剤（エージェント・オレンジ）によって破壊されたジャングル。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-agent-orange-colourised.webp&quot; alt=&quot;枯葉剤によって破壊されたジャングル（カラー化）&quot; width=&quot;800&quot; height=&quot;590&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+カラー化後。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-downed-aircraft.jpeg&quot; alt=&quot;撃墜された米軍機を調べる地元の人々（白黒）&quot; width=&quot;1600&quot; height=&quot;1111&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+スティーヴン・オーウェン・マッセルマン中尉が操縦していた撃墜米軍機を調べる地元の人々。パイロットは生還できませんでした――戦争は地獄です。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-downed-aircraft-colourised.webp&quot; alt=&quot;撃墜された米軍機を調べる地元の人々（カラー化）&quot; width=&quot;800&quot; height=&quot;556&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+カラー化後。
+&lt;/p&gt;
+
+&lt;p&gt;元の白黒写真はすべて&lt;a href=&quot;https://rarehistoricalphotos.com/vietnam-war-images-from-vietnamese-photographers/&quot;&gt;こちら&lt;/a&gt;、カラー化バージョンは&lt;a href=&quot;https://imgur.com/a/aJbpMjf&quot;&gt;こちら&lt;/a&gt;で見ることができます。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;hacker-news-での反響&quot;&gt;Hacker News での反響&lt;/h2&gt;
+
+&lt;p&gt;この試みには称賛の声もあれば、&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/praise.webp&quot; alt=&quot;称賛のコメント&quot; width=&quot;624&quot; height=&quot;934&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;厳しい批判もありましたが、&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/contempt.png&quot; alt=&quot;批判のコメント&quot; width=&quot;546&quot; height=&quot;286&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+[flagged] になってしまったコメントは面白い指摘をしていたので残念です。たしか「お願いだからこういうことはやめてほしい」といった内容でした。
+&lt;/p&gt;
+
+&lt;p&gt;何より、非常に興味深い議論が数多く生まれました。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/discussion.webp&quot; alt=&quot;議論のコメント&quot; width=&quot;654&quot; height=&quot;946&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;カラー化写真がきっかけとなったスレッド全体は&lt;a href=&quot;https://news.ycombinator.com/item?id=27284795&quot;&gt;こちら&lt;/a&gt;から読めます。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;限界&quot;&gt;限界&lt;/h2&gt;
+
+&lt;p&gt;その議論の中で特に印象に残った点が2つありました。1つ目は、AI の限界を改めて思い知らされたことです。&lt;/p&gt;
+
+&lt;p&gt;たとえば、建設中のゴールデンゲートブリッジの古い写真にモデルを適用すると、橋が白く塗られてしまいます。公平に言えばまったくの間違いではなく、建設初期には実際に白かったのですが、この写真が撮られた時点ではすでに赤い下塗り塗料が塗られていました（&lt;a href=&quot;https://github.com/jantic/DeOldify&quot;&gt;DeOldify リポジトリ&lt;/a&gt;の記載による）。つまり、学習データに建設中のゴールデンゲートブリッジが含まれており、モデルが「建設中の同じ橋だ」と認識できたとしても、撮影時期を見分けて「この時点ではすでに赤く下塗りされていた」と判断することはできなかったのです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/golden-gate.webp&quot; alt=&quot;白いゴールデンゲートブリッジ？&quot; width=&quot;1200&quot; height=&quot;472&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+白いゴールデンゲートブリッジ？白かった時期はありましたが、この写真が撮られたときではありません。
+&lt;/p&gt;
+
+&lt;p&gt;また、文脈が曖昧なシーンもあります。たとえば次の写真では、特徴だけから地面が芝生なのかアスファルトなのかをモデルが判別できず、人間なら正しく塗れるはずのアスファルトを誤って緑色に塗ってしまっています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/a-celebration-colourised.webp&quot; alt=&quot;祝賀の場面&quot; width=&quot;800&quot; height=&quot;522&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+地面が芝生ではなくアスファルトであることをモデルが見分けられていません。
+&lt;/p&gt;
+
+&lt;p&gt;もう一つ興味深かったのは、衣服には正確な色付けの手がかりとなる特徴的な色調・質感・文脈が乏しいことが多いという点です。はっきりした特徴や文脈がない限り、モデルは衣服を紫色に塗りがちでした。おそらく、服の色をうまく推測できないときに、学習損失を最小化する無難な賭けとして曖昧な色空間の中間あたりにある紫を選ぶのでしょう。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/colourising-black-and-white-photos/vietnam-divers-colourised.webp&quot; alt=&quot;ベトナムのダイバーたち――全員紫？&quot; width=&quot;796&quot; height=&quot;800&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+&lt;p class=&quot;caption&quot;&gt;
+昔の服が、このモデルが描くほど紫だらけだったとは思いません。
+&lt;/p&gt;
+
+&lt;p&gt;実際、父からも写真に写っているいくつかの物の色を直してほしいと頼まれました。残念ながらその要望には応えられませんでしたし、どうすればうまく直せるのかもすぐには思いつきませんでした。それでも、あるコメント投稿者が書いていた通り、たとえ色が間違っていたとしても、写真に命が吹き込まれることに変わりはありません。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;倫理的な考察&quot;&gt;倫理的な考察&lt;/h2&gt;
+
+&lt;p&gt;こうした限界が見えてくると、カラー化 AI がもたらす倫理的影響を考える準備が整います。これが議論の中で強く印象に残った2つ目の点です。このプロジェクトを始めたとき、倫理面のことは頭に浮かびもしませんでしたが、寄せられたフィードバックのおかげで深く考えるきっかけを得られました。感謝しています。&lt;/p&gt;
+
+&lt;p&gt;最大の倫理的課題は「真実」に関わる問題です。ディープフェイクが「何が真実かわからなくなる」という論争を呼ぶのと同じように、人工的な着色は私たちが歴史をどう体験するかを変えてしまう可能性があります。AI は過去の色について判断を下しますが、それは必ずしも正確ではありません。たとえば、AI が生成した「白いゴールデンゲートブリッジ」をそのまま保存・拡散すれば、見る人が体験する橋の姿は歴史的に不正確なものになります。もちろん白黒写真も現実そのままではありません。ただおそらく厄介なのは、白黒写真を見る人は「過去が実際に白黒だったわけではない」とわかっているのに対し、カラー写真を見る人は「これが当時の歴史そのものだ」と簡単に信じ込んでしまいやすい点です。&lt;/p&gt;
+
+&lt;p&gt;こうしたレタッチは歴史の書き換えに等しいとまで言う人もいますし、実際そう見えてしまう事例もあります。最近の例を見てみましょう。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;カンボジアは米メディアグループ Vice に対し、クメール・ルージュの犠牲者の写真を新たにカラー化して掲載した記事を取り下げるよう要求した。一部の写真に笑顔を付け加える改変がなされており、死者への冒涜であるとしている。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p class=&quot;caption&quot; style=&quot;margin-top:-25px;&quot;&gt;&lt;a href=&quot;https://www.aljazeera.com/news/2021/4/11/cambodia-condemns-vice-for-altered-khmer-rouge-images&quot;&gt;出典&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;これはまったく正当な抗議です。モデルが過学習しており、おそらく笑顔の写真が大半を占めるデータで学習されていたのでしょう。その結果、犠牲者の顔を学習データに近づける形で――つまり笑顔へと――改変してしまったのです。AI を不用意に適用したときの落とし穴を示す象徴的な例と言えます。&lt;/p&gt;
+
+&lt;p&gt;私が使ったのと同じ DeOldify モデルをベースにカラー復元サービスを提供している &lt;a href=&quot;https://www.myheritage.com/incolor&quot;&gt;MyHeritage&lt;/a&gt; は、加工したすべての画像に透かし（ウォーターマーク）を入れることで折衷案をとっています。彼らの主張は説得力があります。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;私たちは、カラー化処理を施した写真の左下に特別なエンボス加工のパレット記号を入れることで、もともとカラーで撮影された写真と区別しています。極めてリアルではありますが、カラー化された写真の色は自動アルゴリズムによってシミュレートされたものであり、元々の現実の色と同一とは限りません。パレットアイコンはすべてのカラー化写真に表示され、本来の色を持つ写真と区別できるようになっています。写真のカラー化技術を利用する他の人々にも、この責任ある慣行が広がることを願っています。なお、色褪せ修復のみを行った写真には本物の色が残っているため、このアイコンは付きません。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;私の場合、家族は私が写真を人工的にカラー化したことを知っていましたし、色が完全に正確ではないこともわかっていました。それでも、たとえ色が違っていても、写真とその中に写る人々や情景は確かに生き返ったのです。高校時代に老人ホームでボランティアをしていたとき、50年間訪れていなかったドレスデンの幼少期の家へ Google ストリートビューで入居者の方をお連れできたのと同じように、私は AI を使って家族を何十年も前の良き時代へ送り届けることができました。テクノロジーは道具であり、このような魔法が可能な時代に生きていることに感謝しています。&lt;/p&gt;
+</description>
+          <pubDate>Sat, 12 Jun 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ja/bringing-colour-and-life-to-black-and-white-photos</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/bringing-colour-and-life-to-black-and-white-photos</guid>
+        </item>
+      
+    
+      
+        <item>
+          <title>最短経路問題としての裁定取引</title>
+          <description>&lt;p class=&quot;description&quot;&gt;
+    裁定取引（アービトラージ）の仕組みと、無リスクかつ瞬間的な裁定機会を効率的に見つけ出すアルゴリズムを解説します。
+&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;お金を稼ぐのが嫌いな人などいるでしょうか？&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;そしてもし、お金を稼ぐ問題を「最短経路を見つける問題」に変換できるとしたらどうでしょう？少なくとも一つの明確な方法があります。それが裁定機会（アービトラージの機会）を利用することです。&lt;/p&gt;
+
+&lt;h2 id=&quot;裁定取引アービトラージとは&quot;&gt;裁定取引（アービトラージ）とは？&lt;/h2&gt;
+
+&lt;p&gt;_裁定取引（アービトラージ）_とは、異なる市場間や異なる形態の間で資産を売買し、価格差から利益を得る行為のことです。そしてこれを行う人々は_裁定取引者（アービトラージャー）_と呼ばれます。なかなか格好いい肩書きですね。&lt;/p&gt;
+
+&lt;p&gt;簡単な例から始めましょう。ポール、ピーター、ボブの3人が、ニンジン、ジャガイモ、レタスを物々交換している村に住んでいるとします。ボブはジャガイモとニンジンを、ピーターはレタスとジャガイモを、ポールはレタスとニンジンを交換しています。&lt;/p&gt;
+
+&lt;p&gt;さらに、ボブはニンジン1本に対してジャガイモ2個、ピーターはジャガイモ2個に対してレタス1玉、ポールはレタス1玉に対してニンジン2本で交換してくれるとします。それぞれの人物を各品物の「市場」と見なすと、交換レートは次のようになります。&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;市場&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;交換レート&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;ボブ（ジャガイモ／ニンジン）&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2 ジャガイモ / ニンジン&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;ピーター（レタス／ジャガイモ）&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;1 レタス / 2 ジャガイモ = 0.5 レタス / ジャガイモ&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;ポール（ニンジン／レタス）&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2 ニンジン / レタス&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+村における品物の交換レート。
+&lt;/p&gt;
+
+&lt;p&gt;チャンスの気配を感じませんか？&lt;/p&gt;
+
+&lt;p&gt;商才あふれるあなたなら、これを活かそうとするはずです。まずニンジンを5本持ってボブのもとへ行き、彼の提示するレートでニンジン5本をジャガイモ10個に交換します。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+5 \text{ carrots} \times 2 \space \frac{\text{potatoes}}{\text{carrots}} = 10 \text{ potatoes} \tag{1} \label{eq:arb_example}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;次に、ジャガイモを持ってピーターのもとへ行くと、レタス5玉と交換してもらえます。そしてそのレタス5玉をポールのところへ持っていくと、ニンジン10本と交換してくれます。&lt;/p&gt;
+
+&lt;p&gt;わずか数回の賢い取引で、手持ちのニンジンを2倍に増やすことができました。裁定機会を突くことで、ニンジン5本を10本にしたのです。&lt;/p&gt;
+
+&lt;p&gt;やがて村が発展すると、ボブ、ピーター、ポールだけが取引相手ではなくなり、より洗練された市場が生まれます。この小さな村にもニンジン／レタス市場、レタス／ジャガイモ市場、ジャガイモ／ニンジン市場ができ、それぞれの取引レートは人々の売買意欲に応じて変動するようになるでしょう。&lt;/p&gt;
+
+&lt;p&gt;それでも裁定取引の原理は変わりません。そしてその機会は、そのレートで交換に応じる取引相手のニンジン、レタス、ジャガイモが尽きるまで利用され続けます。つまり、市場が均衡に達するまで裁定機会は消化されていくのです。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;現代における裁定取引&quot;&gt;現代における裁定取引&lt;/h2&gt;
+
+&lt;p&gt;現代の市場と聞いて、ニンジンやジャガイモ、レタスの取引を思い浮かべる人はあまりいないでしょう。外国為替（FX）に関心がある方なら、ドル、ポンド、円の取引を思い浮かべるはずです。その場合、ドル／ポンド市場、ポンド／円市場、円／ドル市場が存在し、各市場で多数のトレーダーが取引を行っています。ここからは取引対象の例としてこれらの通貨を使いますが、同じ原理はあらゆる取引可能な資産に当てはまることを念頭に置いてください。&lt;/p&gt;
+
+&lt;p&gt;ある時点で、為替レートが次のようになっているとします。&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;市場&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;為替レート&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;ポンド (£) / ドル ($)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0.8 ポンド / ドル&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;円 (¥) / ポンド (£)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;100 円 / ポンド&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;ドル ($) / 円 (¥)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0.013 ドル / 円&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+通貨市場における為替レートの例。
+&lt;/p&gt;
+
+&lt;p&gt;先ほどのボブ、ピーター、ポールによるニンジン・レタス・ジャガイモの取引から学んだ方なら、ここにもチャンスがあると気づくはずです。&lt;/p&gt;
+
+&lt;p&gt;1ドルをポンドに替えると£0.8になります。それを円に替えると¥80になります。その円を円／ドル市場で再びドルに替えると……なんと$1.04になっているのです！&lt;/p&gt;
+
+&lt;p&gt;ただし、他の裁定取引者に先を越されないよう、素早く行動しなければなりません。こうした機会は一時的にしか存在せず、流動性が使い切られてレートが均衡するまでの間だけです。&lt;/p&gt;
+
+&lt;p&gt;鋭い方なら、この例では取引手数料を考慮していないことにお気づきでしょう。実際に利益の出る裁定機会が存在するかどうかを計算するには、当然ながら手数料も織り込む必要があります。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;素早く行動する&quot;&gt;素早く行動する&lt;/h2&gt;
+
+&lt;p&gt;なぜスピードが何より重要なのか、直感的にご理解いただけたと思います。為替レートは目まぐるしく変動し、そのレートで取引できる「モノ」の量には限りがあるからです。&lt;/p&gt;
+
+&lt;p&gt;ここまで扱ったのは比較的シンプルな例ですが、実際の裁定機会は何段階もの取引にまたがり、非常に複雑になり得ます。先の例は3回の取引でしたが、10回の取引が必要だったらどうでしょう？さらに、20種類の通貨があり、すべてのペアに市場が存在するネットワークの中で、どれだけ速く機会を見つけられるでしょうか？&lt;/p&gt;
+
+&lt;p&gt;コンピュータを使うのが明らかな答えです。しかし、誰かに先を越されないためには、効率的なアルゴリズムが必要になります。&lt;/p&gt;
+
+&lt;p&gt;それを実現するために、数学とコンピュータサイエンスにおけるいくつかの巧みな発想を活用できます。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;グラフとしての市場&quot;&gt;グラフとしての市場&lt;/h2&gt;
+
+&lt;p&gt;グラフは、数多くの応用分野で活用されている極めて重要なデータ構造です。社会構造や自然界の多くの仕組みがグラフでモデル化でき、実は市場もその一つです。&lt;/p&gt;
+
+&lt;p&gt;今回のケースでは、それぞれの通貨をノード（頂点）として扱います。あるノードから別のノードへの移動が、ある通貨を別の通貨に交換することに対応します。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-white.png&quot; alt=&quot;簡略化した通貨グラフ&quot; width=&quot;448&quot; height=&quot;283&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+簡略化したグラフ — 実際には各方向に個別のエッジ（有向辺）が必要です。
+&lt;/p&gt;
+
+&lt;p&gt;したがって、ノード間を結ぶエッジ（辺）に沿って移動することは、保有通貨の金額に為替レートを掛ける操作に対応します。&lt;/p&gt;
+
+&lt;p&gt;つまり、ドルノードからポンドノードへの移動は、0.8ポンド／ドルを掛けることを意味します。各エッジの重みとして、この為替レートを割り当てましょう。&lt;/p&gt;
+
+&lt;p&gt;ここで注意すべき点として、双方向の為替レートは互いに_おおよそ_逆数の関係にあります。つまり、ドルからポンドへの換算レートが0.8ポンド／ドルであれば、逆方向のレートは 1 / (0.8ポンド／ドル) = 1.25ドル／ポンド程度になります。そのため、各市場での買いと売りは、それぞれ異なる重みを持つ別個の有向エッジとして扱う必要があります。&lt;/p&gt;
+
+&lt;p&gt;双方向の為替レートが完全にではなく_おおよそ_逆数にとどまる理由は、通貨を買う価格と売る価格の間にわずかな差、すなわちビッド・アスク・スプレッド（売値と買値の差）があるためです。たとえば、ある時点で0.8ポンド／ドルでポンドを買える（相手があなたに売ってくれる現在の価格）一方、ポンドを売ってドルに替えるときは0.82ポンド／ドル（つまり1.22ドル／ポンド、相手があなたから買ってくれる現在の価格）だとすると、グラフモデルは次のようになります（簡単のため他の為替レートは省略しています）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/currency-graph-w-exchange-rates-white.png&quot; alt=&quot;為替レート付きの通貨グラフ&quot; width=&quot;451&quot; height=&quot;378&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;一連の取引は、このグラフ上のエッジを辿ることでモデル化でき、取引の結果は移動したエッジの重みを&lt;strong&gt;&lt;em&gt;掛け合わせる&lt;/em&gt;&lt;/strong&gt;ことで計算されます。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;チャンスを見抜く&quot;&gt;チャンスを見抜く&lt;/h2&gt;
+
+&lt;p&gt;モデルができたところで、裁定機会に対応する構造はこのグラフの中でどのようなものになるでしょうか？&lt;/p&gt;
+
+&lt;p&gt;一連の取引で利益が出たかどうかを判断するには、一貫した評価基準が必要です。言い換えれば、ドルから取引を始めたなら、最後もドルで終える必要があります。そうして、最終的なドル額を最初のドル額と比べることで、利益が出たかどうかがわかるのです。&lt;/p&gt;
+
+&lt;p&gt;グラフ上で言えば、一連の取引は出発したのと同じノードに戻ってこなければなりません。今回の例では、ドルノードから出発してドルノードに戻ってきます。グラフ理論の用語では、これをサイクル（閉路）と呼びます。つまり探しているのは何らかのサイクルですが、利益が出るのはどのようなサイクルでしょうか？&lt;/p&gt;
+
+&lt;p&gt;サイクルのエッジに沿って重みを掛け合わせていくと、実効的な為替レートの単位が変換されていくことに注目してください。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+a \space \frac{\cancel{£}}{$} \times b \space \frac{¥}{\cancel{£}} = ab \space \frac{¥}{$}  \tag{2} \label{eq:units_of_exchange_rate}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;そして出発元のノードに戻ってきたとき、その量は無次元（単位なし）になります。為替レートから、リターン倍率へと変わるのです！グラフ上のサイクルを辿って途中の為替レートの積を計算することは、一連の取引を終えたあとに得られるリターン倍率を求めることに対応します。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+a \space \frac{\cancel{£}}{\cancel{$}} \times b \space \frac{\cancel{¥}}{\cancel{£}} \times c \space \frac{\cancel{$}}{\cancel{¥}} = abc \space \text{[dimensionless]}  \tag{3} \label{eq:unitless_exchange}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;市場が完全に効率的であれば、為替レートが均衡しているため、リターン倍率 \(abc\) は1になります。重みの積が1より大きければ（たとえば1.02であれば）、この裁定機会によって2%の利益が得られたことになります。&lt;/p&gt;
+
+&lt;p&gt;したがって、任意の回数の取引へ一般化すると、裁定機会は次の不等式で表されます。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\prod_i^n{e_i} = e_ie_2...e_n &amp;gt; 1  \tag{4} \label{eq:arbitrage_return}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;ここで \(e_i\) は \(n\) 回の取引における \(i\) 番目の取引の為替レートを表します。&lt;/p&gt;
+
+&lt;p&gt;つまり私たちが必要としているのは、市場のグラフ上で「エッジの重みの積が1より大きいサイクル」を見つけ出すアルゴリズムです。自前でアルゴリズムを考案することもできるかもしれませんが、コンピュータサイエンスでは（人生全般でもそうですが）、目の前の問題を「すでに解き方を知っている問題」に帰着させるのが有効です。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;ベルマンフォード法bellman-ford-algorithm&quot;&gt;ベルマン・フォード法（Bellman-Ford Algorithm）&lt;/h2&gt;
+
+&lt;p&gt;最短経路を見つける問題は、コンピュータサイエンスにおける定番かつ基礎的な問題であり、さまざまな場面に応用されています。グラフと地図を対応づけることで、地図上の最短ルートを求めるのが最もわかりやすい例でしょう。しかし少し工夫すれば、他にも多種多様な問題を最短経路問題へと変換できます。これからお見せするのは、裁定機会の発見もまさにそうした問題の一つだということです。&lt;/p&gt;
+
+&lt;p&gt;まず、最短経路問題とは何かを確認しましょう。グラフ内の2つのノード \(s\) と \(t\) が与えられたとき、最短経路とはエッジの重みの_和_を最小化する経路のことです。すなわち、\(s\) から \(t\) へ経路を辿りながらエッジの重みを足し合わせていったとき、その合計が最小になる経路（最小コストの経路）が最短経路です。&lt;/p&gt;
+
+&lt;p&gt;次に、最短経路問題にはいくつかの種類があることを押さえておきましょう。地図上の最短ルートのようなわかりやすい例では、エッジの重みは正でなければなりません。タイムマシンでもない限り、道路を走って移動時間が減ることはないからです。正の重みしか持たないグラフであれば、有名なダイクストラ法（Dijkstra’s algorithm）によってグラフ内のすべてのノードへの最短経路を計算できます。&lt;/p&gt;
+
+&lt;p&gt;しかし、グラフが負の重みを持ってはいけない理由はありません。その場合、負の重みのエッジを通ると経路の総コストが減少します。ここで問題になるのが、重みの合計が負になる_サイクル_が存在する場合です。そのような_サイクル_を延々と回り続ければ、周回するたびに経路の総コストが下がり続け、最短経路のコストは \(-\infty\) へと発散してしまいます。そのため、最短経路アルゴリズムには「負の重みのサイクル（負閉路）」を検出する仕組みがあると非常に便利です。そうでなければ、最短経路の探索は負閉路を永遠に回り続けることになってしまいます。&lt;/p&gt;
+
+&lt;p&gt;ベルマン・フォード法は、まさにそのためのアルゴリズムです。ダイクストラ法をより一般化したもので、負の重みを扱うことができます。その過程で、エッジの重みを_足し合わせる_と負の値になるサイクル、すなわち_負閉路（negative weight cycles）_を検出できるのです。&lt;/p&gt;
+
+&lt;p&gt;しかし、エッジの重みの&lt;strong&gt;&lt;em&gt;積&lt;/em&gt;&lt;/strong&gt;が1より大きいサイクルを見つけたいときに、エッジの重みの&lt;strong&gt;&lt;em&gt;和&lt;/em&gt;&lt;/strong&gt;が0より小さいサイクルを見つけるアルゴリズムがどう役に立つのでしょうか？&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;救世主としての対数log&quot;&gt;救世主としての対数（log）&lt;/h2&gt;
+
+&lt;p&gt;次なるひらめきは、以下の対数の恒等式を使えば「積」を「和」に変換できるという点です。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\log{ab} = \log{a} + \log{b}  \tag{5} \label{eq:log_product_identity}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;これによって、「_積_が1より大きいサイクルを見つける問題」を「_和_が0より大きいサイクルを見つける問題」へと変換できます！各為替レートの対数を取り、それをエッジの重みとして使えばよいのです。&lt;/p&gt;
+
+&lt;p&gt;先ほどの不等式の両辺に対数を取って確かめてみましょう。まず、左辺の対数を取ると、積の計算が和の計算に変わります。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\log{\prod_i^n{e_i}} = \log{e_ie_2...e_n} = \log{e_1} + ... + \log{e_n} = \sum_i^n{\log{e_i}} \tag{6} 
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;右辺の対数を取ると、1がちょうど0に変わります。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{\log{e_i}} &amp;gt; \log{1} \rightarrow \sum_i^n{\log{e_i}} &amp;gt; 0 \tag{7}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;もう一息です。既知のアルゴリズムで解ける形に帰着させる最後のステップは、各エッジの重みに -1 を掛けることです。これにより、正の重みのサイクルを探す問題が、負の重みのサイクルを探す問題へと変わります。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{-\log{e_i}} &amp;lt; 0 \tag{8}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;これこそ、ベルマン・フォード法が得意とする問題です！このようにグラフを構築してベルマン・フォード法を実行すれば、裁定機会を素早く効率的に見つけ出すことができます。裁定取引の問題を最短経路問題――いわば_無限に短い経路_を探す問題――へと変換できたからです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/img/arbitrage-as-a-shortest-path-problem/neg-log-currency-graph-white.png&quot; alt=&quot;負の対数を重みにした通貨グラフ&quot; width=&quot;448&quot; height=&quot;283&quot; loading=&quot;lazy&quot; decoding=&quot;async&quot; /&gt;&lt;/p&gt;
+
+&lt;p class=&quot;caption&quot;&gt;
+為替レートの負の対数をエッジの重みとして、負の重みのサイクル（負閉路）を探します。
+&lt;/p&gt;
+
+&lt;p&gt;後から振り返ってみると、周回するたびに経路コストが減っていく負閉路と、周回するたびに利益が増える裁定機会が対応しているのは実に自然なことです。鍵となったのは、エッジの重みに \(-\log\) を適用することで、積が1より大きいサイクルを探す問題を、和が0未満のサイクルを探す問題に変換した点にあります。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;実際に確かめてみよう&quot;&gt;実際に確かめてみよう&lt;/h2&gt;
+
+&lt;p&gt;先ほどの為替レートにこのアルゴリズムを適用し、裁定機会を正しく検出できるか見てみましょう。各為替レートを \(-\log\) で変換すると、次のようになります。&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;市場&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;-log(為替レート)&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;ポンド (£) / ドル ($)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;0.223&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;円 (¥) / ポンド (£)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;-4.605&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;ドル ($) / 円 (¥)&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;4.343&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;取引全体で合計すると不等式が成り立ちます――&lt;em&gt;負閉路が見つかりました&lt;/em&gt;！&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\sum_i^n{-\log{e_i}} = 0.223 - 4.605 + 4.343 = -0.039 \label{eq:neg_log_exchange_rate_example} \tag{9}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;対数変換を元に戻せば積が復元され、リターンを計算できます。&lt;/p&gt;
+
+&lt;div style=&quot;width: 100%; overflow-x: auto;&quot;&gt;
+    $$
+        
+\begin{align}
+\prod_i^n{e_i} &amp;amp;= \exp{\sum_i^n{-\log{e_i}}} \\
+\prod_i^n{e_i} &amp;amp;= \exp(0.039) = 1.04 \tag{10}
+\end{align}
+
+    $$
+&lt;/div&gt;
+
+&lt;p&gt;これは先ほど計算した4%のリターンとぴったり一致します。&lt;/p&gt;
+
+&lt;div class=&quot;divider&quot;&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;現実の世界では&quot;&gt;現実の世界では&lt;/h2&gt;
+
+&lt;p&gt;裁定機会が負閉路に対応するなら、そのサイクルを永遠に回り続ければ無限にお金を稼げるように思えるかもしれません。もちろん、現実はそうはいきません。&lt;/p&gt;
+
+&lt;p&gt;どのような裁定機会であっても、流動性――価格が大きく動かずに取引できる数量――には限りがあり、コンピュータ技術や物理法則の限界に挑みながら互いに競い合うアルゴリズムトレーダーたちによって瞬く間に取り尽くされてしまいます。&lt;/p&gt;
+
+&lt;p&gt;とはいえ、グラフ理論とよく知られた最短経路アルゴリズムを金融分野の問題――そしてお金を稼ぐこと――に応用するこの思考実験を、私がいつも感じているのと同じくらい楽しんでいただけたなら幸いです。&lt;/p&gt;
+</description>
+          <pubDate>Sun, 25 Apr 2021 00:00:00 -0700</pubDate>
+          <link>https://blog.skz.dev/ja/arbitrage-as-a-shortest-path-problem</link>
+          <guid isPermaLink="true">https://blog.skz.dev/ja/arbitrage-as-a-shortest-path-problem</guid>
+        </item>
+      
+    
+  </channel>
+</rss>
+
